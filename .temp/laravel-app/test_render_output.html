@@ -1,0 +1,10 @@
+
+Fatal error: Uncaught Mockery\Exception\BadMethodCallException: Method Mockery_0::user() does not exist on this mock object in /Volumes/Project/Personal Project/ZontroPay/piprapay/PipraPay-main/laravel-app/vendor/mockery/mockery/library/Mockery/Loader/EvalLoader.php(30) : eval()'d code:974
+Stack trace:
+#0 /Volumes/Project/Personal Project/ZontroPay/piprapay/PipraPay-main/laravel-app/vendor/mockery/mockery/library/Mockery/Loader/EvalLoader.php(30) : eval()'d code(419): Mockery_0->_mockery_handleMethodCall('user', Array)
+#1 /Volumes/Project/Personal Project/ZontroPay/piprapay/PipraPay-main/laravel-app/app/Http/Controllers/Admin/NativeAdminPageController.php(188): Mockery_0->__call('user', Array)
+#2 /Volumes/Project/Personal Project/ZontroPay/piprapay/PipraPay-main/laravel-app/app/Http/Controllers/Admin/NativeAdminPageController.php(104): App\Http\Controllers\Admin\NativeAdminPageController->resolveAdmin(Object(Illuminate\Http\Request))
+#3 [internal function]: App\Http\Controllers\Admin\NativeAdminPageController->viewData(Object(Illuminate\Http\Request))
+#4 /Volumes/Project/Personal Project/ZontroPay/piprapay/PipraPay-main/laravel-app/test_render.php(18): ReflectionMethod->invoke(Object(App\Http\Controllers\Admin\NativeAdminPageController), Object(Illuminate\Http\Request))
+#5 {main}
+  thrown in /Volumes/Project/Personal Project/ZontroPay/piprapay/PipraPay-main/laravel-app/vendor/mockery/mockery/library/Mockery/Loader/EvalLoader.php(30) : eval()'d code on line 974

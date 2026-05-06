@@ -1,0 +1,74 @@
+name: Migration Readiness Gate
+
+on:
+  pull_request:
+    paths:
+      - laravel-app/**
+      - PHASED_MIGRATION_IMPLEMENTATION_PLAN.md
+      - LEGACY_DELETION_READINESS_CHECKLIST.md
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - laravel-app/**
+      - PHASED_MIGRATION_IMPLEMENTATION_PLAN.md
+      - LEGACY_DELETION_READINESS_CHECKLIST.md
+  schedule:
+    - cron: '15 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  readiness-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: laravel-app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+          coverage: none
+
+      - name: Prepare Laravel app
+        run: |
+          cp -f .env.example .env
+          composer install --no-interaction --no-progress --prefer-dist
+          php artisan key:generate --force
+
+      - name: Run migration safety tests
+        run: |
+          php artisan test \
+            tests/Feature/PaymentLinkSubmitRedirectFlowTest.php \
+            tests/Feature/AdminActionsMigrationToggleTest.php \
+            tests/Feature/MigrationReadinessReportCommandTest.php \
+            tests/Feature/InvoiceWebhookMigrationToggleTest.php \
+            tests/Feature/ApiVerifyPaymentMigrationToggleTest.php \
+            tests/Feature/ApiMigrationToggleTest.php \
+            tests/Feature/HybridRouteWiringTest.php \
+            tests/Feature/ExampleTest.php
+
+      - name: Generate readiness report JSON
+        run: php artisan piprapay:migration-readiness-report --format=json > storage/app/reports/migration-readiness-report.json
+
+      - name: Generate readiness report markdown
+        run: php artisan piprapay:migration-readiness-report --write
+
+      - name: Enforce unknown-action fallback 14-day gate
+        run: php scripts/ci/enforce_readiness_gate.php storage/app/reports/migration-readiness-report.json
+
+      - name: Upload readiness artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-readiness-artifacts
+          path: |
+            laravel-app/storage/app/reports/migration-readiness-report.json
+            laravel-app/storage/app/reports/migration-readiness-report-*.md
+            laravel-app/storage/app/reports/admin-legacy-fallback.ndjson
+          if-no-files-found: warn
