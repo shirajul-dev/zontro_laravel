@@ -1,0 +1,9 @@
+{
+  "action-v2": "payment-link-default",
+  "brand_id": "6657227357",
+  "full_name": "Flow Test User",
+  "email": "flowtest@example.com",
+  "mobile": "01700000000",
+  "currency": "BDT",
+  "amount": "100.00"
+}
