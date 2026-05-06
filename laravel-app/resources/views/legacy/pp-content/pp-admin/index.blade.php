@@ -940,6 +940,12 @@
             });
         }
 
+        function updateCsrfTokens(token) {
+            if (!token) return;
+            $('input[name="csrf_token"]').val(token);
+            $('input[name="csrf_token_default"]').val(token);
+        }
+
         function load_content(page, url, nav_id, fromPopState = false) {
             const requestUrl = new URL(url, window.location.origin);
             requestUrl.searchParams.set('content', '1');
@@ -948,47 +954,46 @@
 
             if (isMobileDevice()) {
                 const sidebar = document.getElementById('sidebarMenu');
-
-                if (sidebar && sidebar.classList.contains('offcanvas-md') && sidebar.classList.contains('offcanvas-start') && sidebar.classList.contains('sidebar') && sidebar.classList.contains('show')) {
+                if (sidebar && sidebar.classList.contains('show')) {
                     const toggleBtn = document.querySelector('.navbar-toggler');
                     if (toggleBtn) toggleBtn.click();
                 }
             }
 
-            fetch(requestUrl.toString(), {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+            $.ajax({
+                url: requestUrl.toString(),
+                type: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(html) {
+                    $('.root-print').html(html);
+
+                    // Re-init components safely
+                    if (typeof initHugeRTE === 'function') initHugeRTE();
+                    if (typeof initInvoiceCustomer === 'function') initInvoiceCustomer();
+                    if (typeof initToolTips === 'function') initToolTips();
+                    if (typeof initChoices === 'function') {
+                        initChoices();
+                        initChoices('.js-select');
+                    }
+                    if (typeof initTags === 'function') initTags();
+                    
+                    // Safe re-init of dropdowns using getOrCreateInstance
+                    if (typeof tabler !== 'undefined' && tabler.bootstrap) {
+                        document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(el => {
+                            tabler.bootstrap.Dropdown.getOrCreateInstance(el);
+                        });
+                    }
+
+                    hideProgress();
+
+                    if (!fromPopState) {
+                        history.pushState({ page: page, path: url, nav_id: nav_id }, "", url);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideProgress();
+                    console.error('AJAX Load Error:', error);
                 }
-            })
-            .then(res => res.text())
-            .then(html => {
-                $('.root-print').html(html);
-
-                initHugeRTE();
-
-                initInvoiceCustomer();
-
-                initToolTips();
-
-                initChoices();
-                initChoices('.js-select');
-
-                initTags();
-
-                hideProgress();
-
-                if (!fromPopState) {
-                    history.pushState({
-                        page: page,
-                        path: url,
-                        nav_id: nav_id
-                    }, "", url);
-                }
-            })
-            .catch(error => {
-                hideProgress();
-                console.error('Error:', error);
             });
 
             document.querySelectorAll('#sidebarMenu .nav-link').forEach(link => {

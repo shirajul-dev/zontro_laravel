@@ -157,10 +157,6 @@
 </div>
 
 <script data-cfasync="false">
-    // Using native helper to check permissions in JS
-    const canEditBrand = {{ $canEdit ? 'true' : 'false' }};
-    const canDeleteBrand = {{ $canDelete ? 'true' : 'false' }};
-
     $('.model-bulkAction-btn').click(function () {
         var my_action_confirmation_btn = document.querySelector("#my-action-confirmation-btn").value;
         var actionID = document.querySelector("#model-bulkActionID").value;
@@ -293,29 +289,39 @@
             dataType: 'json',
             success: function (res) {
                 let html = '';
-                updateCsrfTokens(res.csrf_token);
-
-                if (res.status === 'true') {
+                updateCsrfTokens(res.csrf_token);                if (res.status === 'true') {
                     res.response.forEach(item => {
-                        let manageAble = item.deleteable == "false" ? 'disabled' : '';
-                        let redirectEdit = canEditBrand && item.deleteable !== "false" ? `style="cursor:pointer;" onclick="load_content('Edit Brand','{{ $site_url }}{{ $path_admin }}/brands/edit?b_id=${item.id}','nav-item-brands')"` : '';
-                        let redirectDelete = canDeleteBrand ? `onclick="deleteItem('${item.id}')"` : '';
+                        let canEditBrand = {{ $canEdit ? 'true' : 'false' }};
+                        let canDeleteBrand = {{ $canDelete ? 'true' : 'false' }};
+
+                        let redirectEdit = '';
+                        let redirectDelete = '';
+                        
+                        if (canEditBrand) {
+                            redirectEdit = `style="cursor:pointer;" onclick="load_content('Edit Brand','<?php echo $site_url.$path_admin ?>/brands/edit?brand_id=${item.id}','nav-item-brands')"`;
+                        }
+
+                        if (canDeleteBrand) {
+                            redirectDelete = `onclick="deleteItem('${item.id}')"`;
+                        }
+
+                        let manageAble = (canEditBrand || canDeleteBrand) ? '' : 'disabled';
 
                         html += `
                             <tr data-id="${item.id}">
-                                <td><input class="form-check-input m-0 align-middle rowCheckbox" type="checkbox"></td>
+                                <td><input class="form-check-input m-0 align-middle table-selectable-check rowCheckbox" type="checkbox" aria-label="Select brand"></td>
                                 <td ${redirectEdit}>
                                     <div class="d-flex py-1 align-items-center">
                                         <div class="flex-fill">
                                             <div class="font-weight-medium">${item.identify_name}</div>
-                                            <div class="text-secondary">${item.name}</div>
+                                            <div class="text-secondary">${item.brand_id}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td ${redirectEdit}>${item.created_date}</td>
                                 <td class="text-end">
-                                    <span class="dropdown">
-                                        <button ${manageAble} class="btn dropdown-toggle align-text-top" data-bs-toggle="dropdown">Actions</button>
+                                    <span class="dropdown" style="position: unset;">
+                                        <button ${manageAble} class="btn dropdown-toggle align-text-top" data-bs-toggle="dropdown" data-bs-boundary="viewport" aria-expanded="false">Actions</button>
                                         <div class="dropdown-menu dropdown-menu-end">
                                             <a class="dropdown-item ${canEditBrand ? '' : 'd-none'}" href="javascript:void(0)" ${redirectEdit}>Edit</a>
                                             <a class="dropdown-item btnDeleteItem-${item.id} ${canDeleteBrand ? '' : 'd-none'}" href="javascript:void(0)" ${redirectDelete}>Delete</a>
@@ -329,6 +335,13 @@
                     initCheckboxTable();
                     $(".table-data-list-entries").html(res.datatableInfo);
                     $(".table-data-list-pagination").html(res.pagination);
+
+                    // Re-init dropdowns for new rows safely
+                    if (typeof tabler !== 'undefined' && tabler.bootstrap) {
+                        document.querySelectorAll('.table-data-list [data-bs-toggle="dropdown"]').forEach(el => {
+                            tabler.bootstrap.Dropdown.getOrCreateInstance(el);
+                        });
+                    }
                 } else {
                     $(".table-data-list").html('<tr><td colspan="4" class="text-center p-4">No data found</td></tr>');
                 }

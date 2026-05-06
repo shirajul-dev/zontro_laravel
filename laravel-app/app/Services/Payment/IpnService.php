@@ -9,7 +9,8 @@ use App\Models\PpGatewaysParameter;
 class IpnService
 {
     public function __construct(
-        private readonly \App\Services\Payment\Gateways\GatewayRegistry $gatewayRegistry
+        private readonly \App\Services\Payment\Gateways\GatewayRegistry $gatewayRegistry,
+        private readonly \App\Services\Payment\WebhookService $webhookService
     ) {
     }
     public function handleIpn(string $gatewayId, string $siteUrl): array
@@ -65,6 +66,9 @@ class IpnService
                             $transaction->trx_id = (string) $gatewayTrxId;
                         }
                         $transaction->save();
+
+                        // Notify merchant
+                        $this->webhookService->deliver($transaction);
 
                         event(new \App\Events\PaymentCompleted($transaction));
                         

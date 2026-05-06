@@ -52,15 +52,22 @@ Currently, the application runs in a Hybrid state, marrying legacy procedural co
 - [x] **Driver Stabilization**: Verified and fixed bKash (Tokenized API) and SSLCommerz drivers to support the new AJAX flow, including strict amount formatting (2 decimal places) for bKash compatibility.
 - [x] **Legacy Bridge Synchronization**: Successfully bootstrapped legacy globals (`db_prefix`, `PipraPay_INIT`) inside native services to allow seamless usage of legacy database functions.
 
+### Phase 3: IPN & Webhook Security (Completed)
+- [x] **Hardened IPN Verification**: Shifted from passive callback trust to a strict **API-to-API validation model** for bKash and SSLCommerz. Transactions are now verified directly with the gateway servers before status updates.
+- [x] **Merchant Webhook System**: Implemented a secure, real-time notification engine for merchants. 
+- [x] **HMAC-SHA256 Signing**: All webhooks are now cryptographically signed using the merchant's `api_key` as a secret, ensuring notifications are tamper-proof.
+- [x] **Webhook Delivery Logging**: Integrated a detailed logging system in the `pp_webhook_log` table to track every delivery attempt, response code, and payload for easier merchant troubleshooting.
+- [x] **Documentation**: Created a comprehensive [payment_verification_guide.md](file:///Volumes/Project/Personal%20Project/ZontroPay/PipraPay-Laravel%20%28Non%20SaaS%29/laravel-app/payment_verification_guide.md) for developers.
+
 ---
 
 ## 🚀 3. Remaining Migration Plan & Recommendations
 
 ### Immediate Next Steps (Priority)
-1.  **IPN Security Hardening**: Implement HMAC signature verification for all callback endpoints to ensure that payment notifications are legitimately coming from the gateway.
-2.  **Production Audit**: 
+1.  **Production Audit**: 
     *   Re-enable `sslverify => true` in the WordPress plugin before deployment.
     *   Switch off local debug flags in `wp-config.php` and `.env`.
+2.  **Admin Panel UI Completion**: Finalize the re-initialization of Bootstrap dropdowns and tooltips within the AJAX navigation flow to ensure 100% UI stability across all management modules.
 
 ### Long-Term Recommendations
 1.  **Centralized Logging**: Implement a unified logging service in Laravel (using Monolog) that captures both Laravel errors and legacy `pp-content` logs in one place for easier debugging.

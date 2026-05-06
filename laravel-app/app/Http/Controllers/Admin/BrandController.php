@@ -73,10 +73,18 @@ class BrandController extends Controller
      */
     private function viewData(Request $request, array $legacy): array
     {
+        $userRole = strtolower($legacy['global_user_response']['response'][0]['role'] ?? 'staff');
+        $permissions = json_decode($legacy['global_response_permission']['response'][0]['permission'] ?? '[]', true);
+
+        // Super-user check
+        $isSuper = ($userRole === 'root' || $userRole === 'admin');
+
         return array_merge($legacy, [
             'site_url' => rtrim(config('app.url', '/'), '/') . '/',
             'path_admin' => config('piprapay.paths.admin', 'admin'),
             'csrfToken' => csrf_token(),
+            'canEdit' => $isSuper || (bool) ($permissions['brands']['edit'] ?? false),
+            'canDelete' => $isSuper || (bool) ($permissions['brands']['delete'] ?? false),
         ]);
     }
 
@@ -94,9 +102,8 @@ class BrandController extends Controller
     private function hasPageAccess(array $legacy, string $page): bool
     {
         $permissions = json_decode($legacy['global_response_permission']['response'][0]['permission'] ?? '[]', true);
-        $role = $legacy['global_user_response']['response'][0]['role'] ?? 'staff';
-
-        if ($role === 'root') {
+        $userRole = strtolower($legacy['global_user_response']['response'][0]['role'] ?? 'staff');
+        if ($userRole == 'root' || $userRole == 'admin') {
             return true;
         }
 
