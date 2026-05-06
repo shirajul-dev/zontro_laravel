@@ -19,7 +19,7 @@
     $pp_gateways_mfs = pp_gateways('mfs', ['transaction' => $transaction, 'brand' => $brand]);
     $pp_gateways_bank = pp_gateways('bank', ['transaction' => $transaction, 'brand' => $brand]);
     $pp_gateways_global = pp_gateways('global', ['transaction' => $transaction, 'brand' => $brand]);
-    
+
     $bgStyle = 'background-color:#f8f9fa;';
     if (!empty($options['enable_bg_image']) && $options['enable_bg_image'] === 'enabled' && !empty($options['background_image'])) {
         $bgImage = function_exists('pp_asset_url') ? pp_asset_url($options['background_image']) : $options['background_image'];
@@ -45,7 +45,7 @@
 
     <style>
         .container {
-            max-width: 650px; 
+            max-width: 650px;
             width: 100%;
         }
         .company-logo {
@@ -63,24 +63,44 @@
         }
 
         .btn-primary {
-            --tblr-btn-border-color: transparent;
-            --tblr-btn-hover-border-color: transparent;
-            --tblr-btn-active-border-color: transparent;
-            --tblr-btn-color: {{ $options['text_color'] ?? '#FFFFFF' }};
-            --tblr-btn-bg: {{ $options['primary_color'] ?? '#5f38f9' }};
-            --tblr-btn-hover-color: {{ $options['text_color'] ?? '#FFFFFF' }};
-            --tblr-btn-hover-bg: {{ function_exists('pp_hexToRgba') ? pp_hexToRgba($options['primary_color'] ?? '#5f38f9', 0.80) : ($options['primary_color'] ?? '#5f38f9') }};
-            --tblr-btn-active-color: {{ $options['text_color'] ?? '#FFFFFF' }};
-            --tblr-btn-active-bg: {{ function_exists('pp_hexToRgba') ? pp_hexToRgba($options['primary_color'] ?? '#5f38f9', 0.80) : ($options['primary_color'] ?? '#5f38f9') }};
-            --tblr-btn-disabled-bg: {{ $options['primary_color'] ?? '#5f38f9' }};
-            --tblr-btn-disabled-color: {{ $options['text_color'] ?? '#FFFFFF' }};
-            --tblr-btn-box-shadow: {{ $options['text_color'] ?? '#FFFFFF' }};
+            border: none;
+            background: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+            color: {{ $options['text_color'] ?? '#FFFFFF' }} !important;
+        }
+        .btn-outline-primary {
+            border-color: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+            color: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+        }
+        .btn-outline-primary:hover {
+            background-color: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+            color: {{ $options['text_color'] ?? '#FFFFFF' }} !important;
         }
 
-        .btn-check:checked+.btn, .btn.active, .btn.show, .btn:first-child:active, :not(.btn-check)+.btn:active{
-            color: {{ $options['text_color'] ?? '#FFFFFF' }};
-            background-color: {{ $options['primary_color'] ?? '#5f38f9' }};
-            border-color: {{ $options['primary_color'] ?? '#5f38f9' }};
+        /* Tab Active State */
+        .btn-group .btn.active {
+            background-color: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+            border-color: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+            color: {{ $options['text_color'] ?? '#FFFFFF' }} !important;
+        }
+
+        .gateway-card {
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid #e6e7e9;
+        }
+        .gateway-card.active {
+            border-color: {{ $options['primary_color'] ?? '#5f38f9' }} !important;
+            border-width: 2px !important;
+            background-color: {{ function_exists('pp_hexToRgba') ? pp_hexToRgba($options['primary_color'] ?? '#5f38f9', 0.05) : 'transparent' }};
+        }
+
+        #btn-pay-now {
+            transition: all 0.3s ease;
+        }
+        #btn-pay-now:disabled {
+            pointer-events: none;
+            opacity: 0.5;
+            filter: grayscale(0.5);
         }
     </style>
 
@@ -154,8 +174,8 @@
                 <!-- Gateways Display -->
                 <div id="gateways-mfs" class="mt-3 row g-3 text-center tab-content" style="display: none;">
                     @foreach($pp_gateways_mfs['gateway'] ?? [] as $row)
-                        <div class="col-6 col-md-4" style="cursor: pointer" onclick="location.href='?gateway={{ $row['gateway_id'] }}'">
-                            <div class="border rounded p-2">
+                        <div class="col-6 col-md-4 gateway-item" onclick="selectGateway('{{ $row['gateway_id'] }}', this)">
+                            <div class="border rounded p-2 gateway-card">
                                 <img src="{{ $row['logo'] }}" alt="" class="img-fluid mb-2" style="max-height: 40px;">
                                 <div class="fw-semibold small">{{ $row['display'] }}</div>
                             </div>
@@ -165,8 +185,8 @@
 
                 <div id="gateways-bank" class="mt-3 row g-3 text-center tab-content" style="display: none;">
                     @foreach($pp_gateways_bank['gateway'] ?? [] as $row)
-                        <div class="col-6 col-md-4" style="cursor: pointer" onclick="location.href='?gateway={{ $row['gateway_id'] }}'">
-                            <div class="border rounded p-2">
+                        <div class="col-6 col-md-4 gateway-item" onclick="selectGateway('{{ $row['gateway_id'] }}', this)">
+                            <div class="border rounded p-2 gateway-card">
                                 <img src="{{ $row['logo'] }}" alt="" class="img-fluid mb-2" style="max-height: 40px;">
                                 <div class="fw-semibold small">{{ $row['display'] }}</div>
                             </div>
@@ -176,8 +196,8 @@
 
                 <div id="gateways-global" class="mt-3 row g-3 text-center tab-content" style="display: none;">
                     @foreach($pp_gateways_global['gateway'] ?? [] as $row)
-                        <div class="col-6 col-md-4" style="cursor: pointer" onclick="location.href='?gateway={{ $row['gateway_id'] }}'">
-                            <div class="border rounded p-2">
+                        <div class="col-6 col-md-4 gateway-item" onclick="selectGateway('{{ $row['gateway_id'] }}', this)">
+                            <div class="border rounded p-2 gateway-card">
                                 <img src="{{ $row['logo'] }}" alt="" class="img-fluid mb-2" style="max-height: 40px;">
                                 <div class="fw-semibold small">{{ $row['display'] }}</div>
                             </div>
@@ -235,7 +255,10 @@
                     </div>
                 </div>
 
-                <div class="btn btn-primary w-100 mt-4">{{ $lang['pay_now'] }} ({{ $transaction['amount'] }} {{ $transaction['currency'] }})</div>
+                <button id="btn-pay-now" class="btn btn-outline-primary w-100 mt-4" onclick="initiatePayment()" disabled>
+                    <span class="spinner-border spinner-border-sm me-2 d-none" role="status"></span>
+                    <span class="btn-text">{{ $lang['pay_now'] }} ({{ $transaction['amount'] }} {{ $transaction['currency'] }})</span>
+                </button>
             </div>
         </div>
 
@@ -247,10 +270,10 @@
         <div class="modal-dialog modal-dialog-top">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">{{ $lang['select_language'] }}</h5> 
+                    <h5 class="modal-title">{{ $lang['select_language'] }}</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body"> 
+                <div class="modal-body">
                     <div class="form-group mt-1">
                         <label class="form-label">{{ $lang['language'] }} <span class="text-danger">*</span></label>
                         <select class="form-select" id="model-languages" onchange="hitLanguage()">
@@ -290,7 +313,7 @@
             tabs.forEach(tab => {
                 tab.addEventListener('click', function() {
                     const target = this.dataset.tab;
-                    
+
                     tabs.forEach(t => t.classList.remove('active'));
                     this.classList.add('active');
 
@@ -306,6 +329,57 @@
             const firstTab = document.querySelector('.btn-group [data-tab]');
             if (firstTab) firstTab.click();
         });
+
+        let selectedGateway = null;
+
+        function selectGateway(id, element) {
+            selectedGateway = id;
+            document.querySelectorAll('.gateway-card').forEach(card => card.classList.remove('active'));
+            element.querySelector('.gateway-card').classList.add('active');
+            
+            const payBtn = document.getElementById('btn-pay-now');
+            payBtn.disabled = false;
+            payBtn.classList.remove('btn-outline-primary');
+            payBtn.classList.add('btn-primary');
+        }
+
+        async function initiatePayment() {
+            if (!selectedGateway) return;
+
+            const btn = document.getElementById('btn-pay-now');
+            const spinner = btn.querySelector('.spinner-border');
+            const btnText = btn.querySelector('.btn-text');
+
+            btn.disabled = true;
+            spinner.classList.remove('d-none');
+            btnText.style.opacity = '0.5';
+
+            try {
+                const response = await fetch('?gateway=' + selectedGateway + '&ajax=1');
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    if (result.redirect_url) {
+                        window.location.href = result.redirect_url;
+                    } else {
+                        window.location.href = '?gateway=' + selectedGateway;
+                    }
+                } else {
+                    throw new Error(result.message || 'Payment initiation failed.');
+                }
+            } catch (error) {
+                console.error(error);
+                createToast({
+                    title: 'Error',
+                    description: error.message,
+                    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fa3939" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler-x"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>`,
+                    timeout: 5000
+                });
+                btn.disabled = false;
+                spinner.classList.add('d-none');
+                btnText.style.opacity = '1';
+            }
+        }
 
         function hitLanguage(){
             var language = document.querySelector("#model-languages").value;

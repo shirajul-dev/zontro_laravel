@@ -16,33 +16,8 @@ use Illuminate\Support\Facades\Log;
  *
  * Native implementation of the PathaoPay Merchant API gateway.
  */
-class PathaoPayDriver implements PaymentGatewayInterface
+class PathaoPayDriver extends AbstractBaseDriver
 {
-    private array $options;
-
-    public function __construct(private readonly PpGateway $gateway)
-    {
-        $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
-    }
-
-    private function logDebug(string $message, array $context = []): void
-    {
-        if (config('app.debug')) {
-            Log::build([
-                'driver' => 'single',
-                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
-            ])->debug($message, $context);
-        }
-    }
-
-    private function logError(string $message, array $context = []): void
-    {
-        Log::build([
-            'driver' => 'single',
-            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
-        ])->error($message, $context);
-    }
-
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'PathaoPay';

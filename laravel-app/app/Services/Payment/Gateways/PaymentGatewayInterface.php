@@ -27,4 +27,14 @@ interface PaymentGatewayInterface
      * Get the gateway's display name.
      */
     public function getDisplayName(): string;
+
+    /**
+     * Get the payment instructions (steps) for the gateway.
+     */
+    public function getInstructions(PpTransaction $transaction): array;
+
+    /**
+     * Get the localized language strings for the gateway.
+     */
+    public function getLanguageStrings(): array;
 }

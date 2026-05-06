@@ -18,33 +18,8 @@ use Illuminate\Support\Facades\Log;
  * This is a hybrid gateway that requires user interaction (manual transfer) 
  * followed by transaction verification via Binance API.
  */
-class BinancePersonalDriver implements PaymentGatewayInterface
+class BinancePersonalDriver extends AbstractBaseDriver
 {
-    private array $options;
-
-    public function __construct(private readonly PpGateway $gateway)
-    {
-        $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
-    }
-
-    private function logDebug(string $message, array $context = []): void
-    {
-        if (config('app.debug')) {
-            Log::build([
-                'driver' => 'single',
-                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
-            ])->debug($message, $context);
-        }
-    }
-
-    private function logError(string $message, array $context = []): void
-    {
-        Log::build([
-            'driver' => 'single',
-            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
-        ])->error($message, $context);
-    }
-
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'Binance Personal';

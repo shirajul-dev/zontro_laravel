@@ -20,8 +20,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+if (isset($_GET['wc-api']) && $_GET['wc-api'] === 'piprapay') {
+    if (isset($_GET['debug_all'])) {
+        die('PARAMS: ' . json_encode($_GET));
+    }
+}
+
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), 'piprapay_plugin_action_links');
-function piprapay_plugin_action_links($links) {
+function piprapay_plugin_action_links($links)
+{
     $settings_link = '<a href="' . admin_url('admin.php?page=wc-settings&tab=checkout&section=piprapay') . '">' . __('Settings') . '</a>';
     array_unshift($links, $settings_link);
     return $links;
@@ -36,10 +43,26 @@ add_action('before_woocommerce_init', function () {
 });
 
 // Initialize the gateway class
-add_action('plugins_loaded', 'piprapay_init_gateway_class', 0);
+add_action('plugins_loaded', 'piprapay_init_gateway_class');
+
+// Ensure WC_API is registered early and globally
+add_action('woocommerce_api_piprapay', function() {
+    if (function_exists('piprapay_init_gateway_class')) {
+        piprapay_init_gateway_class(); // Ensure class is defined
+    }
+    if (class_exists('WC_PIPRAPAY_Gateway')) {
+        WC_PIPRAPAY_Gateway::get_instance()->handle_webhook();
+        exit;
+    } else {
+        die('-1 (PipraPay Class Missing)');
+    }
+});
 
 function piprapay_init_gateway_class()
 {
+    if (class_exists('WC_PIPRAPAY_Gateway')) {
+        return;
+    }
     if (!class_exists('WC_Payment_Gateway')) {
         return; // Exit if WooCommerce isn’t active
     }
@@ -53,6 +76,7 @@ function piprapay_init_gateway_class()
         public $baseUrl;
         public $order_type;
         public $piprapay_version;
+        public $debug;
 
         public static function get_instance()
         {
@@ -77,21 +101,32 @@ function piprapay_init_gateway_class()
             $this->description = $this->get_option('description') ?: __('Pay securely via PipraPay.', 'piprapay-gateway');
             $this->enabled = $this->get_option('enabled');
             $this->show_icon   = $this->get_option('show_icon') === 'yes';
-            
+
             $this->icon = '';
             if ($this->show_icon) {
                 $this->icon = $this->get_option('logo_url');
                 if (empty($this->icon)) $this->icon = plugins_url('assets/icon.png', __FILE__);
             }
-            
+
             $this->apikey = sanitize_text_field($this->get_option('apikey'));
             $this->baseUrl = sanitize_text_field($this->get_option('baseUrl'));
             $this->order_type = sanitize_text_field($this->get_option('order_type'));
             $this->piprapay_version = sanitize_text_field($this->get_option('piprapay_version'));
-            
+            $this->debug = true;
+
             add_action('woocommerce_update_options_payment_gateways_' . $this->id, [$this, 'process_admin_options']);
             add_action('woocommerce_api_' . strtolower($this->id), [$this, 'handle_webhook']);
             add_action('woocommerce_admin_order_data_after_billing_address', [$this, 'display_piprapay_order_meta'], 10, 1);
+        }
+
+        public function log($message)
+        {
+            error_log('PipraPay Log: ' . $message);
+            if ($this->debug) {
+                $logger = wc_get_logger();
+                $context = ['source' => 'piprapay-gateway'];
+                $logger->debug($message, $context);
+            }
         }
 
         public function init_form_fields()
@@ -167,6 +202,13 @@ function piprapay_init_gateway_class()
                     'default' => '',
                     'desc_tip' => true,
                 ],
+                'debug' => [
+                    'title' => __('Debug Mode', 'piprapay-gateway'),
+                    'type' => 'checkbox',
+                    'label' => __('Enable logging', 'piprapay-gateway'),
+                    'default' => 'no',
+                    'description' => __('Log API requests and responses to WooCommerce logs.', 'piprapay-gateway'),
+                ],
             ];
         }
 
@@ -177,8 +219,8 @@ function piprapay_init_gateway_class()
                 wc_add_notice(__('Order not found.', 'piprapay-gateway'), 'error');
                 return ['result' => 'fail'];
             }
-            
-            if($this->piprapay_version == 'old'){
+
+            if ($this->piprapay_version == 'old') {
                 $data = [
                     'full_name'    => sanitize_text_field(trim(($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()) ?: 'Jhon')),
                     'email_mobile' => sanitize_email($order->get_billing_email() ?: 'jhon@gmail.com'),
@@ -190,7 +232,7 @@ function piprapay_init_gateway_class()
                     'return_type'  => 'POST',
                     'currency'     => $order->get_currency(),
                 ];
-            
+
                 $args = [
                     'body'    => json_encode($data),
                     'headers' => [
@@ -200,29 +242,36 @@ function piprapay_init_gateway_class()
                     ],
                     'timeout' => 45,
                 ];
-            
+
+                $this->log('Create Charge Request (Old API): ' . print_r($data, true));
+
                 $response = wp_remote_post($this->baseUrl . '/create-charge', $args);
-            
+
                 if (is_wp_error($response)) {
+                    $this->log('Create Charge Error (Old API): ' . $response->get_error_message());
                     wc_add_notice(__('Payment error: ', 'piprapay-gateway') . $response->get_error_message(), 'error');
                     return ['result' => 'fail'];
                 }
-            
-                $result = json_decode(wp_remote_retrieve_body($response), true);
-            
+
+                $body = wp_remote_retrieve_body($response);
+                $this->log('Create Charge Response (Old API): ' . $body);
+
+                $result = json_decode($body, true);
+
                 if (isset($result['pp_url'])) {
                     return [
                         'result'   => 'success',
                         'redirect' => esc_url($result['pp_url']),
                     ];
                 }
-        
+
                 $message = !empty($result['message']) ? esc_html($result['message']) : __('Unknown error.', 'piprapay-gateway');
                 wc_add_notice(sprintf(__('Payment error: Unable to create payment link. %s', 'piprapay-gateway'), $message), 'error');
                 return ['result' => 'fail'];
-            }else{
-                $new_url = preg_replace('/(https?:\/\/)www\./i', '$1', WC()->api_request_url(strtolower($this->id)));
-                
+            } else {
+                // Use the query parameter format for maximum compatibility across different server environments
+                $new_url = home_url('/?wc-api=' . strtolower($this->id));
+
                 $data = [
                     'full_name'    => sanitize_text_field(trim(($order->get_billing_first_name() . ' ' . $order->get_billing_last_name()) ?: 'Jhon')),
                     'email_address' => sanitize_email($order->get_billing_email() ?: 'jhon@gmail.com'),
@@ -234,7 +283,7 @@ function piprapay_init_gateway_class()
                     'return_type'  => 'POST',
                     'currency'     => $order->get_currency(),
                 ];
-            
+
                 $args = [
                     'body'    => json_encode($data),
                     'headers' => [
@@ -243,188 +292,267 @@ function piprapay_init_gateway_class()
                         'MHS-PIPRAPAY-API-KEY'    => $this->apikey,
                     ],
                     'timeout' => 45,
+                    'sslverify' => false, // Added for local development
                 ];
-            
-                $response = wp_remote_post($this->baseUrl . '/checkout/redirect', $args);
+
+                $this->log('Checkout Request (New API): ' . print_r($data, true));
+                $this->log('Endpoint: ' . $this->baseUrl . '/checkout/redirect');
+
+                $response = wp_remote_post(rtrim($this->baseUrl, '/') . '/checkout/redirect', $args);
 
                 if (is_wp_error($response)) {
-                    wc_add_notice(__('Payment server connection error.', 'piprapay-gateway'), 'error');
-                    return ['result' => 'failure']; 
+                    $this->log('Checkout Error (New API): ' . $response->get_error_message());
+                    wc_add_notice(__('Payment server connection error: ', 'piprapay-gateway') . $response->get_error_message(), 'error');
+                    return ['result' => 'failure'];
                 }
 
-                $result = json_decode(wp_remote_retrieve_body($response), true);
+                $body = wp_remote_retrieve_body($response);
+                $this->log('Checkout Response (New API): ' . $body);
+
+                $result = json_decode($body, true);
 
                 // 2. Check for a valid redirect URL from your API
                 if (isset($result['pp_url'])) {
+                    if (!empty($result['pp_id'])) {
+                        $order->update_meta_data('_piprapay_payment_id', sanitize_text_field($result['pp_id']));
+                        $order->save();
+                    }
+
                     return [
                         'result'   => 'success',
-                        'redirect' => esc_url_raw($result['pp_url']), // esc_url_raw is safer for redirects
+                        'redirect' => esc_url_raw($result['pp_url']),
                     ];
                 }
 
                 // 3. Handle API-specific errors or unknown responses
-                $message = !empty($result['error']['message']) 
-                    ? esc_html($result['error']['message']) 
+                $message = !empty($result['error']['message'])
+                    ? esc_html($result['error']['message'])
                     : __('Unknown error from payment provider.', 'piprapay-gateway');
+
+                if (empty($result['pp_url']) && empty($result['error']['message'])) {
+                    $message .= ' Raw response: ' . $body;
+                }
 
                 wc_add_notice(sprintf(__('Payment error: %s', 'piprapay-gateway'), $message), 'error');
 
-                return ['result' => 'failure']; 
+                return ['result' => 'failure'];
             }
         }
-        
+
         public function handle_webhook()
         {
+
+            $this->log('Webhook/Redirect TRIGGERED at ' . date('Y-m-d H:i:s'));
+            $this->log('Full URL: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]");
             $raw     = file_get_contents("php://input");
             $payload = json_decode($raw, true);
             $headers = getallheaders();
 
-            if($this->piprapay_version == 'old'){
-                $received_api_key = '';
-                if (isset($headers['mh-piprapay-api-key'])) $received_api_key = $headers['mh-piprapay-api-key'];
-                elseif (isset($headers['Mh-Piprapay-Api-Key'])) $received_api_key = $headers['Mh-Piprapay-Api-Key'];
-                elseif (isset($_SERVER['HTTP_MH_PIPRAPAY_API_KEY'])) $received_api_key = $_SERVER['HTTP_MH_PIPRAPAY_API_KEY'];
+            $this->log('Incoming Request: ' . $_SERVER['REQUEST_METHOD']);
+            $this->log('GET Params: ' . print_r($_GET, true));
+            $this->log('POST Params: ' . print_r($_POST, true));
+            $this->log('Payload: ' . $raw);
 
-                if (!hash_equals($this->apikey, $received_api_key)) {
+            // Determine if this is a browser redirect or a background webhook
+            $is_redirect = ($_SERVER['REQUEST_METHOD'] === 'GET' || isset($_GET['pp_status']) || isset($_GET['amp;pp_status']));
+
+            // Extract PipraPay Transaction Reference
+            $pp_id = '';
+            if (!empty($payload['pp_id'])) {
+                $pp_id = sanitize_text_field($payload['pp_id']);
+            } elseif (!empty($_GET['transaction_ref'])) {
+                $pp_id = sanitize_text_field($_GET['transaction_ref']);
+            } elseif (!empty($_GET['amp;transaction_ref'])) {
+                $pp_id = sanitize_text_field($_GET['amp;transaction_ref']);
+                $this->log('Warning: transaction_ref was received as amp;transaction_ref');
+            }
+
+            if (empty($pp_id)) {
+                $this->log('Error: Missing PipraPay Transaction Reference.');
+                if ($is_redirect) {
+                    wc_add_notice(__('Invalid payment response.', 'piprapay-gateway'), 'error');
+                    wp_safe_redirect(wc_get_checkout_url());
+                } else {
+                    status_header(400);
+                    wp_send_json_error(['message' => 'Missing transaction reference.']);
+                }
+                exit;
+            }
+
+            // Security: Verify API Key for background webhooks
+            if (!$is_redirect) {
+                $received_api_key = '';
+                $key_names = ['mh-piprapay-api-key', 'Mh-Piprapay-Api-Key', 'MHS-PIPRAPAY-API-KEY', 'Mhs-Piprapay-Api-Key'];
+                foreach ($key_names as $key) {
+                    if (isset($headers[$key])) {
+                        $received_api_key = $headers[$key];
+                        break;
+                    }
+                }
+                if (empty($received_api_key) && isset($_SERVER['HTTP_MHS_PIPRAPAY_API_KEY'])) {
+                    $received_api_key = $_SERVER['HTTP_MHS_PIPRAPAY_API_KEY'];
+                }
+
+                if (!empty($this->apikey) && !hash_equals($this->apikey, $received_api_key)) {
+                    $this->log('Security Error: API Key mismatch or missing.');
                     status_header(401);
                     wp_send_json_error(['message' => 'Unauthorized request.']);
                     exit;
                 }
+            }
 
-                if (empty($payload['metadata']['invoiceid']) || empty($payload['pp_id'])) {
-                    status_header(400);
-                    wp_send_json_error(['message' => 'Missing required data.']);
-                    exit;
+            // Always verify the transaction status with the PipraPay server
+            $verification = $this->verify_payment($pp_id);
+            $this->log('Verification Result: ' . print_r($verification, true));
+
+            if (is_wp_error($verification) || empty($verification['status']) || $verification['status'] === 'error') {
+                $error_msg = is_wp_error($verification) ? $verification->get_error_message() : ($verification['message'] ?? 'Empty status in response');
+                $this->log('Error: Could not verify payment status with server. ' . $error_msg);
+                
+                // Store error in order meta if we can find the order by pp_id
+                if (!empty($pp_id)) {
+                    $orders = wc_get_orders(['limit' => 1, 'meta_key' => '_piprapay_payment_id', 'meta_value' => $pp_id]);
+                    if (!empty($orders)) {
+                        $orders[0]->update_meta_data('_piprapay_last_verification_error', $error_msg);
+                        $orders[0]->save();
+                    }
                 }
 
-                $order_id = isset($payload['metadata']['invoiceid']) ? absint($payload['metadata']['invoiceid']) : 0;
-                $pp_id    = isset($payload['pp_id']) ? sanitize_text_field($payload['pp_id']) : '';
-                $order    = wc_get_order($order_id);
+                if ($is_redirect) {
+                    wc_add_notice(__('Could not verify payment. Please check your order status later.', 'piprapay-gateway'), 'notice');
+                    wp_redirect(wc_get_checkout_url());
+                } else {
+                    status_header(500);
+                    wp_send_json_error(['message' => 'Verification failed.']);
+                }
+                exit;
+            }
 
-                if (!$order) {
+            // Identify the Order
+            $order_id = 0;
+            $search_keys = ['invoiceid', 'invoice_id', 'order_id', 'orderid'];
+
+            foreach ($search_keys as $key) {
+                if (!empty($verification['metadata'][$key])) {
+                    $order_id = absint($verification['metadata'][$key]);
+                    break;
+                }
+                if (!empty($verification[$key])) {
+                    $order_id = absint($verification[$key]);
+                    break;
+                }
+                if (!empty($payload['metadata'][$key])) {
+                    $order_id = absint($payload['metadata'][$key]);
+                    break;
+                }
+                if (!empty($payload[$key])) {
+                    $order_id = absint($payload[$key]);
+                    break;
+                }
+            }
+
+            // Fallback: Search by Meta Key if metadata didn't yield an ID
+            if (!$order_id && !empty($pp_id)) {
+                $this->log('Order ID not found in metadata. Searching by meta key _piprapay_payment_id: ' . $pp_id);
+                $orders = wc_get_orders([
+                    'limit'      => 1,
+                    'meta_key'   => '_piprapay_payment_id',
+                    'meta_value' => $pp_id,
+                ]);
+                if (!empty($orders)) {
+                    $order = $orders[0];
+                    $order_id = $order->get_id();
+                    $this->log('Order found by meta key: #' . $order_id);
+                }
+            }
+
+            $order = wc_get_order($order_id);
+            if (!$order) {
+                $this->log('Error: Order not found for ID: ' . $order_id);
+                if ($is_redirect) {
+                    wc_add_notice(__('Order not found. Please contact support.', 'piprapay-gateway'), 'error');
+                    wp_redirect(wc_get_checkout_url());
+                } else {
                     status_header(404);
                     wp_send_json_error(['message' => 'Order not found.']);
-                    exit;
                 }
+                exit;
+            }
 
-                $verification = $this->verify_payment($payload['pp_id']);
+            // Process based on Status
+            $status = strtolower($verification['status'] ?? $_GET['pp_status'] ?? $_GET['amp;pp_status'] ?? '');
+            
+            if (empty($status) && !empty($payload['status'])) {
+                $status = strtolower($payload['status']);
+            }
+            switch ($status) {
+                case 'completed':
+                    if (!$order->has_status('completed') && !$order->has_status('processing')) {
+                        $this->log('Payment Completed. Updating order #' . $order_id);
+                        $order->update_meta_data('_piprapay_payment_id', $pp_id);
 
-                if ($verification['status'] === 'completed') {
-                    // Save Payment ID (pp_id)
-                    $order->update_meta_data('_piprapay_payment_id', $pp_id);
+                        $trx_id = $verification['transaction_id'] ?? '';
+                        $sender = $verification['sender'] ?? $verification['sender_number'] ?? '';
+                        $gateway = $verification['gateway'] ?? $verification['payment_method'] ?? $this->method_title;
 
-                    // Attempt to get Transaction ID, Sender Number, and Payment Method from verification response
-                    $transaction_id = isset($verification['transaction_id']) ? sanitize_text_field($verification['transaction_id']) : '';
-                    $sender_number  = isset($verification['sender_number']) ? sanitize_text_field($verification['sender_number']) : '';
-                    $payment_method_name = isset($verification['payment_method']) ? sanitize_text_field($verification['payment_method']) : $this->method_title; // Default to gateway title if not found
+                        if (!empty($trx_id)) $order->update_meta_data('_piprapay_transaction_id', $trx_id);
+                        if (!empty($sender)) $order->update_meta_data('_piprapay_sender_number', $sender);
+                        $order->update_meta_data('_piprapay_actual_payment_method', $gateway);
+                        $order->save();
 
-                    if (!empty($transaction_id)) {
-                        $order->update_meta_data('_piprapay_transaction_id', $transaction_id);
+                        // Set order status based on user settings
+                        $order_type = $this->order_type;
+                        if ($order_type === 'digital_complete') {
+                            $order->update_status('completed', __('Payment confirmed via PipraPay.', 'piprapay-gateway'));
+                        } else {
+                            $order->update_status('processing', __('Payment confirmed via PipraPay.', 'piprapay-gateway'));
+                        }
+                        $order->payment_complete();
                     }
-                    if (!empty($sender_number)) {
-                        $order->update_meta_data('_piprapay_sender_number', $sender_number);
+                    if ($is_redirect) {
+                        wp_redirect($order->get_checkout_order_received_url());
+                        exit;
                     }
-                    $order->update_meta_data('_piprapay_actual_payment_method', $payment_method_name);
-                    $order->save();
+                    break;
 
-                    // Set order status based on order_type
-                    $order_type = $this->order_type;
-                    if ($order_type === 'physical') {
-                        $order->update_status('processing', __('Physical product order set to processing by PipraPay.', 'piprapay-gateway'));
-                    } elseif ($order_type === 'digital_processing') {
-                        $order->update_status('processing', __('Digital product order set to processing by PipraPay.', 'piprapay-gateway'));
-                    } elseif ($order_type === 'digital_complete') {
-                        $order->update_status('completed', __('Digital product order completed automatically by PipraPay.', 'piprapay-gateway'));
+                case 'canceled':
+                case 'failed':
+                    $this->log('Payment ' . $status . '. Updating order #' . $order_id);
+                    if (!$order->has_status('failed')) {
+                        $order->update_status('failed', sprintf(__('Payment %s via PipraPay.', 'piprapay-gateway'), $status));
                     }
-                    $order->payment_complete();
-                    $order->add_order_note(__('Payment verified via PipraPay.', 'piprapay-gateway'));
-                } else {
-                    if ($verification['status'] === 'pending') {
-                        $order->add_order_note(__('Payment verification is pending.', 'piprapay-gateway'));
-                    } else {
-                        $order->update_status('failed', __('Payment verification failed via PipraPay.', 'piprapay-gateway'));
+                    if ($is_redirect) {
+                        wc_add_notice(__('Your payment was canceled or failed. Please try again.', 'piprapay-gateway'), 'error');
+                        wp_redirect(wc_get_checkout_url());
+                        exit;
                     }
-                }
+                    break;
 
+                case 'pending':
+                case 'initiated':
+                    $this->log('Payment Pending. Order #' . $order_id);
+                    $order->add_order_note(__('Payment is currently pending verification.', 'piprapay-gateway'));
+                    if ($is_redirect) {
+                        wp_redirect($order->get_checkout_order_received_url());
+                        exit;
+                    }
+                    break;
+
+                default:
+                    $this->log('Unknown status received: ' . $status);
+                    break;
+            }
+
+            if (!$is_redirect) {
                 status_header(200);
-                wp_send_json_success(['message' => 'Success']);
-            }else{
-                if (empty($payload['metadata']['invoiceid']) || empty($payload['pp_id'])) {
-                   $pp_id    = isset($_GET['transaction_ref']) ? sanitize_text_field($_GET['transaction_ref']) : '';
-
-                   $verification = $this->verify_payment($pp_id);
-                }else{
-                    $pp_id    = isset($payload['pp_id']) ? sanitize_text_field($payload['pp_id']) : '';
-
-                    $verification = $this->verify_payment($payload['pp_id']);
-                }
-              
-                $order_id = isset($verification['metadata']['invoiceid']) ? absint($verification['metadata']['invoiceid']) : 0;
-
-                $order    = wc_get_order($order_id);
-
-                if (!$order) {
-                    status_header(404);
-                    wp_send_json_error(['message' => 'Order not found.']);
-                    exit;
-                }
-
-                if ($verification['status'] === 'completed') {
-                    $order->update_meta_data('_piprapay_payment_id', $pp_id);
-
-                    $transaction_id = isset($verification['transaction_id']) ? sanitize_text_field($verification['transaction_id']) : '';
-                    $sender_number  = isset($verification['sender']) ? sanitize_text_field($verification['sender']) : '';
-                    $payment_method_name = isset($verification['gateway']) ? sanitize_text_field($verification['gateway']) : $this->method_title; // Default to gateway title if not found
-
-                    if (!empty($transaction_id)) {
-                        $order->update_meta_data('_piprapay_transaction_id', $transaction_id);
-                    }
-                    if (!empty($sender_number)) {
-                        $order->update_meta_data('_piprapay_sender_number', $sender_number);
-                    }
-                    $order->update_meta_data('_piprapay_actual_payment_method', $payment_method_name);
-                    $order->save();
-
-                    // Set order status based on order_type
-                    $order_type = $this->order_type;
-                    if ($order_type === 'physical') {
-                        $order->update_status('processing', __('Physical product order set to processing by PipraPay.', 'piprapay-gateway'));
-                    } elseif ($order_type === 'digital_processing') {
-                        $order->update_status('processing', __('Digital product order set to processing by PipraPay.', 'piprapay-gateway'));
-                    } elseif ($order_type === 'digital_complete') {
-                        $order->update_status('completed', __('Digital product order completed automatically by PipraPay.', 'piprapay-gateway'));
-                    }
-                    $order->payment_complete();
-                    $order->add_order_note(__('Payment verified via PipraPay.', 'piprapay-gateway'));
-
-                    if (empty($payload['metadata']['invoiceid']) || empty($payload['pp_id'])) {
-                        status_header(200);
-                      
-                        wp_safe_redirect($order->get_checkout_order_received_url());
-                    }
-                } else {
-                    if ($verification['status'] === 'pending') {
-                        $order->add_order_note(__('Payment verification is pending.', 'piprapay-gateway'));
-                      
-                        status_header(200);
-                      
-                        wp_safe_redirect($order->get_checkout_order_received_url());
-                    } else {
-                        $order->update_status('failed', __('Payment verification failed via PipraPay.', 'piprapay-gateway'));
-                      
-                        status_header(200);
-                      
-                        wc_add_notice(__('Transaction was canceled. Please try again.', 'piprapay-gateway'), 'error');
-
-                        wp_safe_redirect(wc_get_checkout_url());
-                    }
-                }
+                wp_send_json_success(['message' => 'Processed successfully.']);
+                exit;
             }
         }
 
         private function verify_payment($pp_id)
         {
-            if($this->piprapay_version == 'old'){
+            if ($this->piprapay_version == 'old') {
                 $data = json_encode(['pp_id' => $pp_id]);
                 $args = [
                     'body'    => $data,
@@ -433,13 +561,14 @@ function piprapay_init_gateway_class()
                         'Accept'              => 'application/json',
                         'mh-piprapay-api-key' => $this->apikey,
                     ],
-                    'timeout' => 45,
+                    'timeout'   => 45,
+                    'sslverify' => false,
                 ];
-                $url      = $this->baseUrl . '/verify-payments';
+                $url      = rtrim($this->baseUrl, '/') . '/verify-payments';
                 $response = wp_remote_post($url, $args);
                 if (is_wp_error($response)) return ['status' => 'error', 'message' => $response->get_error_message()];
                 return json_decode(wp_remote_retrieve_body($response), true);
-            }else{
+            } else {
                 $data = json_encode(['pp_id' => $pp_id]);
                 $args = [
                     'body'    => $data,
@@ -448,16 +577,18 @@ function piprapay_init_gateway_class()
                         'Accept'              => 'application/json',
                         'MHS-PIPRAPAY-API-KEY' => $this->apikey,
                     ],
-                    'timeout' => 45,
+                    'timeout'   => 45,
+                    'sslverify' => false,
                 ];
-                $url      = $this->baseUrl . '/verify-payment';
+                $url      = rtrim($this->baseUrl, '/') . '/verify-payment';
                 $response = wp_remote_post($url, $args);
                 if (is_wp_error($response)) return ['status' => 'error', 'message' => $response->get_error_message()];
                 return json_decode(wp_remote_retrieve_body($response), true);
             }
         }
 
-        public function display_piprapay_order_meta($order) {
+        public function display_piprapay_order_meta($order)
+        {
             $payment_id            = $order->get_meta('_piprapay_payment_id', true);
             $transaction_id        = $order->get_meta('_piprapay_transaction_id', true);
             $sender_number         = $order->get_meta('_piprapay_sender_number', true);
@@ -476,6 +607,130 @@ function piprapay_init_gateway_class()
             } else {
                 echo '<p><i class="fa fa-arrow-right"></i> <strong>' . __('Sender Number:', 'piprapay-gateway') . '</strong> ' . __('N/A (Not available from PipraPay API response)', 'piprapay-gateway') . '</p>';
             }
+        }
+
+        private function show_redirect_page($status, $redirect_url, $message)
+        {
+            $color = ($status === 'success') ? '#10b981' : '#ef4444';
+            $icon  = ($status === 'success') ? '✓' : '✕';
+            $title = ($status === 'success') ? __('Payment Successful', 'piprapay-gateway') : __('Payment Failed/Canceled', 'piprapay-gateway');
+
+            if (!headers_sent()) {
+                header('Content-Type: text/html; charset=utf-8');
+            }
+
+            ?>
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title><?php echo esc_html($title); ?></title>
+                <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+                <style>
+                    body {
+                        font-family: 'Inter', sans-serif;
+                        background: #f3f4f6;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .card {
+                        background: white;
+                        padding: 2.5rem;
+                        border-radius: 1.5rem;
+                        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+                        text-align: center;
+                        max-width: 400px;
+                        width: 90%;
+                    }
+                    .icon {
+                        width: 64px;
+                        height: 64px;
+                        background: <?php echo esc_attr($color); ?>;
+                        color: white;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-size: 2rem;
+                        margin: 0 auto 1.5rem;
+                        animation: scaleIn 0.5s ease-out;
+                    }
+                    h1 {
+                        color: #1f2937;
+                        font-size: 1.5rem;
+                        font-weight: 600;
+                        margin-bottom: 0.5rem;
+                    }
+                    p {
+                        color: #6b7280;
+                        margin-bottom: 2rem;
+                    }
+                    .countdown {
+                        font-size: 0.875rem;
+                        color: #9ca3af;
+                    }
+                    .timer {
+                        font-weight: 600;
+                        color: <?php echo esc_attr($color); ?>;
+                    }
+                    .btn {
+                        display: inline-block;
+                        background: <?php echo esc_attr($color); ?>;
+                        color: white;
+                        padding: 0.75rem 1.5rem;
+                        border-radius: 0.5rem;
+                        text-decoration: none;
+                        font-weight: 600;
+                        transition: opacity 0.2s;
+                    }
+                    .btn:hover {
+                        opacity: 0.9;
+                    }
+                    @keyframes scaleIn {
+                        from { transform: scale(0); opacity: 0; }
+                        to { transform: scale(1); opacity: 1; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="icon"><?php echo esc_html($icon); ?></div>
+                    <h1><?php echo esc_html($title); ?></h1>
+                    <p><?php echo esc_html($message); ?></p>
+                    <div style="margin-bottom: 1.5rem;">
+                        <a href="<?php echo esc_url($redirect_url); ?>" class="btn"><?php _e('Return to Merchant', 'piprapay-gateway'); ?></a>
+                    </div>
+                    <div class="countdown">
+                        <?php _e('Redirecting in', 'piprapay-gateway'); ?> <span id="timer" class="timer">3</span> <?php _e('seconds...', 'piprapay-gateway'); ?>
+                    </div>
+                </div>
+                <script>
+                    // Log response to browser console for debugging
+                    console.log("PipraPay Redirect Info:", {
+                        status: "<?php echo esc_js($status); ?>",
+                        redirect_url: "<?php echo esc_js($redirect_url); ?>",
+                        message: "<?php echo esc_js($message); ?>"
+                    });
+
+                    let timeLeft = 3;
+                    const timerElement = document.getElementById('timer');
+                    const interval = setInterval(() => {
+                        timeLeft--;
+                        timerElement.textContent = timeLeft;
+                        if (timeLeft <= 0) {
+                            clearInterval(interval);
+                            window.location.href = "<?php echo esc_url($redirect_url); ?>";
+                        }
+                    }, 1000);
+                </script>
+            </body>
+            </html>
+            <?php
+            exit;
         }
     }
 
@@ -528,4 +783,7 @@ function piprapay_init_gateway_class()
         $gateways[] = 'WC_PIPRAPAY_Gateway';
         return $gateways;
     });
+
+    // Force instantiation to register hooks early (important for WC_API)
+    WC_PIPRAPAY_Gateway::get_instance();
 }

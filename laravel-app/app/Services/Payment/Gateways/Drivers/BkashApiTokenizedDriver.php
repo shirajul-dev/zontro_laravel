@@ -15,33 +15,8 @@ use Illuminate\Support\Facades\Log;
  * 
  * Native implementation of the bKash Tokenized Checkout API.
  */
-class BkashApiTokenizedDriver implements PaymentGatewayInterface
+class BkashApiTokenizedDriver extends AbstractBaseDriver
 {
-    private array $options;
-
-    public function __construct(private readonly PpGateway $gateway)
-    {
-        $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
-    }
-
-    private function logDebug(string $message, array $context = []): void
-    {
-        if (config('app.debug')) {
-            Log::build([
-                'driver' => 'single',
-                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
-            ])->debug($message, $context);
-        }
-    }
-
-    private function logError(string $message, array $context = []): void
-    {
-        Log::build([
-            'driver' => 'single',
-            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
-        ])->error($message, $context);
-    }
-
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'bKash Tokenized';
@@ -101,7 +76,7 @@ class BkashApiTokenizedDriver implements PaymentGatewayInterface
 
         $payload = [
             'mode' => '0011',
-            'amount' => $transaction->local_net_amount,
+            'amount' => number_format((float) $transaction->local_net_amount, 2, '.', ''),
             'currency' => $transaction->local_currency,
             'intent' => 'sale',
             'payerReference' => 'PipraPay',

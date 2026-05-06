@@ -2808,7 +2808,22 @@ function pp_gateway_render($gateway_id = '', $data = [])
         $data['transaction']['local_net_amount'] = money_round($convertedAmount, 2);
         $data['transaction']['local_currency'] = $gatewayCurrency;
 
-        if (file_exists(__DIR__ . '/../pp-modules/pp-gateways/' . $gatewayRow->slug . '/class.php')) {
+        $transaction = \App\Models\PpTransaction::where('ref', $data['transaction']['ref'])->first();
+        $registry = app(\App\Services\Payment\Gateways\GatewayRegistry::class);
+        $nativeDriver = $registry->resolve($gatewayRow);
+
+        if ($nativeDriver) {
+            $gateway = $nativeDriver;
+            $gateway_info = [
+                'title' => $gateway->getDisplayName(),
+                'gateway_type' => $gatewayRow->tab === 'mfs' ? 'automation' : 'manual'
+            ];
+            $supported_languages = [
+                'en' => 'English',
+                'bn' => 'বাংলা',
+            ];
+            $lang_text = $gateway->getLanguageStrings();
+        } elseif (file_exists(__DIR__ . '/../pp-modules/pp-gateways/' . $gatewayRow->slug . '/class.php')) {
             require_once __DIR__ . '/../pp-modules/pp-gateways/' . $gatewayRow->slug . '/class.php';
 
             $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $gatewayRow->slug))) . 'Gateway';
@@ -3060,7 +3075,9 @@ function pp_gateway_render($gateway_id = '', $data = [])
         // If you also want to keep discount in sync (optional)
         //$data['transaction']['discount_amount'] = number_format((float)$data['transaction']['discount_amount'],2,'.','');
 
-        if (is_callable([$gateway, 'instructions'])) {
+        if (method_exists($gateway, 'getInstructions')) {
+            $instructions = $gateway->getInstructions($transaction);
+        } elseif (is_callable([$gateway, 'instructions'])) {
             $instructions = $gateway->instructions($data);
         }
 

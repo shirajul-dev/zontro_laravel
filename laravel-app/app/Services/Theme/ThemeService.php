@@ -4,7 +4,7 @@ namespace App\Services\Theme;
 
 use App\Support\LegacyModuleGuard;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * ThemeService - WordPress-style Dynamic Theme Engine
@@ -309,6 +309,24 @@ class ThemeService
         $viewName = 'theme::checkout';
         if ($transactionInfo['status'] === 'initiated') {
             if (request()->has('gateway')) {
+                $gatewayId = (string) request()->get('gateway');
+                $registry = app(\App\Services\Payment\Gateways\GatewayRegistry::class);
+                $driver = $registry->resolveById($gatewayId);
+
+                if ($driver) {
+                    $transactionModel = \App\Models\PpTransaction::where('ref', $transactionInfo['ref'])->first();
+                    if ($transactionModel) {
+                        $initResult = $driver->initiate($transactionModel);
+
+                        if (request()->has('ajax')) {
+                            return response()->json($initResult);
+                        }
+
+                        if (isset($initResult['redirect_url'])) {
+                            return redirect($initResult['redirect_url']);
+                        }
+                    }
+                }
                 $viewName = 'theme::gateway';
             }
         } else {

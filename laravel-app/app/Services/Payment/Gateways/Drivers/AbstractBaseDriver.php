@@ -59,4 +59,20 @@ abstract class AbstractBaseDriver implements PaymentGatewayInterface
             'status' => 'success',
         ];
     }
+
+    /**
+     * Default instructions for API-based gateways (empty).
+     */
+    public function getInstructions(PpTransaction $transaction): array
+    {
+        return [];
+    }
+
+    /**
+     * Default language strings (empty).
+     */
+    public function getLanguageStrings(): array
+    {
+        return [];
+    }
 }
