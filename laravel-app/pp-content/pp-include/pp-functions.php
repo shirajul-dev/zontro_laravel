@@ -3054,7 +3054,7 @@
                             <input type="hidden" name="action-v2" value="transaction-verify">
                             <input type="hidden" name="gateway-id" value="'.$data['gateway']['gateway_id'].'">
                             <input type="hidden" name="transaction-id" value="'.$data['transaction']['ref'].'">
-                            <?php echo csrf_field(); ?>
+                            '.csrf_field().'
 
                             <div class="form-group  mt-3" style="display: none">
                                 <label class="form-label">'.$data['lang']['mobile_number'].'</label>
@@ -3143,7 +3143,7 @@
                                 <input type="hidden" name="action-v2" value="transaction-verify">
                                 <input type="hidden" name="gateway-id" value="'.$data['gateway']['gateway_id'].'">
                                 <input type="hidden" name="transaction-id" value="'.$data['transaction']['ref'].'">
-                                <?php echo csrf_field(); ?>
+                                '.csrf_field().'
 
                                 <div class="form-group  mt-3">
                                     <label class="form-label">'.$data['lang']['transaction_id'].'</label>
@@ -3219,6 +3219,7 @@
                                     <input type="hidden" name="action-v2" value="transaction-verify">
                                     <input type="hidden" name="gateway-id" value="'.$data['gateway']['gateway_id'].'">
                                     <input type="hidden" name="transaction-id" value="'.$data['transaction']['ref'].'">
+                                    '.csrf_field().'
 
                                     <div class="form-group  mt-3">
                                         <label class="form-label">'.$data['lang']['upload_slip'].'</label>

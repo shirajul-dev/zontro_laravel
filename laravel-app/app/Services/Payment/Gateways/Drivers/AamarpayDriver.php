@@ -145,12 +145,8 @@ class AamarpayDriver implements PaymentGatewayInterface
                     isset($data['status_code']) && 
                     (string)$data['status_code'] === '2'
                 ) {
-                    // Verify the reference matches (opt_a)
-                    $optA = $data['opt_a'] ?? null;
-                    // We might need to store the bank_trxid in the transaction model later in IpnService
                     return true;
                 }
-            }
             } else {
                 $this->logError("aamarPay API Verify HTTP Error", [
                     'status' => $response->status(),
