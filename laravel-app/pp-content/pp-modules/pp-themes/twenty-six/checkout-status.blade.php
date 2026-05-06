@@ -11,6 +11,7 @@
         'pending'   => ['text' => $lang['payment_pending'], 'color' => 'warning', 'icon' => 'hourglass-split'],
         'refunded'  => ['text' => $lang['payment_refunded'], 'color' => 'info', 'icon' => 'arrow-counterclockwise'],
         'canceled'  => ['text' => $lang['payment_canceled'], 'color' => 'danger', 'icon' => 'x-circle-fill'],
+        'failed'    => ['text' => $lang['payment_failed'] ?? 'Payment Failed', 'color' => 'danger', 'icon' => 'x-circle-fill'],
     ];
     $currentStatus = $statusMap[$status] ?? $statusMap['pending'];
 

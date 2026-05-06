@@ -25,6 +25,24 @@ class ShurjopayDriver implements PaymentGatewayInterface
         $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
     }
 
+    private function logDebug(string $message, array $context = []): void
+    {
+        if (config('app.debug')) {
+            Log::build([
+                'driver' => 'single',
+                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+            ])->debug($message, $context);
+        }
+    }
+
+    private function logError(string $message, array $context = []): void
+    {
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+        ])->error($message, $context);
+    }
+
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'shurjoPay';
@@ -48,7 +66,7 @@ class ShurjopayDriver implements PaymentGatewayInterface
                 return $response->json('token');
             }
         } catch (\Exception $e) {
-            Log::error("ShurjopayDriver Token Error: " . $e->getMessage());
+            $this->logError("ShurjopayDriver Token Error: " . $e->getMessage());
         }
 
         return null;
@@ -69,8 +87,8 @@ class ShurjopayDriver implements PaymentGatewayInterface
         $payload = [
             'prefix' => $this->options['prefix'] ?? 'bp',
             'token' => $token,
-            'return_url' => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref]),
-            'cancel_url' => route('payment.checkout', ['ref' => $transaction->ref]),
+            'return_url' => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref, 'redirect' => 'true']),
+            'cancel_url' => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref, 'status' => 'cancel', 'redirect' => 'true']),
             'store_id' => '1', // Often 1 or provided by token response, legacy used rand logic
             'amount' => $transaction->local_net_amount,
             'order_id' => $transaction->ref . '_' . time(),
@@ -94,23 +112,28 @@ class ShurjopayDriver implements PaymentGatewayInterface
         ];
 
         try {
+            $this->logDebug("shurjoPay API Initiate Request", ['url' => $this->getBaseUrl() . "/api/secret-pay", 'payload' => $payload]);
             $response = Http::withToken($token)->asForm()->post($this->getBaseUrl() . "/api/secret-pay", $payload);
             
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("shurjoPay API Initiate Response", ['response' => $data]);
                 if (isset($data['checkout_url'])) {
                     return [
                         'status' => 'success',
                         'redirect_url' => $data['checkout_url']
                     ];
                 }
+                $this->logError("shurjoPay API Initiation Failed", [
+                    'body' => $response->body()
+                ]);
                 return [
                     'status' => 'error',
-                    'message' => 'shurjoPay initiation failed: ' . $response->body()
+                    'message' => 'shurjoPay initiation failed.'
                 ];
             }
         } catch (\Exception $e) {
-            Log::error("ShurjopayDriver Initiation Error: " . $e->getMessage());
+            $this->logError("ShurjopayDriver Initiation Error: " . $e->getMessage());
         }
 
         return [
@@ -128,18 +151,26 @@ class ShurjopayDriver implements PaymentGatewayInterface
         if (!$token) return false;
 
         try {
+            $this->logDebug("shurjoPay API Verify Request", ['url' => $this->getBaseUrl() . "/api/verification", 'order_id' => $orderId]);
             $response = Http::withToken($token)->post($this->getBaseUrl() . "/api/verification", [
                 'order_id' => $orderId
             ]);
 
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("shurjoPay API Verify Response", ['response' => $data]);
                 if (isset($data[0]['bank_status']) && $data[0]['bank_status'] === 'Success') {
                     return true;
                 }
             }
+            } else {
+                $this->logError("shurjoPay API Verify HTTP Error", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error("ShurjopayDriver Verify Error: " . $e->getMessage());
+            $this->logError("ShurjopayDriver Verify Error: " . $e->getMessage());
         }
 
         return false;

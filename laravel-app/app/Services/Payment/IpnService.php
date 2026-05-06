@@ -37,7 +37,8 @@ class IpnService
                 $ref = request()->input('ref') ?? 
                        request()->input('opt_a') ?? 
                        request()->input('mer_txnid') ?? 
-                       request()->input('order_id');
+                       request()->input('order_id') ??
+                       request()->input('value_a');
 
                 // Strip time suffix if present (from our drivers' tran_id logic)
                 if ($ref && str_contains($ref, '_')) {

@@ -25,6 +25,24 @@ class AamarpayDriver implements PaymentGatewayInterface
         $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
     }
 
+    private function logDebug(string $message, array $context = []): void
+    {
+        if (config('app.debug')) {
+            Log::build([
+                'driver' => 'single',
+                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+            ])->debug($message, $context);
+        }
+    }
+
+    private function logError(string $message, array $context = []): void
+    {
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+        ])->error($message, $context);
+    }
+
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'aamarPay';
@@ -41,9 +59,9 @@ class AamarpayDriver implements PaymentGatewayInterface
         $payload = [
             "store_id" => $this->options['store_id'] ?? '',
             "tran_id" => $transaction->ref . '_' . time(),
-            "success_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref]),
-            "fail_url" => route('payment.checkout', ['ref' => $transaction->ref]),
-            "cancel_url" => route('payment.checkout', ['ref' => $transaction->ref]),
+            "success_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref, 'redirect' => 'true']),
+            "fail_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref, 'redirect' => 'true']),
+            "cancel_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref, 'redirect' => 'true']),
             "amount" => $transaction->local_net_amount,
             "currency" => $transaction->local_currency,
             "signature_key" => $this->options['signature_key'] ?? '',
@@ -59,28 +77,38 @@ class AamarpayDriver implements PaymentGatewayInterface
         ];
 
         try {
+            $this->logDebug("aamarPay API Initiate Request", ['url' => $apiUrl, 'payload' => $payload]);
             $response = Http::post($apiUrl, $payload);
             
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("aamarPay API Initiate Response", ['response' => $data]);
                 if (isset($data['payment_url'])) {
                     return [
                         'status' => 'success',
                         'redirect_url' => $data['payment_url']
                     ];
                 }
+                $this->logError("aamarPay API Initiation Failed", [
+                    'body' => $response->body()
+                ]);
                 return [
                     'status' => 'error',
-                    'message' => 'aamarPay initiation failed: ' . ($response->body())
+                    'message' => 'aamarPay initiation failed.'
                 ];
             }
+            
+            $this->logError("aamarPay API Initiation HTTP Error", [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
             
             return [
                 'status' => 'error',
                 'message' => 'Failed to connect to aamarPay API.'
             ];
         } catch (\Exception $e) {
-            Log::error("AamarpayDriver: " . $e->getMessage());
+            $this->logError("AamarpayDriver: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'An internal error occurred while initiating payment.'
@@ -99,6 +127,7 @@ class AamarpayDriver implements PaymentGatewayInterface
         $verifyUrl = "{$baseUrl}/api/v1/trxcheck/request.php";
 
         try {
+            $this->logDebug("aamarPay API Verify Request", ['url' => $verifyUrl, 'request_id' => $mer_txnid]);
             $response = Http::get($verifyUrl, [
                 'request_id' => $mer_txnid,
                 'store_id' => $this->options['store_id'] ?? '',
@@ -108,6 +137,7 @@ class AamarpayDriver implements PaymentGatewayInterface
 
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("aamarPay API Verify Response", ['response' => $data]);
                 // Check if payment was successful
                 if (
                     isset($data['pay_status']) && 
@@ -121,8 +151,14 @@ class AamarpayDriver implements PaymentGatewayInterface
                     return true;
                 }
             }
+            } else {
+                $this->logError("aamarPay API Verify HTTP Error", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error("AamarpayDriver Verify Error: " . $e->getMessage());
+            $this->logError("AamarpayDriver Verify Error: " . $e->getMessage());
         }
 
         return false;

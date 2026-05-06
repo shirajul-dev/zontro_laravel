@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Services\Payment\Gateways\Drivers;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * SslCommerzDriver
- * 
+ *
  * Native implementation of the SSLCommerz payment gateway.
  */
 class SslCommerzDriver implements PaymentGatewayInterface
@@ -62,9 +63,9 @@ class SslCommerzDriver implements PaymentGatewayInterface
             "total_amount" => $transaction->local_net_amount,
             "currency" => $transaction->local_currency,
             "tran_id" => $transaction->ref . '_' . time(),
-            "success_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id]),
-            "fail_url" => route('payment.checkout', ['ref' => $transaction->ref]),
-            "cancel_url" => route('payment.checkout', ['ref' => $transaction->ref]),
+            "success_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'redirect' => 'true']),
+            "fail_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'redirect' => 'true']),
+            "cancel_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'redirect' => 'true']),
             "ipn_url" => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id]),
             "emi_option" => "0",
             "cus_name" => $customer['name'] ?? 'N/A',
@@ -84,7 +85,7 @@ class SslCommerzDriver implements PaymentGatewayInterface
         try {
             $this->logDebug("SSLCommerz API Initiate Request", ['url' => $apiUrl, 'payload' => $payload]);
             $response = Http::asForm()->post($apiUrl, $payload);
-            
+
             if ($response->successful()) {
                 $data = $response->json();
                 $this->logDebug("SSLCommerz API Initiate Response", ['response' => $data]);
@@ -103,12 +104,12 @@ class SslCommerzDriver implements PaymentGatewayInterface
                     'message' => $data['failedreason'] ?? 'SSLCommerz initiation failed.'
                 ];
             }
-            
+
             $this->logError("SSLCommerz API Initiation HTTP Error", [
                 'status' => $response->status(),
                 'body' => $response->body()
             ]);
-            
+
             return [
                 'status' => 'error',
                 'message' => 'Failed to connect to SSLCommerz API.'
@@ -144,13 +145,12 @@ class SslCommerzDriver implements PaymentGatewayInterface
                 $data = $response->json();
                 $this->logDebug("SSLCommerz API Verify Response", ['response' => $data]);
                 if (
-                    ($data['APIConnect'] ?? '') === 'DONE' && 
-                    ($data['no_of_trans_found'] ?? 0) > 0 && 
+                    ($data['APIConnect'] ?? '') === 'DONE' &&
+                    ($data['no_of_trans_found'] ?? 0) > 0 &&
                     in_array($data['element'][0]['status'] ?? '', ['VALID', 'VALIDATED'])
                 ) {
                     return true;
                 }
-            }
             } else {
                 $this->logError("SSLCommerz API Verify HTTP Error", [
                     'status' => $response->status(),

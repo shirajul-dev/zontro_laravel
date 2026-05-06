@@ -70,7 +70,7 @@ class NagadDriver implements PaymentGatewayInterface
             $payload = [
                 'amount' => (string) round((float)$transaction->local_net_amount),
                 'invoice' => $transaction->ref . '_' . time(),
-                'merchantCallback' => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref]),
+                'merchantCallback' => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref, 'redirect' => 'true']),
             ];
 
             $this->logDebug("Nagad API Initiate Request", ['payload' => $payload]);

@@ -24,6 +24,24 @@ class StripeDriver implements PaymentGatewayInterface
         $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
     }
 
+    private function logDebug(string $message, array $context = []): void
+    {
+        if (config('app.debug')) {
+            Log::build([
+                'driver' => 'single',
+                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+            ])->debug($message, $context);
+        }
+    }
+
+    private function logError(string $message, array $context = []): void
+    {
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+        ])->error($message, $context);
+    }
+
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'Stripe';
@@ -36,10 +54,16 @@ class StripeDriver implements PaymentGatewayInterface
         $successUrl = route('payment.ipn', [
             'gateway_id' => $this->gateway->gateway_id,
             'ref' => $transaction->ref,
-            'session_id' => '{CHECKOUT_SESSION_ID}'
+            'session_id' => '{CHECKOUT_SESSION_ID}',
+            'redirect' => 'true'
         ]);
 
-        $cancelUrl = route('payment.checkout', ['ref' => $transaction->ref]);
+        $cancelUrl = route('payment.ipn', [
+            'gateway_id' => $this->gateway->gateway_id,
+            'ref' => $transaction->ref,
+            'status' => 'cancel',
+            'redirect' => 'true'
+        ]);
 
         $payload = [
             "payment_method_types" => ["card"],
@@ -58,12 +82,14 @@ class StripeDriver implements PaymentGatewayInterface
         ];
 
         try {
+            $this->logDebug("Stripe API Initiate Request", ['url' => $apiUrl, 'payload' => $payload]);
             $response = Http::withBasicAuth($this->options['secret_key'] ?? '', '')
                 ->asForm()
                 ->post($apiUrl, $payload);
 
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("Stripe API Initiate Response", ['response' => $data]);
                 if (isset($data['url'])) {
                     return [
                         'status' => 'success',
@@ -72,12 +98,16 @@ class StripeDriver implements PaymentGatewayInterface
                 }
             }
 
+            $this->logError("Stripe API Initiation Failed", [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
             return [
                 'status' => 'error',
                 'message' => $response->json()['error']['message'] ?? 'Stripe initiation failed.'
             ];
         } catch (\Exception $e) {
-            Log::error("StripeDriver Error: " . $e->getMessage());
+            $this->logError("StripeDriver Error: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'An internal error occurred while initiating Stripe payment.'
@@ -97,11 +127,13 @@ class StripeDriver implements PaymentGatewayInterface
         $apiUrl = "https://api.stripe.com/v1/checkout/sessions/{$sessionId}";
 
         try {
+            $this->logDebug("Stripe API Verify Request", ['url' => $apiUrl]);
             $response = Http::withBasicAuth($this->options['secret_key'] ?? '', '')
                 ->get($apiUrl);
 
             if ($response->successful()) {
                 $session = $response->json();
+                $this->logDebug("Stripe API Verify Response", ['response' => $session]);
                 if (
                     ($session['payment_status'] ?? '') === 'paid' && 
                     ($session['metadata']['invoice_id'] ?? '') === $ref
@@ -109,8 +141,14 @@ class StripeDriver implements PaymentGatewayInterface
                     return true;
                 }
             }
+            } else {
+                $this->logError("Stripe API Verify HTTP Error", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error("StripeDriver Verify Error: " . $e->getMessage());
+            $this->logError("StripeDriver Verify Error: " . $e->getMessage());
         }
 
         return false;
