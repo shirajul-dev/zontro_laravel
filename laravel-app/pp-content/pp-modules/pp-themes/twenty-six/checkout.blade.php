@@ -343,6 +343,15 @@
             payBtn.classList.add('btn-primary');
         }
 
+        function resetPayButton() {
+            const btn = document.getElementById('btn-pay-now');
+            const spinner = btn.querySelector('.spinner-border');
+            const btnText = btn.querySelector('.btn-text');
+            btn.disabled = false;
+            spinner.classList.add('d-none');
+            btnText.style.opacity = '1';
+        }
+
         async function initiatePayment() {
             if (!selectedGateway) return;
 
@@ -375,9 +384,7 @@
                     svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fa3939" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler-x"><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>`,
                     timeout: 5000
                 });
-                btn.disabled = false;
-                spinner.classList.add('d-none');
-                btnText.style.opacity = '1';
+                resetPayButton();
             }
         }
 

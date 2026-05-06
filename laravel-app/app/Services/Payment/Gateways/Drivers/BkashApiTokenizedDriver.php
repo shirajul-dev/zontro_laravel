@@ -17,11 +17,6 @@ use Illuminate\Support\Facades\Log;
  */
 class BkashApiTokenizedDriver extends AbstractBaseDriver
 {
-    public function getDisplayName(): string
-    {
-        return $this->gateway->display ?? 'bKash Tokenized';
-    }
-
     private function getBaseUrl(): string
     {
         $mode = $this->options['mode'] ?? 'sandbox';
@@ -100,7 +95,8 @@ class BkashApiTokenizedDriver extends AbstractBaseDriver
                 if (isset($data['bkashURL'])) {
                     return [
                         'status' => 'success',
-                        'redirect_url' => $data['bkashURL']
+                        'redirect_url' => $data['bkashURL'],
+                        'paymentID' => $data['paymentID'] ?? null
                     ];
                 }
                 return [

@@ -47,9 +47,10 @@ Currently, the application runs in a Hybrid state, marrying legacy procedural co
 - [x] **Universal Driver Architecture**: Implemented `AbstractBaseDriver`, `MfsAutomationDriver`, and `ManualPaymentDriver` to handle all non-API gateway types.
 - [x] **Bulk Migration**: Registered all 46+ legacy slugs (bKash, Nagad, Rocket, Cellfin, Wise, etc.) in the `GatewayRegistry`.
 - [x] **Native Verification Engine**: Refactored `CheckoutController` to use a native `PaymentVerificationService`, completely removing the dependency on legacy procedural code for user-submitted transaction verification.
-- [x] **Redirection & UI Stabilization**: Fixed critical infinite reload loops and "Native Gateway Error" messages by decoupling initiation from redirection for manual gateways.
+- [x] **Modern Gateway UI**: Implemented a state-of-the-art selection-based UI in the `twenty-six` theme. Users now select a gateway card to enable a sleek, AJAX-driven "Pay Now" action.
+- [x] **AJAX Initiation Flow**: Standardized the initiation process to use background requests. This allows for smooth loading states and instant error reporting via Toasts, followed by a professional redirect to the gateway's native page.
+- [x] **Driver Stabilization**: Verified and fixed bKash (Tokenized API) and SSLCommerz drivers to support the new AJAX flow, including strict amount formatting (2 decimal places) for bKash compatibility.
 - [x] **Legacy Bridge Synchronization**: Successfully bootstrapped legacy globals (`db_prefix`, `PipraPay_INIT`) inside native services to allow seamless usage of legacy database functions.
-- [x] **Feature Parity**: Maintained full support for payment tolerance, "Under Verification" status, and automated TRX ID matching via the new native logic.
 
 ---
 

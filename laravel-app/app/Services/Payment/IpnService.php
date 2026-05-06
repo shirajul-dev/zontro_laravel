@@ -30,26 +30,26 @@ class IpnService
         // Try native driver first
         $nativeDriver = $this->gatewayRegistry->resolve($gatewayRow);
         if ($nativeDriver) {
-            $status = $nativeDriver->verify(request());
+            $isVerified = $nativeDriver->verify(request());
             
-            if ($status) {
-                // Standardized resolution of transaction reference
-                $ref = request()->input('ref') ?? 
-                       request()->input('opt_a') ?? 
-                       request()->input('mer_txnid') ?? 
-                       request()->input('order_id') ??
-                       request()->input('value_a');
+            // Standardized resolution of transaction reference
+            $ref = request()->input('ref') ?? 
+                   request()->input('opt_a') ?? 
+                   request()->input('mer_txnid') ?? 
+                   request()->input('order_id') ??
+                   request()->input('value_a') ??
+                   request()->input('paymentID'); // For bKash execute response
 
-                // Strip time suffix if present (from our drivers' tran_id logic)
-                if ($ref && str_contains($ref, '_')) {
-                    $ref = explode('_', $ref)[0];
-                }
+            if ($ref && str_contains($ref, '_')) {
+                $ref = explode('_', $ref)[0];
+            }
 
-                if ($ref) {
-                    $transaction = \App\Models\PpTransaction::where('ref', $ref)->first();
-                    if ($transaction) {
-                        $paymentService = app(\App\Services\Payment\PaymentService::class);
-                        
+            if ($ref) {
+                $transaction = \App\Models\PpTransaction::where('ref', $ref)->first();
+                if ($transaction) {
+                    $paymentService = app(\App\Services\Payment\PaymentService::class);
+                    
+                    if ($isVerified) {
                         // Extract gateway transaction ID
                         $gatewayTrxId = request()->input('bank_trxid') ?? 
                                         request()->input('pg_txnid') ?? 
@@ -60,28 +60,44 @@ class IpnService
 
                         $paymentService->updateStatus($transaction, 'completed');
                         
-                        $transaction->gateway_id = $gatewayId;
+                        $transaction->gateway_id = $gatewayRow->gateway_id;
                         if ($gatewayTrxId) {
                             $transaction->trx_id = (string) $gatewayTrxId;
                         }
                         $transaction->save();
 
-                        // Fire native events if needed
                         event(new \App\Events\PaymentCompleted($transaction));
+                        
+                        return [
+                            'status' => 'success',
+                            'code' => 200,
+                            'message' => 'Payment Verified'
+                        ];
+                    } else {
+                        // Handle failure/cancel statuses from request
+                        $gwStatus = strtolower(request()->input('status') ?? '');
+                        $newStatus = 'failed';
+                        if (in_array($gwStatus, ['cancelled', 'canceled', 'aborted', 'cancel'])) {
+                            $newStatus = 'canceled';
+                        }
+                        
+                        if ($transaction->status === 'initiated') {
+                            $paymentService->updateStatus($transaction, $newStatus);
+                        }
+                        
+                        return [
+                            'status' => 'error',
+                            'code' => 400,
+                            'message' => 'Payment Verification Failed (' . $newStatus . ')'
+                        ];
                     }
                 }
-
-                return [
-                    'status' => 'success',
-                    'code' => 200,
-                    'message' => 'Payment Verified'
-                ];
             }
 
             return [
                 'status' => 'error',
                 'code' => 400,
-                'message' => 'Payment Verification Failed'
+                'message' => 'Transaction not found for reference: ' . ($ref ?? 'N/A')
             ];
         }
 
