@@ -26,6 +26,24 @@ class NagadDriver implements PaymentGatewayInterface
         $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
     }
 
+    private function logDebug(string $message, array $context = []): void
+    {
+        if (config('app.debug')) {
+            Log::build([
+                'driver' => 'single',
+                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+            ])->debug($message, $context);
+        }
+    }
+
+    private function logError(string $message, array $context = []): void
+    {
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+        ])->error($message, $context);
+    }
+
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'Nagad';
@@ -49,16 +67,22 @@ class NagadDriver implements PaymentGatewayInterface
         try {
             $config = $this->getConfig();
             
-            // Note: Nagad SDK might expect a string for amount
-            $nagad = new Base($config, [
+            $payload = [
                 'amount' => (string) round((float)$transaction->local_net_amount),
                 'invoice' => $transaction->ref . '_' . time(),
                 'merchantCallback' => route('payment.ipn', ['gateway_id' => $this->gateway->gateway_id, 'ref' => $transaction->ref]),
-            ]);
+            ];
+
+            $this->logDebug("Nagad API Initiate Request", ['payload' => $payload]);
+
+            // Note: Nagad SDK might expect a string for amount
+            $nagad = new Base($config, $payload);
     
             // The payNow method usually returns a redirect URL or handles the redirect
             // If it returns a string (URL), we return it.
             $redirectUrl = $nagad->payNow($nagad);
+
+            $this->logDebug("Nagad API Initiate Response", ['redirect_url' => $redirectUrl]);
 
             if (is_string($redirectUrl) && filter_var($redirectUrl, FILTER_VALIDATE_URL)) {
                 return [
@@ -67,13 +91,18 @@ class NagadDriver implements PaymentGatewayInterface
                 ];
             }
 
+            $this->logError("Nagad API Initiation Failed", [
+                'message' => 'Nagad initiation failed to return a valid URL.',
+                'redirectUrl' => $redirectUrl ?? null
+            ]);
+
             return [
                 'status' => 'error',
                 'message' => 'Nagad initiation failed to return a valid URL.'
             ];
 
         } catch (\Exception $e) {
-            Log::error("NagadDriver Initiation Error: " . $e->getMessage());
+            $this->logError("NagadDriver Initiation Error: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'An error occurred during Nagad payment initiation: ' . $e->getMessage()
@@ -93,16 +122,20 @@ class NagadDriver implements PaymentGatewayInterface
         if (!$paymentRefId) return false;
 
         try {
+            $this->logDebug("Nagad API Verify Request", ['paymentRefId' => $paymentRefId]);
+
             $config = $this->getConfig();
             $helper = new Helper($config);
             $response = $helper->verifyPayment($paymentRefId);
             $data = json_decode($response, true);
 
+            $this->logDebug("Nagad API Verify Response", ['response' => $data]);
+
             if (isset($data['status']) && $data['status'] === 'Success') {
                 return true;
             }
         } catch (\Exception $e) {
-            Log::error("NagadDriver Verify Error: " . $e->getMessage());
+            $this->logError("NagadDriver Verify Error: " . $e->getMessage());
         }
 
         return false;

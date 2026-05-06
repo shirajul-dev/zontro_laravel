@@ -2237,7 +2237,16 @@
             global $site_url;
             return $site_url . 'pp-addon/' . $addon . '/assets/' . ltrim($path, '/');
         }
+    }    function pp_asset_url($url) {
+        if (empty($url)) return '';
+        $parsed = parse_url($url);
+        if (isset($parsed['path'])) {
+            $path = ltrim($parsed['path'], '/');
+            return asset($path);
+        }
+        return $url;
     }
+
 
     function pp_assets($position = '') {
         global $site_url, $global_response_brand;
@@ -2476,7 +2485,7 @@
                         'slug'                 => $row->slug,
                         'name'                 => $row->name,
                         'display'              => $row->display,
-                        'logo'                 => $row->logo,
+                        'logo'                 => pp_asset_url($row->logo),
                         'currency'             => $row->currency,
                         'min_allow'            => money_round($row->min_allow),
                         'max_allow'            => money_round($row->max_allow),
@@ -2589,7 +2598,7 @@
                     'slug'                 => $row->slug,
                     'name'                 => $row->name,
                     'display'              => $row->display,
-                    'logo'                 => $row->logo,
+                    'logo'                 => pp_asset_url($row->logo),
                     'currency'             => $row->currency,
                     'min_allow'            => money_round($row->min_allow),
                     'max_allow'            => money_round($row->max_allow),
@@ -2623,67 +2632,57 @@
     }
 
     function pp_gateway_render($gateway_id = '', $data = []){
-        global $db_prefix;
-
         unset($data['options'], $data['lang']);
 
-        $params = [ ':gateway_id' => $gateway_id, ':brand_id' => $data['brand']['id'] ];
+        $gatewayRow = \App\Models\PpGateway::where('gateway_id', $gateway_id)
+            ->where('brand_id', $data['brand']['id'])
+            ->where('status', 'active')
+            ->first();
 
-        $response_gateway = json_decode(getData($db_prefix.'gateways','WHERE gateway_id = :gateway_id AND brand_id = :brand_id  AND status = "active"', '* FROM', $params),true);
-        if($response_gateway['status'] == true){
-
+        if ($gatewayRow) {
             $options = [];
-
-            $params = [ ':gateway_id' => $gateway_id ];
-            $response_gateways_parameter = json_decode(getData($db_prefix.'gateways_parameter','WHERE gateway_id = :gateway_id', '* FROM', $params),true);
-            foreach($response_gateways_parameter['response'] as $field){
-                $value = $field['value'];
-
-                if(!empty($field['multiple']) && !empty($value)){
-                    $value = is_array($value) ? $value : json_decode($value, true);
+            foreach ($gatewayRow->parameters as $field) {
+                $value = $field->value;
+                if (!empty($field->multiple) && !empty($value)) {
+                    $decoded = json_decode($value, true);
+                    if (is_array($decoded)) {
+                        $value = $decoded;
+                    }
                 }
-
-                $options[$field['option_name']] = $value;
+                $options[$field->option_name] = $value;
             }
-
             $data['options'] = $options;
 
             $gatewayInfo = [
-                'gateway_id'     => $response_gateway['response'][0]['gateway_id'],
-                'slug'     => $response_gateway['response'][0]['slug'],
-                'name'     => $response_gateway['response'][0]['name'],
-                'display'     => $response_gateway['response'][0]['display'],
-                'logo'     => $response_gateway['response'][0]['logo'],
-                'currency'     => $response_gateway['response'][0]['currency'],
-                'min_allow'     => money_round($response_gateway['response'][0]['min_allow']),
-                'max_allow'     => money_round($response_gateway['response'][0]['max_allow']),
-
-                'fixed_discount'     => money_round($response_gateway['response'][0]['fixed_discount']),
-                'percentage_discount'     => money_round($response_gateway['response'][0]['percentage_discount']),
-                'fixed_charge'     => money_round($response_gateway['response'][0]['fixed_charge']),
-                'percentage_charge'     => money_round($response_gateway['response'][0]['percentage_charge']),
-
-                'primary_color'     => $response_gateway['response'][0]['primary_color'],
-                'text_color'     => $response_gateway['response'][0]['text_color'],
-                'btn_color'     => $response_gateway['response'][0]['btn_color'],
-                'btn_text_color'     => $response_gateway['response'][0]['btn_text_color'],
+                'gateway_id'          => $gatewayRow->gateway_id,
+                'slug'                => $gatewayRow->slug,
+                'name'                => $gatewayRow->name,
+                'display'             => $gatewayRow->display,
+                'logo'                => $gatewayRow->logo,
+                'currency'            => $gatewayRow->currency,
+                'min_allow'           => money_round((float) $gatewayRow->min_allow),
+                'max_allow'           => money_round((float) $gatewayRow->max_allow),
+                'fixed_discount'      => money_round((float) $gatewayRow->fixed_discount),
+                'percentage_discount' => money_round((float) $gatewayRow->percentage_discount),
+                'fixed_charge'        => money_round((float) $gatewayRow->fixed_charge),
+                'percentage_charge'   => money_round((float) $gatewayRow->percentage_charge),
+                'primary_color'       => $gatewayRow->primary_color,
+                'text_color'          => $gatewayRow->text_color,
+                'btn_color'           => $gatewayRow->btn_color,
+                'btn_text_color'      => $gatewayRow->btn_text_color,
+                'tab'                 => $gatewayRow->tab,
             ];
-
             $data['gateway'] = $gatewayInfo;
 
             $currencyRates = [];
-
-            $currencyRes = json_decode(getData($db_prefix.'currency', ' WHERE brand_id = "'.$response_gateway['response'][0]['brand_id'].'"'), true);
-
-            if (!empty($currencyRes['response'])) {
-                foreach ($currencyRes['response'] as $c) {
-                    $currencyRates[$c['code']] =$c['rate'];
-                }
+            $currencies = \App\Models\PpCurrency::where('brand_id', $gatewayRow->brand_id)->get();
+            foreach ($currencies as $c) {
+                $currencyRates[$c->code] = $c->rate;
             }
 
             $txnAmount  = money_sanitize($data['transaction']['amount']);
             $txnCurrency = $data['transaction']['currency'];
-            $gatewayCurrency = $response_gateway['response'][0]['currency'];
+            $gatewayCurrency = $gatewayRow->currency;
 
             if ($txnCurrency === $gatewayCurrency) {
                 $convertedAmount = $txnAmount;
@@ -2695,11 +2694,11 @@
                 }
             }
 
-            $fixed_discount = money_sanitize($response_gateway['response'][0]['fixed_discount']);
-            $percentage_discount = money_sanitize($response_gateway['response'][0]['percentage_discount']);
+            $fixed_discount = money_sanitize($gatewayRow->fixed_discount);
+            $percentage_discount = money_sanitize($gatewayRow->percentage_discount);
 
-            $fixed_charge = money_sanitize($response_gateway['response'][0]['fixed_charge']);
-            $percentage_charge = money_sanitize($response_gateway['response'][0]['percentage_charge']);
+            $fixed_charge = money_sanitize($gatewayRow->fixed_charge);
+            $percentage_charge = money_sanitize($gatewayRow->percentage_charge);
 
             $percentageDiscountAmount = money_div(money_mul($convertedAmount, $percentage_discount, 8), "100", 8);
             $totalDiscount = money_add($fixed_discount, $percentageDiscountAmount, 8);
@@ -2720,10 +2719,10 @@
             $data['transaction']['local_net_amount'] = money_round($convertedAmount, 2);
             $data['transaction']['local_currency'] = $gatewayCurrency;
 
-            if(file_exists(__DIR__.'/../pp-modules/pp-gateways/'.$response_gateway['response'][0]['slug'].'/class.php')){
-                require_once __DIR__.'/../pp-modules/pp-gateways/'.$response_gateway['response'][0]['slug'].'/class.php';
+            if(file_exists(__DIR__.'/../pp-modules/pp-gateways/'.$gatewayRow->slug.'/class.php')){
+                require_once __DIR__.'/../pp-modules/pp-gateways/'.$gatewayRow->slug.'/class.php';
 
-                $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $response_gateway['response'][0]['slug']))) . 'Gateway';
+                $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $gatewayRow->slug))) . 'Gateway';
 
                 $gateway = new $class();
 
@@ -2741,7 +2740,7 @@
                     $lang_text = [];
                 }
             }else{
-                if($response_gateway['response'][0]['tab'] == 'bank'){
+                if($gatewayRow->tab == 'bank'){
                     $gateway = '';
 
                     $supported_languages = [
@@ -3286,12 +3285,42 @@
                 }
             }
 
+            $registry = app(\App\Services\Payment\Gateways\GatewayRegistry::class);
+            $nativeDriver = $registry->resolveById($gateway_id);
+
             if(isset($_GET['pp_callback'])){
-                if (is_callable([$gateway, 'callback'])) {
+                if ($nativeDriver) {
+                    echo "<center>IPN is handled natively via Laravel Routing.</center>";
+                    exit;
+                } elseif (is_callable([$gateway, 'callback'])) {
                     $gateway->callback($data);
                 }
             }else{
-                if (is_callable([$gateway, 'process_payment'])) {
+                if ($nativeDriver) {
+                    $transaction = \App\Models\PpTransaction::where('ref', $data['transaction']['ref'])->first();
+                    if ($transaction) {
+                        $transaction->processing_fee = $data['transaction']['processing_fee'];
+                        $transaction->discount_amount = $data['transaction']['discount_amount'];
+                        $transaction->local_net_amount = $data['transaction']['local_net_amount'];
+                        $transaction->local_currency = $data['transaction']['local_currency'];
+                        $transaction->save();
+
+                        echo '<center><div class="spinner-border text-primary m-3 loading-123412341234" role="status"><span class="visually-hidden">Loading...</span></div></center>';
+                        flush();
+
+                        $result = $nativeDriver->initiate($transaction);
+                        if ($result['status'] === 'success' && isset($result['redirect_url'])) {
+                            echo '<script>location.href="' . $result['redirect_url'] . '";</script>';
+                            exit;
+                        } else {
+                            echo '<center>Native Gateway Error: ' . ($result['message'] ?? 'Unknown error') . '</center>';
+                            echo '<style>.loading-123412341234{display: none;}</style>';
+                            exit;
+                        }
+                    } else {
+                        echo '<center>Transaction not found.</center>';
+                    }
+                } elseif (is_callable([$gateway, 'process_payment'])) {
                     $gateway->process_payment($data);
                 }
             }

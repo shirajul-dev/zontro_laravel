@@ -25,6 +25,24 @@ class SslCommerzDriver implements PaymentGatewayInterface
         $this->options = $gateway->parameters->pluck('value', 'option_name')->toArray();
     }
 
+    private function logDebug(string $message, array $context = []): void
+    {
+        if (config('app.debug')) {
+            Log::build([
+                'driver' => 'single',
+                'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+            ])->debug($message, $context);
+        }
+    }
+
+    private function logError(string $message, array $context = []): void
+    {
+        Log::build([
+            'driver' => 'single',
+            'path' => storage_path('logs/gateway_' . $this->gateway->slug . '.log'),
+        ])->error($message, $context);
+    }
+
     public function getDisplayName(): string
     {
         return $this->gateway->display ?? 'SSLCommerz';
@@ -64,28 +82,39 @@ class SslCommerzDriver implements PaymentGatewayInterface
         ];
 
         try {
+            $this->logDebug("SSLCommerz API Initiate Request", ['url' => $apiUrl, 'payload' => $payload]);
             $response = Http::asForm()->post($apiUrl, $payload);
             
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("SSLCommerz API Initiate Response", ['response' => $data]);
                 if (($data['status'] ?? '') === 'SUCCESS') {
                     return [
                         'status' => 'success',
                         'redirect_url' => $data['GatewayPageURL']
                     ];
                 }
+                $this->logError("SSLCommerz API Initiation Failed", [
+                    'message' => $data['failedreason'] ?? 'SSLCommerz initiation failed.',
+                    'response' => $data
+                ]);
                 return [
                     'status' => 'error',
                     'message' => $data['failedreason'] ?? 'SSLCommerz initiation failed.'
                 ];
             }
             
+            $this->logError("SSLCommerz API Initiation HTTP Error", [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+            
             return [
                 'status' => 'error',
                 'message' => 'Failed to connect to SSLCommerz API.'
             ];
         } catch (\Exception $e) {
-            Log::error("SslCommerzDriver: " . $e->getMessage());
+            $this->logError("SslCommerzDriver: " . $e->getMessage());
             return [
                 'status' => 'error',
                 'message' => 'An internal error occurred while initiating payment.'
@@ -103,6 +132,7 @@ class SslCommerzDriver implements PaymentGatewayInterface
         $verifyUrl = "{$baseUrl}/validator/api/merchantTransIDvalidationAPI.php";
 
         try {
+            $this->logDebug("SSLCommerz API Verify Request", ['url' => $verifyUrl, 'tran_id' => $tranId]);
             $response = Http::get($verifyUrl, [
                 'tran_id' => $tranId,
                 'store_id' => $this->options['store_id'] ?? '',
@@ -112,6 +142,7 @@ class SslCommerzDriver implements PaymentGatewayInterface
 
             if ($response->successful()) {
                 $data = $response->json();
+                $this->logDebug("SSLCommerz API Verify Response", ['response' => $data]);
                 if (
                     ($data['APIConnect'] ?? '') === 'DONE' && 
                     ($data['no_of_trans_found'] ?? 0) > 0 && 
@@ -120,8 +151,14 @@ class SslCommerzDriver implements PaymentGatewayInterface
                     return true;
                 }
             }
+            } else {
+                $this->logError("SSLCommerz API Verify HTTP Error", [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+            }
         } catch (\Exception $e) {
-            Log::error("SslCommerzDriver Verify Error: " . $e->getMessage());
+            $this->logError("SslCommerzDriver Verify Error: " . $e->getMessage());
         }
 
         return false;

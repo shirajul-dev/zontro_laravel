@@ -22,7 +22,7 @@
     
     $bgStyle = 'background-color:#f8f9fa;';
     if (!empty($options['enable_bg_image']) && $options['enable_bg_image'] === 'enabled' && !empty($options['background_image'])) {
-        $bgImage = $options['background_image'];
+        $bgImage = function_exists('pp_asset_url') ? pp_asset_url($options['background_image']) : $options['background_image'];
         $bgStyle = "
             background-image: url('{$bgImage}');
             background-size: cover;
@@ -39,7 +39,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>{{ $lang['checkout'] }} - {{ $brand['name'] }}</title>
-    <link rel="shortcut icon" href="{{ $brand['favicon'] }}">
+    <link rel="shortcut icon" href="{{ function_exists('pp_asset_url') ? pp_asset_url($brand['favicon']) : $brand['favicon'] }}">
 
     {!! pp_assets('head') !!}
 
@@ -125,7 +125,7 @@
                 </div>
 
                 <center>
-                    <img src="{{ $brand['favicon'] }}" alt="" class="company-logo">
+                    <img src="{{ function_exists('pp_asset_url') ? pp_asset_url($brand['favicon']) : $brand['favicon'] }}" alt="" class="company-logo">
                     <p class="company-name">{{ $brand['name'] }}</p>
                 </center>
 
