@@ -144,6 +144,27 @@ class DeviceAdminActionService
         PpDevice::query()->whereIn('device_id', $sanitized)->delete();
     }
 
+    public function createDemo(string $ownerId, string $name, string $model, string $androidLevel): array
+    {
+        PpDevice::query()->create([
+            'd_id' => $ownerId,
+            'device_id' => $this->generateNumericId(),
+            'otp' => $this->generateNumericId(),
+            'name' => $name,
+            'model' => $model,
+            'android_level' => $androidLevel,
+            'status' => 'used',
+            'created_date' => now()->format('Y-m-d H:i:s'),
+            'updated_date' => now()->format('Y-m-d H:i:s'),
+        ]);
+
+        return [
+            'status' => 'true',
+            'title' => 'Device Created',
+            'message' => 'The demo device has been created successfully.',
+        ];
+    }
+
     private function generateNumericId(int $length = 10, int $maxLength = 10): string
     {
         $length = $length > $maxLength ? $maxLength : $length;

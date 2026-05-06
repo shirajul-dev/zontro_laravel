@@ -36,17 +36,32 @@ Currently, the application runs in a Hybrid state, marrying legacy procedural co
 - [x] **Language Switcher Fix**: Resolved an infinite redirect loop caused by strict `null` evaluation in Laravel. Changed strict `!== ""` to loose `!= ""` across 10 different theme files (`commerz` and `twenty-six`).
 - [x] **UX Enhancement**: Upgraded the language switcher to strip messy query parameters (e.g., `?lang=en`) using `url()->current()`, while injecting a `sessionStorage` flag to trigger a beautiful success Toast notification upon reload.
 
-### Phase 1: Database Schema & Eloquent Porting
-- [x] Generated formal Laravel Migrations for legacy tables (`pp_transaction`, `pp_invoice`, `pp_api`, etc.)
-- [x] Built the respective Eloquent Models (`PpTransaction`, `PpInvoice`, `PpBrand`, `PpGateway`) with their proper relationships inside `app/Models/`.
-- [x] Refactored all core legacy query functions inside `pp-content/pp-include/pp-functions.php` (such as `pp_gateways()`, `limit_checker()`, `pp_gateway_info()`, and `pp_check_transaction()`) to utilize modern Laravel Eloquent models instead of raw `getData()` calls.
+### WooCommerce & UX Optimization (Current Session)
+- [x] **Order Status Sync Logic**: Fixed a critical logic bug where WooCommerce orders were marked as "Complete" for pending payments. Implemented a strict mapping: `pending`/`initiated` -> `on-hold`.
+- [x] **Zero-Delay Redirection**: Eliminated redundant 3-second "waiting" screens on both the Gateway (Laravel) and WordPress sides. Redirection is now instantaneous.
+- [x] **Contextful Status UI**: Re-designed the `checkout-status` page to show a brief (1.5s) "contextful" summary with a spinner, balancing visual feedback with speed.
+- [x] **Plugin Stabilization**: Standardized the `WC_API` global hook to ensure the PipraPay plugin takes control early, preventing conflict-related 404/blank page errors.
+- [x] **Internal Fixes**: Resolved a `TypeError` in `ThemeService` that occurred during direct PHP redirects, ensuring compatibility with the legacy theme engine.
+
+### Phase 2: Gateway Driver Modernization (Completed)
+- [x] **Universal Driver Architecture**: Implemented `AbstractBaseDriver`, `MfsAutomationDriver`, and `ManualPaymentDriver` to handle all non-API gateway types.
+- [x] **Bulk Migration**: Registered all 46+ legacy slugs (bKash, Nagad, Rocket, Cellfin, Wise, etc.) in the `GatewayRegistry`.
+- [x] **Native Verification Engine**: Refactored `CheckoutController` to use a native `PaymentVerificationService`, completely removing the dependency on legacy procedural code for user-submitted transaction verification.
+- [x] **Redirection & UI Stabilization**: Fixed critical infinite reload loops and "Native Gateway Error" messages by decoupling initiation from redirection for manual gateways.
+- [x] **Legacy Bridge Synchronization**: Successfully bootstrapped legacy globals (`db_prefix`, `PipraPay_INIT`) inside native services to allow seamless usage of legacy database functions.
+- [x] **Feature Parity**: Maintained full support for payment tolerance, "Under Verification" status, and automated TRX ID matching via the new native logic.
 
 ---
 
-## 🚀 3. Remaining Migration Plan (What's Next)
+## 🚀 3. Remaining Migration Plan & Recommendations
 
-### Phase 2: Gateway Driver Modernization (Current Target)
-*(Note: Admin Panel UI Migration has been completely skipped for now.)*
-There are ~40+ smaller local payment gateways (Nagad, Rocket, etc.) still utilizing legacy PHP classes. 
-1.  Port the most highly-trafficked gateways to native Laravel Payment Drivers using modern HTTP clients (`Http::post()`).
-2.  Standardize the IPN (Instant Payment Notification) callback routing.
+### Immediate Next Steps (Priority)
+1.  **IPN Security Hardening**: Implement HMAC signature verification for all callback endpoints to ensure that payment notifications are legitimately coming from the gateway.
+2.  **Production Audit**: 
+    *   Re-enable `sslverify => true` in the WordPress plugin before deployment.
+    *   Switch off local debug flags in `wp-config.php` and `.env`.
+
+### Long-Term Recommendations
+1.  **Centralized Logging**: Implement a unified logging service in Laravel (using Monolog) that captures both Laravel errors and legacy `pp-content` logs in one place for easier debugging.
+2.  **Automated Testing Suite**: Build a series of Laravel Dusk tests to simulate the full A-Z checkout flow (Success, Fail, Cancel, Pending) to prevent regressions in future updates.
+3.  **Admin Panel UI Migration**: Gradually migrate the legacy Admin Panel into a modern TailAdmin/Blade dashboard for better maintainability.

@@ -31,6 +31,34 @@ class GatewayRegistry
         $this->register('binance-personal', \App\Services\Payment\Gateways\Drivers\BinancePersonalDriver::class);
         $this->register('eps', \App\Services\Payment\Gateways\Drivers\EpsDriver::class);
         $this->register('pathaopay-merchant-api', \App\Services\Payment\Gateways\Drivers\PathaoPayDriver::class);
+
+        // MFS Automation (Universal Driver)
+        $mfsAutomationSlugs = [
+            'bkash-personal', 'bkash-agent', 'bkash-merchant',
+            'nagad-personal', 'nagad-agent', 'nagad-merchant',
+            'rocket-personal', 'rocket-agent', 'rocket-merchant',
+            'upay-personal', 'upay-agent', 'upay-merchant',
+            'tap-personal', 'tap-agent', 'tap-merchant',
+            'cellfin-personal', 'cellfin-merchant',
+            'ipay-personal', 'ipay-merchant',
+            'mcash-personal', 'mcash-agent', 'mcash-merchant',
+            'okwallet-personal', 'okwallet-agent', 'okwallet-merchant',
+            'telecash-personal', 'telecash-agent', 'telecash-merchant'
+        ];
+
+        foreach ($mfsAutomationSlugs as $slug) {
+            $this->register($slug, \App\Services\Payment\Gateways\Drivers\MfsAutomationDriver::class);
+        }
+
+        // Manual / Bank (Universal Driver)
+        $manualSlugs = [
+            'dbbl', 'wise-manual', 'paypal-manual', 'payoneer-manual', 
+            'payeer-manual', 'taptap-send-manual'
+        ];
+
+        foreach ($manualSlugs as $slug) {
+            $this->register($slug, \App\Services\Payment\Gateways\Drivers\ManualPaymentDriver::class);
+        }
     }
 
     /**

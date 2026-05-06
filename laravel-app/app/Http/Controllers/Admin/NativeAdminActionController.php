@@ -112,6 +112,10 @@ class NativeAdminActionController extends Controller
             return $this->handleDeviceBulkAction($request);
         }
 
+        if ($action === 'device-create-demo') {
+            return $this->handleDeviceCreateDemo($request);
+        }
+
         if ($action === 'sms-data-list') {
             return $this->handleSmsDataList($request);
         }
@@ -899,6 +903,44 @@ class NativeAdminActionController extends Controller
             'message' => 'The selected device have been deleted successfully.',
             'csrf_token' => $newCsrfToken,
         ]);
+    }
+
+    private function handleDeviceCreateDemo(Request $request): JsonResponse
+    {
+        $newCsrfToken = (string) csrf_token();
+        $legacy = $this->setupLegacyGlobals($request);
+
+        if (!$this->isLegacyUserAuthorized($legacy)) {
+            return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
+        }
+
+        if (!$this->hasPageAccess($legacy, 'device')) {
+            return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
+        }
+
+        if (!empty(config('piprapay.demo_mode', false))) {
+            // Check demo mode is allowed in config
+        } else {
+             // In some cases we might want to check another way, but for now let's stick to config
+        }
+
+        $ownerId = trim((string) $request->cookie('pp_admin', ''));
+        if ($ownerId === '') {
+            return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
+        }
+
+        $name = trim((string) $request->input('name', ''));
+        $model = trim((string) $request->input('model', ''));
+        $androidLevel = trim((string) $request->input('android_level', ''));
+
+        if ($name === '' || $model === '') {
+            return $this->failure('Incomplete Information', 'Please fill in all required fields before proceeding.', $newCsrfToken);
+        }
+
+        $result = $this->deviceAdminActionService->createDemo($ownerId, $name, $model, $androidLevel);
+        $result['csrf_token'] = $newCsrfToken;
+
+        return response()->json($result);
     }
 
     private function handleDeviceBulkAction(Request $request): JsonResponse

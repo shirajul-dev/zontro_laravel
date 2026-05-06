@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'demo_mode' => env('PIPRAPAY_DEMO_MODE', false),
     'paths' => [
         'payment' => env('PIPRAPAY_PAYMENT_PATH', 'payment'),
         'invoice' => env('PIPRAPAY_INVOICE_PATH', 'invoice'),

@@ -15,6 +15,13 @@ class AuthenticateApiKey
      */
     public function handle(Request $request, Closure $next): Response
     {
+        \Illuminate\Support\Facades\Log::debug('API Authentication attempt', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'ip' => $request->ip(),
+            'header' => $request->header('MHS-PIPRAPAY-API-KEY') ? 'Present' : 'Missing',
+        ]);
+
         $apiKey = $request->header('MHS-PIPRAPAY-API-KEY');
 
         if (!$apiKey) {

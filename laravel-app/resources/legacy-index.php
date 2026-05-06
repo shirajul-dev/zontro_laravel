@@ -224,14 +224,27 @@
                 }
             }
 
-            if ($bpid === '' || $trx_id === '') {
-                echo json_encode(['status' => 'false', 'title' => 'Incomplete Information', 'message' => 'Please fill in all required fields.']);
+            if ($bpid === '') {
+                echo json_encode(['status' => 'false', 'title' => 'Invalid Request', 'message' => 'Transaction reference is missing.']);
                 exit;
             }
 
-            // Check for duplicate transaction ID (already used in pp_transaction)
-            if (pp_check_transaction_id($trx_id)) {
-                echo json_encode(['status' => 'false', 'title' => 'Duplicate Transaction ID', 'message' => 'This Transaction ID has already been used.']);
+            // Handle Payment Slip Upload if present
+            if (isset($_FILES['slip']) && $_FILES['slip']['error'] === UPLOAD_ERR_OK) {
+                $upload_result = json_decode(uploadImage($_FILES['slip'], 5 * 1024 * 1024), true);
+                if ($upload_result['status'] === true) {
+                    $slip_filename = $upload_result['file'];
+                    $source_info['payment_slip'] = $site_url . '/public/pp-media/storage/' . $slip_filename;
+                    
+                    // If no Trx ID provided, use the filename as a unique identifier
+                    if ($trx_id === '') {
+                        $trx_id = $slip_filename;
+                    }
+                }
+            }
+
+            if ($trx_id === '') {
+                echo json_encode(['status' => 'false', 'title' => 'Incomplete Information', 'message' => 'Please fill in all required fields.']);
                 exit;
             }
 
@@ -244,7 +257,20 @@
             }
             $transaction = $response_transaction['response'][0];
 
-            // Fetch gateway info to get sender_key and sender_type
+            // If already completed, just return success
+            if ($transaction['status'] === 'completed') {
+                echo json_encode(['status' => 'true', 'is_completed' => 'true', 'title' => 'Already Paid', 'message' => 'This transaction has already been completed.']);
+                exit;
+            }
+
+            // Check for duplicate transaction ID (used by DIFFERENT transaction)
+            $existing_trx = \App\Models\PpTransaction::where('trx_id', $trx_id)->where('ref', '!=', $bpid)->first();
+            if ($existing_trx) {
+                echo json_encode(['status' => 'false', 'title' => 'Duplicate Transaction ID', 'message' => 'This Transaction ID has already been used by another transaction.']);
+                exit;
+            }
+
+            // Fetch gateway info and pending_payment setting
             $params = [':gateway_id' => $gateway_id, ':brand_id' => $transaction['brand_id']];
             $response_gateway = json_decode(getData($db_prefix . 'gateways', 'WHERE gateway_id = :gateway_id AND brand_id = :brand_id', '* FROM', $params), true);
             if ($response_gateway['status'] !== true) {
@@ -252,6 +278,17 @@
                 exit;
             }
             $gateway = $response_gateway['response'][0];
+
+            $allow_pending = false;
+            $response_params = json_decode(getData($db_prefix . 'gateways_parameter', 'WHERE gateway_id = "' . $gateway['gateway_id'] . '" AND option_name = "pending_payment"'), true);
+            if ($response_params['status'] === true && ($response_params['response'][0]['value'] === 'enable' || $response_params['response'][0]['value'] === 'enabled')) {
+                $allow_pending = true;
+            }
+
+            // Force allow pending for Bank transfers or manual slip uploads
+            if ($gateway['tab'] === 'bank' || isset($source_info['payment_slip'])) {
+                $allow_pending = true;
+            }
 
             // Load gateway class to get info()
             $sender_key = '';
@@ -270,42 +307,48 @@
             $source_info['sender_key'] = $sender_key;
             $source_info['sender_type'] = $sender_type;
 
+            // Set to pending ONLY if allowed, otherwise just update metadata in initiated state
+            $target_status = $allow_pending ? 'pending' : 'initiated';
+            pp_set_transaction_status($bpid, $target_status, $gateway_id, $trx_id, $source_info);
+
+            // Re-fetch transaction to get the calculated local_net_amount
+            $response_transaction = json_decode(getData($db_prefix . 'transaction', 'WHERE ref = :ref', 'local_net_amount, brand_id, status FROM', [':ref' => $bpid]), true);
+            $transaction_updated = $response_transaction['response'][0];
+
             // Attempt immediate SMS verification
-            $params = [
+            $params_sms = [
                 ':sender_key' => $sender_key,
                 ':type' => $sender_type,
                 ':trx_id' => $trx_id,
                 ':status' => 'approved'
             ];
-            $response_sms = json_decode(getData($db_prefix . 'sms_data', 'WHERE sender_key = :sender_key AND type = :type AND trx_id = :trx_id AND status = :status', '* FROM', $params), true);
+            $response_sms = json_decode(getData($db_prefix . 'sms_data', 'WHERE sender_key = :sender_key AND type = :type AND trx_id = :trx_id AND status = :status', '* FROM', $params_sms), true);
 
             if ($response_sms['status'] === true) {
                 $sms = $response_sms['response'][0];
                 
-                // Fetch brand for tolerance
-                $response_brand = json_decode(getData($db_prefix . 'brands', 'WHERE brand_id = "' . $transaction['brand_id'] . '"'), true);
-                $tolerance = $response_brand['response'][0]['payment_tolerance'] ?? '0';
+                // Fetch brand for tolerance (only if pending is allowed, otherwise strict zero-tolerance)
+                $response_brand = json_decode(getData($db_prefix . 'brands', 'WHERE brand_id = "' . $transaction_updated['brand_id'] . '"'), true);
+                $tolerance = $allow_pending ? ($response_brand['response'][0]['payment_tolerance'] ?? '0') : '0';
 
-                if (verifyPaymentTolerance($transaction['local_net_amount'], $sms['amount'], $tolerance)) {
+                if (verifyPaymentTolerance($transaction_updated['local_net_amount'], $sms['amount'], $tolerance)) {
                     // Match found! Complete the transaction
                     updateData($db_prefix . 'sms_data', ['status', 'updated_date'], ['used', getCurrentDatetime('Y-m-d H:i:s')], 'id = "' . $sms['id'] . '"');
                     pp_set_transaction_status($bpid, 'completed', $gateway_id, $trx_id, $source_info);
 
                     echo json_encode(['status' => 'true', 'is_completed' => 'true', 'title' => 'Verified Successfully', 'message' => 'Your payment has been verified and processed.']);
                     exit;
-                } else {
-                    // Amount mismatch
-                    echo json_encode(['status' => 'false', 'title' => 'Amount Mismatch', 'message' => 'The amount in the SMS does not match the transaction amount.']);
-                    exit;
                 }
             }
 
-            // Not found in SMS data (or not approved yet), set to pending
-            pp_set_transaction_status($bpid, 'pending', $gateway_id, $trx_id, $source_info);
-
-            echo json_encode(['status' => 'true', 'is_completed' => 'false', 'title' => 'Under Verification', 'message' => 'We have received your request. It is under verification, please wait a moment.']);
+            if ($allow_pending) {
+                echo json_encode(['status' => 'true', 'is_completed' => 'false', 'title' => 'Under Verification', 'message' => 'We have received your request. It is under verification, please wait a moment.']);
+            } else {
+                echo json_encode(['status' => 'false', 'title' => 'Verification Failed', 'message' => 'Payment record not found. Please ensure you have sent the correct amount and try again after a few moments.']);
+            }
             exit;
         }
+
     }
 
     /*

@@ -21,6 +21,10 @@ class IpnController extends Controller
     public function handle(Request $request, string $gateway_id)
     {
         $siteUrl = rtrim((string) config('app.url', '/'), '/') . '/';
+        \Illuminate\Support\Facades\Log::debug('Incoming IPN Request', [
+            'gateway_id' => $gateway_id,
+            'params' => $request->all()
+        ]);
         $result = $this->ipnService->handleIpn($gateway_id, $siteUrl);
 
         // Attempt to extract the transaction reference

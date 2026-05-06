@@ -13,7 +13,8 @@ class CheckoutController extends Controller
         private readonly ThemeService $themeService,
         private readonly \App\Services\Payment\PaymentService $paymentService,
         private readonly \App\Services\Common\MoneyService $moneyService,
-        private readonly \App\Services\Common\BrandingService $brandingService
+        private readonly \App\Services\Common\BrandingService $brandingService,
+        private readonly \App\Services\Payment\PaymentVerificationService $verificationService
     ) {
     }
 
@@ -65,8 +66,18 @@ class CheckoutController extends Controller
             return $this->handlePaymentLinkAction($request);
         }
 
-        // Delegate to legacy runtime for any other actions (like transaction-verify)
+        if ($action === 'transaction-verify') {
+            return $this->handleTransactionVerify($request);
+        }
+
+        // Delegate to legacy runtime for any other actions
         return app(LegacyRuntimeService::class)->dispatch($request);
+    }
+
+    private function handleTransactionVerify(Request $request)
+    {
+        $response = $this->verificationService->verify($request);
+        return response()->json($response);
     }
 
     private function handleInvoiceAction(Request $request)

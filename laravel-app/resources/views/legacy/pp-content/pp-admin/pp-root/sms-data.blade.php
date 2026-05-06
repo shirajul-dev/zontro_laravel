@@ -330,6 +330,9 @@
           </div>
           <div class="modal-footer">
             <a href="javascript:void(0)" class="btn btn-link link-secondary btn-3" data-bs-dismiss="modal"> Cancel </a>
+            <?php if (!empty(config('piprapay.demo_mode', false))): ?>
+                <a href="javascript:void(0)" class="btn btn-info btn-5 ms-2 autofill-demo-btn" onclick="autofillDemoData()">Demo Autofill</a>
+            <?php endif; ?>
             <a href="javascript:void(0)" class="btn btn-primary btn-5 ms-auto modal-createItem-btn">Create</a>
           </div>
         </div>
@@ -1182,4 +1185,70 @@
     //extra requirement 
     //extra requirement 
     //extra requirement 
+    <?php if (!empty(config('piprapay.demo_mode', false))): ?>
+    $('.autofill-demo-btn').click(function() {
+        autofillDemoData();
+    });
+    <?php endif; ?>
+
+    function autofillDemoData() {
+        const modal = document.getElementById("modal-createItem");
+        const entryTypeSelect = modal.querySelector('select[name="entry-type"]');
+        const senderKeySelect = modal.querySelector('select[name="sender_key"]');
+        const statusSelect = modal.querySelector('select[name="status"]');
+        const deviceSelect = modal.querySelector('select[name="device"]');
+        
+        const typeInput = modal.querySelector('input[name="type"]');
+        const amountInput = modal.querySelector('input[name="amount"]');
+        const phoneInput = modal.querySelector('input[name="phone_number"]');
+        const trxIdInput = modal.querySelector('input[name="transaction_id"]');
+
+        // Set to Manual entry
+        if (entryTypeSelect) {
+            entryTypeSelect.value = 'manual';
+            // Trigger change event if needed by other logic
+            var event = new Event('change');
+            entryTypeSelect.dispatchEvent(event);
+            itemEntryType('modal-createItem');
+        }
+
+        // Random values
+        const randomTrx = 'DEMO' + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const randomAmount = (Math.random() * 5000 + 10).toFixed(2);
+        const randomPhone = '017' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+
+        if (trxIdInput) trxIdInput.value = randomTrx;
+        if (amountInput) amountInput.value = randomAmount;
+        if (phoneInput) phoneInput.value = randomPhone;
+        if (typeInput) {
+            if (typeInput.tagName === 'SELECT') {
+                typeInput.selectedIndex = 1;
+            } else {
+                typeInput.value = 'Receive Money';
+            }
+        }
+
+        // Select first available device if none selected
+        if (deviceSelect && deviceSelect.value === "") {
+            if (deviceSelect.options.length > 1) {
+                deviceSelect.selectedIndex = 1;
+            }
+        }
+        
+        // Select first sender key if none selected
+        if (senderKeySelect && senderKeySelect.value === "") {
+             if (senderKeySelect.options.length > 1) {
+                senderKeySelect.selectedIndex = 1;
+                itemPaymentMethod('modal-createItem');
+            }
+        }
+
+        createToast({
+            title: 'Demo Data Loaded',
+            description: 'Dummy transaction details have been populated.',
+            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
+            timeout: 3000,
+            top: 70
+        });
+    }
 </script>

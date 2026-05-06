@@ -185,7 +185,35 @@
                 </div>
 
                 <div class="mb-3">
-                    <a href="<?php echo $data['transaction']['return_url']?>" class="btn btn-primary <?php echo ($data['transaction']['return_url'] == "--" || $data['transaction']['return_url'] == "") ? 'd-none' : ''?>"><?php echo $data['lang']['go_to_site']?></a>
+                    <?php if (!empty($data['transaction']['return_url']) && $data['transaction']['return_url'] !== "--"): ?>
+                        <div id="redirect-message" class="mt-4">
+                            <div class="spinner-border spinner-border-sm text-secondary me-2" role="status"></div>
+                            <span class="text-muted">
+                                <?php echo $data['lang']['redirecting_to_site'] ?? 'Redirecting to merchant site'; ?>...
+                            </span>
+                        </div>
+                        <script>
+                            // Redirect after a short delay so the user can see the status
+                            setTimeout(function() {
+                                let baseUrl = "<?php echo $data['transaction']['return_url']; ?>";
+                                let status = "<?php echo $status; ?>";
+                                let ref = "<?php echo $data['transaction']['ref']; ?>";
+                                
+                                let separator = baseUrl.includes('?') ? '&' : '?';
+                                let finalUrl = baseUrl + separator + 'pp_status=' + status + '&transaction_ref=' + ref;
+                                
+                                window.location.href = finalUrl;
+                            }, 1500);
+                        </script>
+                    <?php endif; ?>
+
+                    <?php 
+                        $baseUrl = $data['transaction']['return_url'];
+                        $separator = (strpos($baseUrl, '?') !== false) ? '&' : '?';
+                        $finalReturnUrl = $baseUrl . $separator . 'pp_status=' . $status . '&transaction_ref=' . $data['transaction']['ref'];
+                    ?>
+
+                    <a href="<?php echo $finalReturnUrl ?>" class="btn btn-primary <?php echo ($data['transaction']['return_url'] == "--" || $data['transaction']['return_url'] == "") ? 'd-none' : ''?>"><?php echo $data['lang']['go_to_site']?></a>
                     <?php
                         if($status == "completed" || $status == "pending" || $status == "refunded"){
                     ?>

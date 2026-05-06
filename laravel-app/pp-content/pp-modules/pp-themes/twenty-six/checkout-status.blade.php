@@ -164,7 +164,31 @@
                 </div>
 
                 <div class="mb-3">
-                    <a href="{{ $transaction['return_url'] }}" class="btn btn-primary {{ ($transaction['return_url'] == "--" || $transaction['return_url'] == "") ? 'd-none' : '' }}">{{ $lang['go_to_site'] }}</a>
+                    @if(!empty($transaction['return_url']) && $transaction['return_url'] !== "--")
+                        <div id="redirect-message" class="text-muted mb-3">
+                            {{ $lang['redirecting_to_merchant'] ?? 'Redirecting to the merchant after' }} <span id="countdown">3</span> {{ $lang['seconds'] ?? 'seconds' }}...
+                        </div>
+                        <script>
+                            let seconds = 3;
+                            const countdownEl = document.getElementById('countdown');
+                            const timer = setInterval(() => {
+                                seconds--;
+                                if (countdownEl) countdownEl.textContent = seconds;
+                                if (seconds <= 0) {
+                                    clearInterval(timer);
+                                    
+                                    let finalUrl = "{!! $transaction['return_url'] !!}";
+                                    window.location.href = finalUrl;
+                                }
+                            }, 1000);
+                        </script>
+                    @endif
+
+                    @php
+                        $finalReturnUrl = $transaction['return_url'];
+                    @endphp
+
+                    <a href="{{ $finalReturnUrl }}" class="btn btn-primary {{ ($transaction['return_url'] == "--" || $transaction['return_url'] == "") ? 'd-none' : '' }}">{{ $lang['go_to_site'] }}</a>
                     @if(in_array($status, ['completed', 'pending', 'refunded']))
                         <a href="{{ function_exists('pp_checkout_address') ? pp_checkout_address() : url('/') }}?receipt" class="btn btn-success">{{ $lang['download_receipt'] }}</a>
                     @endif

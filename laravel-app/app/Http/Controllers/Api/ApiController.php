@@ -11,6 +11,7 @@ use App\Models\PpTransaction;
 use App\Models\PpBalanceVerification;
 use App\Models\PpGateway;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ApiController extends Controller
 {
@@ -130,6 +131,8 @@ class ApiController extends Controller
             $checkoutType = strtolower($segments[2]);
         }
 
+        Log::debug('Native Checkout Payload', ['data' => $data]);
+
         $result = $this->apiCheckoutService->handleCheckout($data, $apiType, $checkoutType, $apiRow, $siteUrl);
 
         if (($result['status'] ?? '') === 'error') {
@@ -146,6 +149,13 @@ class ApiController extends Controller
 
     private function handleNativeVerifyPayment(Request $request): JsonResponse
     {
+        Log::debug('Native Verify Payment Request Received', [
+            'method' => $request->method(),
+            'url' => $request->fullUrl(),
+            'ip' => $request->ip(),
+            'headers' => $request->headers->all(),
+        ]);
+
         if (config('piprapay.security.strict_api_methods_enabled', false) && !$request->isMethod('post')) {
             return response()->json([
                 'error' => [
@@ -160,6 +170,8 @@ class ApiController extends Controller
 
         $rawInput = (string) $request->getContent();
         $data = json_decode($rawInput, true);
+
+        Log::debug('Native Verify Payment Payload', ['data' => $data]);
 
         if (!is_array($data)) {
             return response()->json([
@@ -232,7 +244,7 @@ class ApiController extends Controller
             ->setTimezone($timezone)
             ->format('M d, Y h:i A');
 
-        return response()->json([
+        $responsePayload = [
             'pp_id' => (string) $transaction->ref,
             'full_name' => (string) ($customer['name'] ?? 'N/A'),
             'email_address' => (string) ($customer['email'] ?? 'N/A'),
@@ -250,7 +262,11 @@ class ApiController extends Controller
             'transaction_id' => (string) ($transaction->trx_id ?? ''),
             'status' => (string) ($transaction->status ?? ''),
             'date' => $date,
-        ]);
+        ];
+
+        Log::debug('Native Verify Payment Response', ['response' => $responsePayload]);
+
+        return response()->json($responsePayload);
     }
 
     private function handleNativeRefundPayment(Request $request): JsonResponse

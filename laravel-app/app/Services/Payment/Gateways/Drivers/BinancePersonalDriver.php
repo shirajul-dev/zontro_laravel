@@ -53,13 +53,9 @@ class BinancePersonalDriver implements PaymentGatewayInterface
     public function initiate(PpTransaction $transaction): array
     {
         // For Binance Personal, we don't redirect to an external site immediately.
-        // Instead, we show the instructions and the verification form.
-        // We redirect back to the checkout page with the 'gateway' parameter to trigger the instruction view.
-        $paymentPath = trim((string) config('piprapay.paths.payment', 'payment'), '/');
-        
+        // Instead, we stay on the same page to show instructions and the verification form.
         return [
             'status' => 'success',
-            'redirect_url' => url('/') . '/' . $paymentPath . '/' . $transaction->ref . '?gateway=' . $this->gateway->gateway_id
         ];
     }
 

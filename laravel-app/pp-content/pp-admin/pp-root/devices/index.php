@@ -20,6 +20,9 @@
 </style>
 
 <div class="page-header d-print-none" aria-label="Page header">
+    <?php if (config('piprapay.demo_mode')): ?>
+        <div class="alert alert-info">DEMO MODE IS ACTIVE</div>
+    <?php endif; ?>
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
@@ -41,6 +44,18 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-plus"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                         </a>
                     </span>
+
+                    <?php if (!empty(config('piprapay.demo_mode', false))): ?>
+                    <span data-bs-target="#modal-createDemoDevice" data-bs-toggle="modal">
+                        <a href="javascript:void(0)" class="btn btn-info btn-5 d-none d-sm-inline-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-device-mobile-cog"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21h-4a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v7" /><path d="M11 4h2" /><path d="M12 17v.01" /><path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19.001 15.5v1.5" /><path d="M19.001 21v1.5" /><path d="M22.032 17.25l-1.299 .75" /><path d="M17.27 20l-1.3 .75" /><path d="M15.97 17.25l1.3 .75" /><path d="M20.733 20l1.3 .75" /></svg>
+                            Create Manual Device (Demo)
+                        </a>
+                        <a href="javascript:void(0)" class="btn btn-info btn-6 d-sm-none btn-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-device-mobile-cog"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 21h-4a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v7" /><path d="M11 4h2" /><path d="M12 17v.01" /><path d="M19.001 19m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" /><path d="M19.001 15.5v1.5" /><path d="M19.001 21v1.5" /><path d="M22.032 17.25l-1.299 .75" /><path d="M17.27 20l-1.3 .75" /><path d="M15.97 17.25l1.3 .75" /><path d="M20.733 20l1.3 .75" /></svg>
+                        </a>
+                    </span>
+                    <?php endif; ?>
                 </div>
                 <!-- BEGIN MODAL -->
                 <!-- END MODAL -->
@@ -639,4 +654,93 @@
             load_data_list(1);
         });
     });
+
+    function createDemoDevice() {
+        var csrf_token_default = $('input[name="csrf_token_default"]').val();
+        var name = $('input[name="demo-device-name"]').val();
+        var model = $('input[name="demo-device-model"]').val();
+        var android_level = $('input[name="demo-android-level"]').val();
+
+        if (name === "" || model === "") {
+            createToast({
+                title: 'Required Fields',
+                description: 'Please fill in the Device Name and Model.',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d63939" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-exclamation-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 9v4" /><path d="M12 16v.01" /></svg>`,
+                timeout: 6000,
+                top: 70
+            });
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: '<?php echo $site_url.$path_admin ?>/dashboard',
+            data: {
+                action: "device-create-demo",
+                csrf_token: csrf_token_default,
+                name: name,
+                model: model,
+                android_level: android_level
+            },
+            dataType: 'json',
+            success: function (response) {
+                document.querySelectorAll('input[name="csrf_token"]').forEach(input => { input.value = response.csrf_token; });
+                document.querySelectorAll('input[name="csrf_token_default"]').forEach(input => { input.value = response.csrf_token; });
+
+                if (response.status === 'true') {
+                    $('#modal-createDemoDevice').modal('hide');
+                    $('input[name="demo-device-name"]').val('');
+                    $('input[name="demo-device-model"]').val('');
+                    $('input[name="demo-android-level"]').val('');
+
+                    createToast({
+                        title: response.title,
+                        description: response.message,
+                        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
+                        timeout: 6000,
+                        top: 70
+                    });
+
+                    load_data_list(1);
+                } else {
+                    createToast({
+                        title: response.title,
+                        description: response.message,
+                        svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d63939" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-exclamation-circle"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M12 9v4" /><path d="M12 16v.01" /></svg>`,
+                        timeout: 6000,
+                        top: 70
+                    });
+                }
+            }
+        });
+    }
 </script>
+
+<div class="modal modal-blur fade" id="modal-createDemoDevice" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create Demo Device</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label">Device Name</label>
+                    <input type="text" class="form-control" name="demo-device-name" placeholder="Enter device name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Model</label>
+                    <input type="text" class="form-control" name="demo-device-model" placeholder="Enter model name">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Android Level</label>
+                    <input type="text" class="form-control" name="demo-android-level" placeholder="Enter android level">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-link link-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="createDemoDevice()">Create</button>
+            </div>
+        </div>
+    </div>
+</div>
