@@ -53,4 +53,3 @@
 
         // Legacy methods removed in favor of native Laravel driver (PathaoPayDriver)
     }
-    }

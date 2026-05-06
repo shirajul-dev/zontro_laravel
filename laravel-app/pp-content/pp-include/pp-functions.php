@@ -1989,9 +1989,7 @@
     function pp_set_transaction_status($transactionid, $status = '', $gateway_id = '', $trxid = '', $source_info = []){
         global $db_prefix;
 
-        $params = [ ':ref' => $transactionid, ':status' => 'initiated' ];
-
-        $response_transaciton = json_decode(getData($db_prefix.'transaction','WHERE ref = :ref AND status = :status','* FROM',$params),true);
+        $response_transaciton = json_decode(getData($db_prefix.'transaction','WHERE ref = "'.$transactionid.'" AND (status = "initiated" OR status = "pending")','* FROM'),true);
 
         if ($response_transaciton['status'] === true) {
             if($status == "canceled"){
@@ -2076,8 +2074,15 @@
                     return false;
                 }
 
-                $columns = ['processing_fee', 'discount_amount', 'local_net_amount', 'local_currency', 'gateway_id', 'status', 'trx_id', 'source_info', 'updated_date'];
-                $values = [$totalProcessingFee, $totalDiscount, $convertedAmount, $response_gateway['response'][0]['currency'], $gateway_id, 'completed', $trxid, $final_source_info, getCurrentDatetime('Y-m-d H:i:s')];
+                $sender_key = $source_info['sender_key'] ?? '--';
+                $sender_type = $source_info['sender_type'] ?? 'Personal';
+
+                if (is_array($source_info)) {
+                    unset($source_info['sender_key'], $source_info['sender_type']);
+                }
+
+                $columns = ['processing_fee', 'discount_amount', 'local_net_amount', 'local_currency', 'gateway_id', 'status', 'trx_id', 'sender_key', 'sender_type', 'source_info', 'updated_date'];
+                $values = [$totalProcessingFee, $totalDiscount, $convertedAmount, $response_gateway['response'][0]['currency'], $gateway_id, $status, $trxid, $sender_key, $sender_type, $final_source_info, getCurrentDatetime('Y-m-d H:i:s')];
                 $condition = 'id ="'.$response_transaciton['response'][0]['id'].'"'; 
 
                 updateData($db_prefix.'transaction', $columns, $values, $condition);
@@ -3049,6 +3054,7 @@
                             <input type="hidden" name="action-v2" value="transaction-verify">
                             <input type="hidden" name="gateway-id" value="'.$data['gateway']['gateway_id'].'">
                             <input type="hidden" name="transaction-id" value="'.$data['transaction']['ref'].'">
+                            <?php echo csrf_field(); ?>
 
                             <div class="form-group  mt-3" style="display: none">
                                 <label class="form-label">'.$data['lang']['mobile_number'].'</label>
@@ -3137,6 +3143,7 @@
                                 <input type="hidden" name="action-v2" value="transaction-verify">
                                 <input type="hidden" name="gateway-id" value="'.$data['gateway']['gateway_id'].'">
                                 <input type="hidden" name="transaction-id" value="'.$data['transaction']['ref'].'">
+                                <?php echo csrf_field(); ?>
 
                                 <div class="form-group  mt-3">
                                     <label class="form-label">'.$data['lang']['transaction_id'].'</label>

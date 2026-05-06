@@ -348,8 +348,20 @@
             });
         }
 
-        function success(){
-            location.href = "<?php echo pp_checkout_address();?>";
+        function success(data){
+            createToast({
+                title: data.title || 'Success',
+                description: data.message || 'Operation successful.',
+                svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
+                timeout: 4000,
+                top: 20
+            });
+
+            if (data.is_completed === 'true') {
+                setTimeout(() => {
+                    location.href = "<?php echo pp_checkout_address();?>";
+                }, 2000);
+            }
         }
 
         document.addEventListener('DOMContentLoaded', function() {

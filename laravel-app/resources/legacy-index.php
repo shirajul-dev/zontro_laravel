@@ -215,11 +215,8 @@
             $trx_id = '';
             $source_info = [];
             foreach ($_POST as $key => $value) {
-                if (!in_array($key, ['action-v2', 'transaction-id', 'bpid', 'gateway-id'])) {
-                    $source_info[] = [
-                        'label' => ucwords(str_replace(['-', '_'], ' ', $key)),
-                        'value' => $value
-                    ];
+                if (!in_array($key, ['action-v2', 'transaction-id', 'bpid', 'gateway-id', '_token'])) {
+                    $source_info[$key] = $value;
                     // Usually the first field after standard ones is the Trx ID
                     if ($trx_id === '') {
                         $trx_id = (string) $value;
@@ -232,7 +229,7 @@
                 exit;
             }
 
-            // Check for duplicate transaction ID
+            // Check for duplicate transaction ID (already used in pp_transaction)
             if (pp_check_transaction_id($trx_id)) {
                 echo json_encode(['status' => 'false', 'title' => 'Duplicate Transaction ID', 'message' => 'This Transaction ID has already been used.']);
                 exit;
@@ -245,15 +242,68 @@
                 echo json_encode(['status' => 'false', 'title' => 'Invalid Transaction', 'message' => 'Transaction not found.']);
                 exit;
             }
+            $transaction = $response_transaction['response'][0];
 
-            // For automation gateways, we set status to 'completed' (or 'pending' if the system requires it)
-            // Legacy PipraPay often sets it to 'completed' and lets the admin verify later if needed, 
-            // or uses a specific 'pending' state.
-            // Looking at pp-functions.php, pp_set_transaction_status handles the logic.
-            
-            pp_set_transaction_status($bpid, 'completed', $gateway_id, $trx_id, $source_info);
+            // Fetch gateway info to get sender_key and sender_type
+            $params = [':gateway_id' => $gateway_id, ':brand_id' => $transaction['brand_id']];
+            $response_gateway = json_decode(getData($db_prefix . 'gateways', 'WHERE gateway_id = :gateway_id AND brand_id = :brand_id', '* FROM', $params), true);
+            if ($response_gateway['status'] !== true) {
+                echo json_encode(['status' => 'false', 'title' => 'Gateway Error', 'message' => 'Gateway configuration not found.']);
+                exit;
+            }
+            $gateway = $response_gateway['response'][0];
 
-            echo json_encode(['status' => 'true', 'title' => 'Submitted', 'message' => 'Your payment information has been submitted successfully.']);
+            // Load gateway class to get info()
+            $sender_key = '';
+            $sender_type = '';
+            if (file_exists(base_path() . '/pp-content/pp-modules/pp-gateways/' . $gateway['slug'] . '/class.php')) {
+                require_once base_path() . '/pp-content/pp-modules/pp-gateways/' . $gateway['slug'] . '/class.php';
+                $className = str_replace(' ', '', ucwords(str_replace('-', ' ', $gateway['slug']))) . 'Gateway';
+                if (class_exists($className)) {
+                    $gateway_obj = new $className();
+                    $info = $gateway_obj->info();
+                    $sender_key = $info['sender_key'] ?? '';
+                    $sender_type = $info['sender_type'] ?? '';
+                }
+            }
+
+            $source_info['sender_key'] = $sender_key;
+            $source_info['sender_type'] = $sender_type;
+
+            // Attempt immediate SMS verification
+            $params = [
+                ':sender_key' => $sender_key,
+                ':type' => $sender_type,
+                ':trx_id' => $trx_id,
+                ':status' => 'approved'
+            ];
+            $response_sms = json_decode(getData($db_prefix . 'sms_data', 'WHERE sender_key = :sender_key AND type = :type AND trx_id = :trx_id AND status = :status', '* FROM', $params), true);
+
+            if ($response_sms['status'] === true) {
+                $sms = $response_sms['response'][0];
+                
+                // Fetch brand for tolerance
+                $response_brand = json_decode(getData($db_prefix . 'brands', 'WHERE brand_id = "' . $transaction['brand_id'] . '"'), true);
+                $tolerance = $response_brand['response'][0]['payment_tolerance'] ?? '0';
+
+                if (verifyPaymentTolerance($transaction['local_net_amount'], $sms['amount'], $tolerance)) {
+                    // Match found! Complete the transaction
+                    updateData($db_prefix . 'sms_data', ['status', 'updated_date'], ['used', getCurrentDatetime('Y-m-d H:i:s')], 'id = "' . $sms['id'] . '"');
+                    pp_set_transaction_status($bpid, 'completed', $gateway_id, $trx_id, $source_info);
+
+                    echo json_encode(['status' => 'true', 'is_completed' => 'true', 'title' => 'Verified Successfully', 'message' => 'Your payment has been verified and processed.']);
+                    exit;
+                } else {
+                    // Amount mismatch
+                    echo json_encode(['status' => 'false', 'title' => 'Amount Mismatch', 'message' => 'The amount in the SMS does not match the transaction amount.']);
+                    exit;
+                }
+            }
+
+            // Not found in SMS data (or not approved yet), set to pending
+            pp_set_transaction_status($bpid, 'pending', $gateway_id, $trx_id, $source_info);
+
+            echo json_encode(['status' => 'true', 'is_completed' => 'false', 'title' => 'Under Verification', 'message' => 'We have received your request. It is under verification, please wait a moment.']);
             exit;
         }
     }

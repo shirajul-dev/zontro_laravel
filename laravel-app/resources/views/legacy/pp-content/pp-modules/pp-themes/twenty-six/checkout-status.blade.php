@@ -100,6 +100,7 @@
                     'pending'   => ['text' => $data['lang']['payment_pending'], 'color' => 'warning', 'icon' => 'hourglass-split'],
                     'refunded'  => ['text' => $data['lang']['payment_refunded'], 'color' => 'info', 'icon' => 'arrow-counterclockwise'],
                     'canceled'  => ['text' => $data['lang']['payment_canceled'], 'color' => 'danger', 'icon' => 'x-circle-fill'],
+                    'failed'    => ['text' => $data['lang']['payment_failed'] ?? 'Payment Failed', 'color' => 'danger', 'icon' => 'x-circle-fill'],
                 ];
 
                 $currentStatus = $statusMap[$status] ?? $statusMap['pending'];
@@ -119,6 +120,7 @@
                                 echo '<path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 0-.853-.521A4 4 0 1 1 8 4v1l2-2-2-2v1a5 5 0 0 0 0 10z"/>';
                                 break;
                             case 'canceled':
+                            case 'failed':
                                 echo '<path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM4.646 4.646a.5.5 0 0 0 0 .708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646a.5.5 0 0 0-.708 0z"/>';
                                 break;
                         }
@@ -140,6 +142,7 @@
                             echo $data['lang']['change_status_refunded'];
                             break;
                         case 'canceled':
+                        case 'failed':
                             echo $data['lang']['change_status_cancled'];
                             break;
                     }
