@@ -65,7 +65,8 @@ class CheckoutController extends Controller
             return $this->handlePaymentLinkAction($request);
         }
 
-        return response()->json(['status' => 'false', 'message' => 'Invalid action.'], 400);
+        // Delegate to legacy runtime for any other actions (like transaction-verify)
+        return app(LegacyRuntimeService::class)->dispatch($request);
     }
 
     private function handleInvoiceAction(Request $request)

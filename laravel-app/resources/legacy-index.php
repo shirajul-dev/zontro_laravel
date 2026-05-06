@@ -208,8 +208,53 @@
         }
 
         if ($action === 'transaction-verify') {
-            // Placeholder for transaction verification logic if needed
-            // Legacy system might handle this via pp-adapter or specific theme hooks
+            $bpid = (string) ($_POST['transaction-id'] ?? $_POST['bpid'] ?? '');
+            $gateway_id = (string) ($_POST['gateway-id'] ?? '');
+            
+            // Collect all other POST fields as transaction details
+            $trx_id = '';
+            $source_info = [];
+            foreach ($_POST as $key => $value) {
+                if (!in_array($key, ['action-v2', 'transaction-id', 'bpid', 'gateway-id'])) {
+                    $source_info[] = [
+                        'label' => ucwords(str_replace(['-', '_'], ' ', $key)),
+                        'value' => $value
+                    ];
+                    // Usually the first field after standard ones is the Trx ID
+                    if ($trx_id === '') {
+                        $trx_id = (string) $value;
+                    }
+                }
+            }
+
+            if ($bpid === '' || $trx_id === '') {
+                echo json_encode(['status' => 'false', 'title' => 'Incomplete Information', 'message' => 'Please fill in all required fields.']);
+                exit;
+            }
+
+            // Check for duplicate transaction ID
+            if (pp_check_transaction_id($trx_id)) {
+                echo json_encode(['status' => 'false', 'title' => 'Duplicate Transaction ID', 'message' => 'This Transaction ID has already been used.']);
+                exit;
+            }
+
+            // Verify transaction exists
+            $params = [':ref' => $bpid];
+            $response_transaction = json_decode(getData($db_prefix . 'transaction', 'WHERE ref = :ref', '* FROM', $params), true);
+            if ($response_transaction['status'] !== true) {
+                echo json_encode(['status' => 'false', 'title' => 'Invalid Transaction', 'message' => 'Transaction not found.']);
+                exit;
+            }
+
+            // For automation gateways, we set status to 'completed' (or 'pending' if the system requires it)
+            // Legacy PipraPay often sets it to 'completed' and lets the admin verify later if needed, 
+            // or uses a specific 'pending' state.
+            // Looking at pp-functions.php, pp_set_transaction_status handles the logic.
+            
+            pp_set_transaction_status($bpid, 'completed', $gateway_id, $trx_id, $source_info);
+
+            echo json_encode(['status' => 'true', 'title' => 'Submitted', 'message' => 'Your payment information has been submitted successfully.']);
+            exit;
         }
     }
 

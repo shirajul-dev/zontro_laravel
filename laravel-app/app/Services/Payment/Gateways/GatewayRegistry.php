@@ -26,6 +26,11 @@ class GatewayRegistry
         $this->register('aamarpay', \App\Services\Payment\Gateways\Drivers\AamarpayDriver::class);
         $this->register('nagad-merchant-api', \App\Services\Payment\Gateways\Drivers\NagadDriver::class);
         $this->register('shurjopay', \App\Services\Payment\Gateways\Drivers\ShurjopayDriver::class);
+        $this->register('oxapay', \App\Services\Payment\Gateways\Drivers\OxaPayDriver::class);
+        $this->register('paystation', \App\Services\Payment\Gateways\Drivers\PaystationDriver::class);
+        $this->register('binance-personal', \App\Services\Payment\Gateways\Drivers\BinancePersonalDriver::class);
+        $this->register('eps', \App\Services\Payment\Gateways\Drivers\EpsDriver::class);
+        $this->register('pathaopay-merchant-api', \App\Services\Payment\Gateways\Drivers\PathaoPayDriver::class);
     }
 
     /**
