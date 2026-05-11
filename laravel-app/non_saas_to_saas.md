@@ -1537,3 +1537,361 @@ If you want to start implementation, the order should be:
 
 **Status:** Draft blueprint ready for implementation planning  
 **Next action:** Convert this blueprint into the actual SaaS architecture backlog and database migration plan
+
+---
+
+## 37. Implementation Backlog
+
+This backlog converts the SaaS blueprint into a practical delivery sequence. The order below is designed to reduce rework: foundation first, then onboarding, then billing, then tenant scoping, then admin control, then reporting and hardening.
+
+### Epic 1: SaaS foundation
+Goal:
+- Establish the tenant-aware core model without changing existing merchant behavior.
+
+Deliverables:
+- Create `tenants` and `tenant_users` tables.
+- Add `tenant_id` to all merchant-owned records.
+- Introduce `plans`, `plan_features`, `subscriptions`, and `usage_counters`.
+- Add tenant-aware authentication and middleware.
+- Define SuperAdmin and merchant role boundaries.
+
+Acceptance criteria:
+- A merchant record can be created independently of platform admin data.
+- Every merchant-owned resource can be resolved to one tenant.
+- SuperAdmin can bypass tenant scoping safely and with audit logging.
+
+### Epic 2: Merchant signup and onboarding
+Goal:
+- Let merchants register themselves from the public site.
+
+Deliverables:
+- Public signup screen.
+- Email and phone verification flow.
+- Business profile screen.
+- Document upload screen.
+- Onboarding checklist screen.
+- Automatic default brand creation.
+- Default free or trial plan assignment.
+
+Acceptance criteria:
+- A new merchant can register without internal admin intervention.
+- One default brand is created automatically.
+- The merchant lands on a guided onboarding flow after signup.
+
+### Epic 3: Verification and approval workflow
+Goal:
+- Make merchant verification explicit and reviewable.
+
+Deliverables:
+- `verification_requests` table.
+- `verification_documents` table.
+- Review queue for SuperAdmin/compliance.
+- Approve, reject, request-more-info, and suspend actions.
+- Notification events for every review state.
+
+Acceptance criteria:
+- Uploads are linked to one merchant tenant.
+- Review decisions are auditable.
+- The merchant sees the correct status at every stage.
+
+### Epic 4: Billing and subscriptions
+Goal:
+- Monetize the SaaS with plan-based access.
+
+Deliverables:
+- Plan management screens.
+- Subscription lifecycle logic.
+- Billing invoices and renewal history.
+- Trial expiration and grace period logic.
+- Manual SuperAdmin plan overrides.
+
+Acceptance criteria:
+- Plan changes affect feature access immediately.
+- Billing state can suspend or limit tenant actions.
+- SuperAdmin can see all subscription records.
+
+### Epic 5: Tenant scoping for merchant features
+Goal:
+- Ensure merchants only see their own operational data.
+
+Deliverables:
+- Tenant-aware queries for brands, transactions, invoices, payment links, customers, gateways, webhooks, domains, API keys, reports, and notifications.
+- Tenant policies and permission checks.
+- Resource ownership checks in controllers and services.
+- Audit logging for sensitive operations.
+
+Acceptance criteria:
+- One merchant cannot access another merchant’s records.
+- All major merchant screens work with tenant-scoped data.
+- Cross-tenant access is blocked by default.
+
+### Epic 6: Merchant operational screens
+Goal:
+- Make the dashboard useful for daily payment operations.
+
+Deliverables:
+- Dashboard widgets.
+- Transactions screen.
+- Invoice screen.
+- Payment link screen.
+- Customer screen.
+- Gateway setup screen.
+- Domain management screen.
+- API key management screen.
+- Webhook history screen.
+- Reports screen.
+
+Acceptance criteria:
+- The merchant can process payments, manage links, and review reporting in one tenant workspace.
+- Locked features are clearly shown with upgrade prompts.
+
+### Epic 7: SuperAdmin control center
+Goal:
+- Keep central platform control while preserving tenant isolation.
+
+Deliverables:
+- Merchant directory.
+- Merchant detail and status view.
+- Verification queue.
+- Plan editor.
+- Gateway policy screen.
+- Support queue.
+- Audit log viewer.
+- Feature flag management.
+
+Acceptance criteria:
+- SuperAdmin can manage the whole platform from one console.
+- Every platform-level action is logged.
+
+### Epic 8: Reporting, support, and compliance
+Goal:
+- Make the platform operationally safe and supportable.
+
+Deliverables:
+- Platform analytics.
+- Merchant analytics.
+- Support ticket flow.
+- Compliance actions and risk flags.
+- Export/report permissions.
+
+Acceptance criteria:
+- Support staff can help merchants without exposing unrelated tenant data.
+- Risk events are visible to SuperAdmin.
+
+### Epic 9: Security and hardening
+Goal:
+- Protect tenant data and reduce abuse.
+
+Deliverables:
+- Rate limiting.
+- Session and login protection.
+- IP/domain checks where needed.
+- Audit trail coverage for all sensitive actions.
+- Data retention rules.
+
+Acceptance criteria:
+- Tenant isolation is enforced at the policy and query level.
+- Sensitive actions are traceable.
+
+---
+
+## 38. Suggested Laravel Build Map
+
+The current Laravel app should be extended in layers rather than replaced. The list below describes the build areas that should be created or refactored.
+
+### Models to add or refactor
+- Tenant
+- TenantUser
+- Plan
+- PlanFeature
+- Subscription
+- UsageCounter
+- VerificationRequest
+- VerificationDocument
+- BillingInvoice
+- SupportTicket
+- AuditEvent
+
+### Existing models to tenant-scope
+- Brand
+- Transaction
+- Invoice
+- PaymentLink
+- Gateway
+- Customer
+- ApiKey or Api credential model
+- Domain
+- Notification
+- Webhook
+- Staff or team member model
+
+### Services to add
+- TenantResolver service
+- MerchantOnboarding service
+- VerificationWorkflow service
+- SubscriptionService
+- PlanLimitService
+- TenantAccessService
+- TenantAuditService
+- MerchantNotificationService
+
+### Policies and middleware to add
+- TenantScope middleware
+- SuperAdmin bypass policy
+- Merchant ownership policy
+- Plan access policy
+- Verification state policy
+- Domain access policy
+- API scope policy
+
+### Controllers to add or expand
+- Public registration controller
+- Merchant onboarding controller
+- Verification controller
+- Billing controller
+- Plan selection controller
+- Tenant dashboard controller
+- Merchant settings controller
+- SuperAdmin merchant controller
+- SuperAdmin verification controller
+- SuperAdmin plan controller
+- SuperAdmin audit controller
+
+### Routes to organize
+- Public auth and registration routes
+- Merchant portal routes under one authenticated tenant group
+- SuperAdmin routes under an admin-only prefix
+- API routes that resolve tenant context explicitly
+- Webhook/IPN routes that verify tenant ownership before processing
+
+### Views or screens to add
+- Public signup and pricing pages
+- Merchant onboarding wizard
+- Merchant dashboard widgets
+- Verification upload and status pages
+- Billing and subscription pages
+- SuperAdmin merchant overview pages
+- SuperAdmin verification queue pages
+- SuperAdmin plan management pages
+
+### Jobs and commands to add
+- Tenant provisioning job
+- Verification reminder job
+- Trial expiration reminder job
+- Subscription renewal job
+- Usage limit enforcement job
+- Audit log cleanup job
+- Notification dispatch job
+
+### Tests to add
+- Merchant signup and onboarding tests
+- Tenant isolation tests
+- Verification workflow tests
+- Plan limit tests
+- Subscription lifecycle tests
+- SuperAdmin access tests
+- Merchant dashboard visibility tests
+- API tenant scope tests
+
+---
+
+## 39. Screen-By-Screen Build Order
+
+Build in this sequence so the product becomes usable early while the deeper SaaS controls are still being added.
+
+### Stage 1: Public acquisition
+- Landing page.
+- Pricing page.
+- Signup page.
+- Login page.
+- Forgot password page.
+
+### Stage 2: Onboarding
+- Account verification page.
+- Business profile page.
+- Document upload page.
+- Default brand setup page.
+- Onboarding checklist page.
+
+### Stage 3: Core merchant operations
+- Dashboard.
+- Transactions.
+- Payment links.
+- Invoices.
+- Customers.
+- Gateways.
+
+### Stage 4: Growth and controls
+- Domains.
+- API keys.
+- Webhooks.
+- Reports.
+- Team and permissions.
+- Billing.
+- Settings.
+
+### Stage 5: Platform admin
+- Merchant directory.
+- Merchant detail.
+- Verification queue.
+- Plans.
+- Subscriptions.
+- Analytics.
+- Support.
+- Audit logs.
+- Feature flags.
+
+---
+
+## 40. Delivery Milestones
+
+### Milestone A: SaaS skeleton
+- Tenant tables exist.
+- Merchant signup works.
+- Default brand auto-creates.
+- Merchant can log in and see a scoped dashboard.
+
+### Milestone B: Merchant activation
+- Verification upload and review work.
+- Plan assignment works.
+- Merchant can configure a gateway and create test transactions.
+
+### Milestone C: Monetization
+- Billing and subscriptions work.
+- Upgrade/downgrade logic works.
+- Usage limits and feature gating are enforced.
+
+### Milestone D: Platform administration
+- SuperAdmin can manage all merchants.
+- SuperAdmin can review verification.
+- SuperAdmin can control plans and feature flags.
+
+### Milestone E: Hardening and scale
+- Tenant isolation is tested.
+- Audit logs are complete.
+- Notifications and support are production ready.
+
+---
+
+## 41. Implementation Rule Set
+
+Use these rules while building the SaaS version:
+- Never expose merchant data without tenant resolution.
+- Never enable a paid feature without checking plan and verification state.
+- Never create a merchant without creating the default tenant context.
+- Never approve risky features without an auditable decision.
+- Never skip tests for tenant boundaries.
+- Never remove existing functionality unless the SaaS replacement is already verified.
+
+---
+
+## 42. Build Outcome Target
+
+When this backlog is complete, the product should support this end state:
+- A merchant can register themselves on the public site.
+- A tenant and default brand are created automatically.
+- The merchant uploads documents and passes verification.
+- The merchant subscribes to a plan.
+- The merchant uses gateways, invoices, links, APIs, and reports inside one isolated workspace.
+- SuperAdmin can manage the whole platform without breaking tenant boundaries.
+- The platform is ready to scale as a real SaaS payment product.
