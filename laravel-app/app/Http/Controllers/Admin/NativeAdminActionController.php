@@ -530,7 +530,7 @@ class NativeAdminActionController extends Controller
             'status' => 'false',
             'title' => 'Invalid Action',
             'message' => 'The requested action is not available.',
-        ], 404);
+        ], 200);
     }
 
     private function handleSetDefaultBrand(Request $request): JsonResponse

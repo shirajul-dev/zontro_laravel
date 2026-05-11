@@ -81,7 +81,7 @@ class ApiVerifyPaymentMigrationToggleTest extends TestCase
 
         $this->app->instance(LegacyRuntimeService::class, $legacyMock);
 
-        $response = $this->postJson('/api/verify-payment', ['pp_id' => 'pp_123']);
+        $response = $this->postJson('/api/verify-payment', ['pp_id' => 'pp_123'], ['MHS-PIPRAPAY-API-KEY' => 'key_123']);
         $response->assertOk();
         $response->assertJson(['legacy' => true]);
     }

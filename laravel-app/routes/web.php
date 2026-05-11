@@ -35,7 +35,7 @@ Route::post('/', [LegacyRouteDispatchController::class, 'handleRootPost'])->name
 Route::match(['get', 'post'], '/api/{api_type}/{api_subtype?}', [ApiController::class, 'handle'])
     ->where('api_type', '[A-Za-z0-9_-]+')
     ->where('api_subtype', '[A-Za-z0-9_-]+')
-    ->middleware(['throttle:piprapay_api', 'api_auth'])
+    ->middleware(['throttle:piprapay_api'])
     ->name('api.handle');
 
 Route::match(['get', 'post'], '/ipn/{gateway_id}', [IpnController::class, 'handle'])

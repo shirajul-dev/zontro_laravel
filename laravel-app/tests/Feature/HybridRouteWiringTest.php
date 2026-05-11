@@ -40,7 +40,7 @@ class HybridRouteWiringTest extends TestCase
         $this->app->instance(LegacyRuntimeService::class, $legacyMock);
 
         $response = $this->post('/payment/abc123', [
-            'action-v2' => 'transaction-verify',
+            'action-v2' => 'unknown-action',
         ]);
 
         $response->assertOk();
@@ -95,7 +95,7 @@ class HybridRouteWiringTest extends TestCase
         $this->app->instance(LegacyRuntimeService::class, $legacyMock);
 
         $response = $this->post('/payment-link/pl_123', [
-            'action-v2' => 'payment-link',
+            'action-v2' => 'unknown-action',
         ]);
 
         $response->assertOk();

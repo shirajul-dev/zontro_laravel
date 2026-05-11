@@ -45,7 +45,7 @@ class DashboardController extends Controller
             'total_gateways' => PpGateway::where('brand_id', $brandId)->where('status', 'active')->count(),
             'pending_invoices' => PpInvoice::where('brand_id', $brandId)->where('status', 'unpaid')->count(),
             'last_cron' => $lastCron,
-            
+
             // Sparkline Data
             'chart_total_payments' => $this->getSparklineData(PpTransaction::class, $brandId, null, ['initiated', 'expired']),
             'chart_pending_payments' => $this->getSparklineData(PpTransaction::class, $brandId, 'pending'),

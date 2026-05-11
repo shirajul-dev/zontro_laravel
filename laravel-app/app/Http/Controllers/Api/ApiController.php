@@ -30,12 +30,8 @@ class ApiController extends Controller
      */
     public function handle(Request $request, string $api_type, ?string $api_subtype = null): JsonResponse
     {
-        // Start native migration on a low-risk API surface while keeping fallback live.
-        if (
-            config('piprapay.migration.native_api_checkout_enabled', false)
-            && $api_type === 'checkout'
-            && $api_subtype === 'health'
-        ) {
+        // Health check is always public - no auth required
+        if ($api_type === 'checkout' && $api_subtype === 'health') {
             return response()->json([
                 'status' => true,
                 'source' => 'laravel-native',
@@ -45,7 +41,61 @@ class ApiController extends Controller
             ]);
         }
 
-        if (config('piprapay.migration.native_api_verify_payment_enabled', false) && $api_type === 'verify-payment') {
+        // All other endpoints require API key
+        $apiKey = $request->header('MHS-PIPRAPAY-API-KEY');
+        if (!$apiKey) {
+            return response()->json([
+                'error' => [
+                    'code' => 'MISSING_API_KEY',
+                    'message' => 'The API key is required in the MHS-PIPRAPAY-API-KEY header.'
+                ]
+            ], 401);
+        }
+
+        $apiRow = \App\Models\PpApi::where('api_key', $apiKey)
+            ->where('status', 'active')
+            ->first();
+
+        if (!$apiRow) {
+            return response()->json([
+                'error' => [
+                    'code' => 'INVALID_API_KEY',
+                    'message' => 'The API key provided is incorrect or invalid.'
+                ]
+            ], 401);
+        }
+
+        if ($apiRow->expired_date && strtotime((string)$apiRow->expired_date) < time()) {
+            return response()->json([
+                'error' => [
+                    'code' => 'EXPIRED_API_KEY',
+                    'message' => 'The API key provided has expired.'
+                ]
+            ], 401);
+        }
+
+        $request->attributes->set('authenticated_api', $apiRow);
+
+        // Route checkout redirect/popup natively; keep other checkout subtypes on legacy for now.
+        if ($api_type === 'checkout' && in_array($api_subtype, ['redirect', 'popup'], true)) {
+            return $this->handleNativeCheckout($request);
+        }
+
+        if ($api_type === 'verify-payment') {
+            // Check if native verify payment is enabled
+            if (!config('piprapay.migration.native_api_verify_payment_enabled', false)) {
+                return $this->dispatchLegacyAsJson($request);
+            }
+
+            // Check scope for verify-payment
+            if (!$this->hasRequiredScope($apiRow, 'verify_payment')) {
+                return response()->json([
+                    'error' => [
+                        'code' => 'INSUFFICIENT_SCOPE',
+                        'message' => 'The API key does not have permission to verify payments.'
+                    ]
+                ], 400);
+            }
             return $this->handleNativeVerifyPayment($request);
         }
 
@@ -57,15 +107,25 @@ class ApiController extends Controller
             return $this->handleNativeTransactionList($request);
         }
 
-        if ($api_type === 'checkout') {
-            return $this->handleNativeCheckout($request);
-        }
-
         if ($api_type === 'refund-payment') {
             return $this->handleNativeRefundPayment($request);
         }
 
         return $this->dispatchLegacyAsJson($request);
+    }
+
+    private function hasRequiredScope(\App\Models\PpApi $apiRow, string $requiredScope): bool
+    {
+        $scopes = $apiRow->api_scopes;
+
+        // Handle if scopes is already an array (Eloquent casting)
+        if (is_array($scopes)) {
+            return in_array($requiredScope, $scopes, true);
+        }
+
+        // Handle if scopes is a JSON string
+        $decodedScopes = json_decode((string)$scopes, true) ?? [];
+        return in_array($requiredScope, $decodedScopes, true);
     }
 
     /**
@@ -92,6 +152,12 @@ class ApiController extends Controller
         $content = $response->getContent();
         $data = json_decode($content, true);
 
+        // If content is valid JSON, return it as is
+        if (is_array($data)) {
+            return response()->json($data, $response->getStatusCode());
+        }
+
+        // Otherwise wrap it in a message field
         return response()->json(['message' => $content], $response->getStatusCode());
     }
 
@@ -125,7 +191,7 @@ class ApiController extends Controller
         $apiType = 'checkout';
         $pathInfo = $request->getPathInfo();
         $segments = explode('/', trim($pathInfo, '/'));
-        
+
         $checkoutType = null;
         if (count($segments) >= 3 && strtolower($segments[0]) === 'api' && strtolower($segments[1]) === 'checkout') {
             $checkoutType = strtolower($segments[2]);

@@ -65,18 +65,12 @@ class AdminActionsMigrationToggleTest extends TestCase
     {
         config(['piprapay.migration.native_admin_actions_enabled' => true]);
 
-        $legacyMock = Mockery::mock(LegacyRuntimeService::class);
-        $legacyMock->shouldReceive('dispatch')
-            ->once()
-            ->andReturn(response('{"legacy":true}', 200, ['Content-Type' => 'application/json']));
-
-        $this->app->instance(LegacyRuntimeService::class, $legacyMock);
-
         $response = $this->post('/admin/dashboard', [
             'action' => 'unknown-admin-action',
         ]);
 
         $response->assertOk();
+        $response->assertJsonPath('status', 'false');
 
         $filePath = $this->fallbackTrackerFilePath();
         $this->assertTrue(File::exists($filePath));
