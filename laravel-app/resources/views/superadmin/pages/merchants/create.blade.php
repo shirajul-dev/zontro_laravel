@@ -101,13 +101,29 @@
                             </div>
                         </div>
                         <div class="flex items-center flex-wrap lg:flex-nowrap gap-2.5">
-                            <label class="kt-form-label max-w-48 w-full">Password <span class="text-danger">*</span></label>
+                            <label class="kt-form-label max-w-48 w-full">Subscription Plan <span class="text-danger">*</span></label>
                             <div class="grow">
-                                <input class="kt-input w-full" name="password" placeholder="Enter secure password" type="password" required>
+                                <select class="kt-input w-full" name="plan_id" required>
+                                    <option value="">Select a Plan</option>
+                                    @foreach($plans as $plan)
+                                        <option value="{{ $plan->id }}" {{ old('plan_id') == $plan->id ? 'selected' : ($plan->is_default ? 'selected' : '') }}>
+                                            {{ $plan->name }} ({{ $plan->currency }} {{ number_format($plan->price, 2) }} / {{ $plan->interval }})
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
-                        <div class="flex items-baseline flex-wrap gap-2.5">
-                            <label class="kt-form-label max-w-48 w-full">Account Status</label>
+                        <div class="flex items-center flex-wrap lg:flex-nowrap gap-2.5">
+                            <label class="kt-form-label max-w-48 w-full">Account Password <span class="text-danger">*</span></label>
+                            <div class="grow relative" x-data="{ show: false }">
+                                <input class="kt-input w-full" :type="show ? 'text' : 'password'" name="password" placeholder="Min 6 characters" required>
+                                <button type="button" @click="show = !show" class="absolute inset-y-0 end-0 pe-3 flex items-center text-muted-foreground hover:text-primary">
+                                    <i class="ki-filled" :class="show ? 'ki-eye-slash' : 'ki-eye'"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center flex-wrap lg:flex-nowrap gap-2.5">
+                            <label class="kt-form-label max-w-48 w-full">Initial Status <span class="text-danger">*</span></label>
                             <div class="grow">
                                 <select class="kt-input w-full" name="status">
                                     <option value="active" {{ old('status') == 'active' ? 'selected' : '' }}>Active</option>

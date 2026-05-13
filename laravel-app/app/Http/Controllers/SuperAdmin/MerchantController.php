@@ -43,7 +43,8 @@ class MerchantController extends Controller
      */
     public function create()
     {
-        return view('superadmin.pages.merchants.create');
+        $plans = \App\Models\PpPlan::where('is_active', true)->get();
+        return view('superadmin.pages.merchants.create', compact('plans'));
     }
 
     /**
@@ -68,6 +69,7 @@ class MerchantController extends Controller
             'email' => 'required|email|unique:pp_admin,email|max:100',
             'password' => 'required|string|min:3',
             'status' => 'required|in:active,suspend',
+            'plan_id' => 'required|exists:pp_plans,id',
             'brand_name' => 'required|string|max:255',
             'support_email' => 'required|email|max:100',
             'support_phone' => 'nullable|string|max:20',
@@ -106,7 +108,9 @@ class MerchantController extends Controller
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
                 'status' => $request->status,
+                'plan_id' => $request->plan_id,
                 'role' => 'admin', // Default role for merchant
+                'user_type' => 'merchant',
                 'created_date' => now()->format('Y-m-d H:i:s'),
                 'updated_date' => now()->format('Y-m-d H:i:s'),
             ]);
@@ -154,7 +158,6 @@ class MerchantController extends Controller
             DB::commit();
 
             return redirect()->route('superadmin.merchants.index')->with('success', 'Merchant and Brand created successfully');
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Merchant creation failed: ' . $e->getMessage(), [
@@ -173,6 +176,7 @@ class MerchantController extends Controller
         $merchant = PpAdmin::where('pp_admin.a_id', $id)
             ->leftJoin('pp_permission', 'pp_admin.a_id', '=', 'pp_permission.a_id')
             ->leftJoin('pp_brands', 'pp_permission.brand_id', '=', 'pp_brands.brand_id')
+            ->leftJoin('pp_plans', 'pp_admin.plan_id', '=', 'pp_plans.id')
             ->select(
                 'pp_admin.*',
                 'pp_brands.name as brand_name',
@@ -181,7 +185,9 @@ class MerchantController extends Controller
                 'pp_brands.support_email_address as support_email',
                 'pp_brands.support_phone_number as support_phone',
                 'pp_brands.support_website',
-                'pp_brands.brand_id'
+                'pp_brands.brand_id',
+                'pp_plans.name as plan_name',
+                'pp_plans.features as plan_features'
             )
             ->firstOrFail();
 
@@ -208,7 +214,8 @@ class MerchantController extends Controller
             )
             ->firstOrFail();
 
-        return view('superadmin.pages.merchants.edit', compact('merchant'));
+        $plans = \App\Models\PpPlan::where('is_active', true)->get();
+        return view('superadmin.pages.merchants.edit', compact('merchant', 'plans'));
     }
 
     /**
@@ -223,6 +230,7 @@ class MerchantController extends Controller
             'brand_name' => 'required|string|max:255',
             'support_email' => 'required|email|max:255',
             'status' => 'required|in:active,suspend',
+            'plan_id' => 'required|exists:pp_plans,id',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -239,6 +247,7 @@ class MerchantController extends Controller
                 'username' => $request->username,
                 'email' => $request->email,
                 'status' => $request->status,
+                'plan_id' => $request->plan_id,
                 'updated_date' => now()->format('Y-m-d H:i:s'),
             ];
 
@@ -270,7 +279,6 @@ class MerchantController extends Controller
             DB::commit();
 
             return redirect()->route('superadmin.merchants.show', $id)->with('success', 'Merchant updated successfully');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Update failed: ' . $e->getMessage())->withInput();

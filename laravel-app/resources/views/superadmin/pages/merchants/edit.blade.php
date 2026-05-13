@@ -80,6 +80,18 @@
                                 <div class="text-xs text-muted-foreground mt-1">Only fill this if you want to change the password.</div>
                             </div>
                         </div>
+                        <div class="flex items-center flex-wrap lg:flex-nowrap gap-2.5">
+                            <label class="kt-form-label max-w-48 w-full">Subscription Plan <span class="text-danger">*</span></label>
+                            <div class="grow">
+                                <select class="kt-input w-full" name="plan_id" required>
+                                    @foreach($plans as $plan)
+                                        <option value="{{ $plan->id }}" {{ old('plan_id', $merchant->plan_id) == $plan->id ? 'selected' : '' }}>
+                                            {{ $plan->name }} ({{ $plan->currency }} {{ number_format($plan->price, 2) }} / {{ $plan->interval }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                         <div class="flex items-baseline flex-wrap gap-2.5">
                             <label class="kt-form-label max-w-48 w-full">Account Status</label>
                             <div class="grow">

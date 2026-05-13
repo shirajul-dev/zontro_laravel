@@ -26,6 +26,16 @@ Route::domain('root.' . $domain)->group(function () {
             Route::post('/{merchant}/suspend', [MerchantController::class, 'suspend'])->name('superadmin.merchants.suspend');
             Route::post('/{merchant}/reactivate', [MerchantController::class, 'reactivate'])->name('superadmin.merchants.reactivate');
         });
+
+        // Plan Routes
+        Route::prefix('plans')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SuperAdmin\PlanController::class, 'index'])->name('superadmin.plans.index');
+            Route::get('/create', [\App\Http\Controllers\SuperAdmin\PlanController::class, 'create'])->name('superadmin.plans.create');
+            Route::post('/', [\App\Http\Controllers\SuperAdmin\PlanController::class, 'store'])->name('superadmin.plans.store');
+            Route::get('/{plan}/edit', [\App\Http\Controllers\SuperAdmin\PlanController::class, 'edit'])->name('superadmin.plans.edit');
+            Route::put('/{plan}', [\App\Http\Controllers\SuperAdmin\PlanController::class, 'update'])->name('superadmin.plans.update');
+            Route::delete('/{plan}', [\App\Http\Controllers\SuperAdmin\PlanController::class, 'destroy'])->name('superadmin.plans.destroy');
+        });
     });
 
     Route::post('/login', [AuthController::class, 'login'])->name('superadmin.login.submit');
