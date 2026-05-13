@@ -221,7 +221,7 @@ class AuthController extends Controller
     {
         $adminCookie = $request->cookie('pp_admin');
         if ($adminCookie) {
-            PpBrowserLog::where('cookie', $adminCookie)->update(['status' => 'inactive']);
+            PpBrowserLog::where('cookie', $adminCookie)->update(['status' => 'expired']);
         }
 
         Auth::guard('pp_admin')->logout();

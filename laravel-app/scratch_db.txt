@@ -1,0 +1,46 @@
+
+  zontropay.pp_brands ........................................................  
+  Columns ................................................................. 26  
+  Size .............................................................. 96.00 KB  
+  Engine .............................................................. InnoDB  
+  Collation ............................................... utf8mb4_unicode_ci  
+
+  Column ................................................................ Type  
+  id int, autoincrement ..................................... int(10) unsigned  
+  tenant_id bigint, nullable ............................. bigint(20) unsigned  
+  brand_id varchar, utf8mb4_unicode_ci ........................... varchar(15)  
+  favicon text, nullable, utf8mb4_unicode_ci ............................ text  
+  logo text, nullable, utf8mb4_unicode_ci ............................... text  
+  identify_name varchar, utf8mb4_unicode_ci .............. Default varchar(50)  
+  name text, nullable, utf8mb4_unicode_ci ............................... text  
+  support_email_address text, nullable, utf8mb4_unicode_ci .............. text  
+  support_phone_number text, nullable, utf8mb4_unicode_ci ............... text  
+  support_website text, nullable, utf8mb4_unicode_ci .................... text  
+  whatsapp_number text, nullable, utf8mb4_unicode_ci .................... text  
+  telegram text, nullable, utf8mb4_unicode_ci ........................... text  
+  facebook_messenger text, nullable, utf8mb4_unicode_ci ................. text  
+  facebook_page text, nullable, utf8mb4_unicode_ci ...................... text  
+  theme varchar, utf8mb4_unicode_ci .................. twenty-six varchar(120)  
+  street_address text, nullable, utf8mb4_unicode_ci ..................... text  
+  city_town text, nullable, utf8mb4_unicode_ci .......................... text  
+  postal_code text, nullable, utf8mb4_unicode_ci ........................ text  
+  country text, nullable, utf8mb4_unicode_ci ............................ text  
+  timezone varchar, utf8mb4_unicode_ci ............... Asia/Dhaka varchar(150)  
+  language varchar, utf8mb4_unicode_ci ....................... en varchar(150)  
+  currency_code varchar, utf8mb4_unicode_ci ................. BDT varchar(150)  
+  autoExchange enum, utf8mb4_unicode_ci .. disabled enum('disabled','enabled')  
+  payment_tolerance varchar, utf8mb4_unicode_ci ............... 0 varchar(150)  
+  created_date varchar, utf8mb4_unicode_ci .................... -- varchar(20)  
+  updated_date varchar, utf8mb4_unicode_ci .................... -- varchar(20)  
+
+  Index ......................................................................  
+  autoexchange autoExchange ............................................ btree  
+  brand_id brand_id .................................................... btree  
+  created_date created_date, updated_date .................... btree, compound  
+  identify_name identify_name .......................................... btree  
+  pp_brands_tenant_id_foreign tenant_id ................................ btree  
+  primary id .................................................. btree, primary  
+
+  Foreign Key .......................................... On Update / On Delete  
+  pp_brands_tenant_id_foreign tenant_id references id on pp_tenants  restrict / restrict  
+

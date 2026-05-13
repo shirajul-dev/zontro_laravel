@@ -47,6 +47,11 @@ return [
             'driver' => 'session',
             'provider' => 'pp_admins',
         ],
+
+        'superadmin' => [
+            'driver' => 'session',
+            'provider' => 'superadmins',
+        ],
     ],
 
     /*
@@ -70,6 +75,11 @@ return [
         'pp_admins' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', PpAdmin::class),
+        ],
+
+        'superadmins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\SuperAdmin::class,
         ],
 
         // 'pp_admins' => [
