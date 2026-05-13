@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\MerchantController;
 use App\Http\Controllers\Admin\NativeAdminActionController;
 use App\Http\Controllers\Admin\NativeAdminPageController;
 use Illuminate\Support\Facades\Route;
@@ -41,6 +42,11 @@ Route::group(['prefix' => $adminPath], function () {
     // Brand Management
     Route::get('/brands', [BrandController::class, 'index'])->name('admin.brands.index');
     Route::post('/api/brands/list', [BrandController::class, 'list'])->name('admin.brands.list.ajax');
+
+    // Merchant Management
+    Route::get('/merchants', [MerchantController::class, 'index'])->name('admin.merchants.index');
+    Route::get('/merchants/create', [MerchantController::class, 'create'])->name('admin.merchants.create');
+    Route::post('/api/merchants/list', [MerchantController::class, 'list'])->name('admin.merchants.list.ajax');
 
     // Account & Profile
     Route::get('/my-account', [NativeAdminPageController::class, 'myAccount'])->name('native.admin.my-account');

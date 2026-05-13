@@ -8,6 +8,7 @@
             'version_channel' => 'beta',
         ];
         $csrfToken = $csrfToken ?? ($csrf_token ?? '');
+        $isSuperAdmin = ($global_user_response['response'][0]['user_type'] ?? '') === 'superadmin';
     ?>
     <meta charset="utf-8">
     <meta name="author" content="Softnio">
@@ -345,6 +346,25 @@
                 </a>
               </li>
 
+              @if($isSuperAdmin)
+              <!-- Management Heading -->
+              <li class="card-title pt-3">Management</li>
+
+              <!-- Merchants -->
+              <li class="nav-item nav-item-merchants <?= canAccessPage(json_decode($global_response_permission['response'][0]['permission'], true), 'merchants', $global_user_response['response'][0]['role']) ? '' : 'd-none' ?>"
+                  onclick="load_content('Merchants','<?php echo $site_url.$path_admin ?>/merchants','nav-item-merchants')">
+                <a href="javascript:void(0)" class="nav-link d-flex align-items-center rounded">
+                  <span class="nav-link-icon d-inline-flex align-items-center justify-content-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-building-community">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                      <path d="M8 9l5 5v7h-5v-4m0 4h-5v-7l5 -5m1 1v-2a1 1 0 0 1 1 -1h2a1 1 0 0 1 1 1v7h3a1 1 0 0 1 1 1v5a1 1 0 0 1 -1 1h-7a1 1 0 0 1 -1 -1v-3a1 1 0 0 0 -1 -1h-1" />
+                    </svg>
+                  </span>
+                  <span class="nav-link-title ms-2">Merchants</span>
+                </a>
+              </li>
+              @endif
+
               <!-- Administration Heading -->
               <li class="card-title pt-3">Administration</li>
 
@@ -384,6 +404,7 @@
                 </a>
               </li>
 
+              @if($isSuperAdmin)
               <!-- System Settings -->
               <li class="nav-item nav-item-system-settings <?= canAccessPage(json_decode($global_response_permission['response'][0]['permission'], true), 'system_settings', $global_user_response['response'][0]['role']) ? '' : 'd-none' ?>"
                   onclick="load_content('System Settings','<?php echo $site_url.$path_admin ?>/system-settings','nav-item-system-settings')">
@@ -392,6 +413,7 @@
                   <span class="nav-link-title ms-2">System Settings</span>
                 </a>
               </li>
+              @endif
 
               <!-- Activities -->
               <li class="nav-item nav-item-activities" onclick="load_content('Activities','<?php echo $site_url.$path_admin ?>/activities','nav-item-activities')">

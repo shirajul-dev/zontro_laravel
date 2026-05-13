@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class BrandAdminActionService
 {
-    public function list(array $input, string $currentBrandId, string $brandTimezone): array
+    public function list(array $input, string $currentBrandId, string $brandTimezone, string $userType = 'staff'): array
     {
         $searchInput = trim((string) ($input['search_input'] ?? ''));
         $filterStart = trim((string) ($input['filter_start'] ?? ''));
@@ -26,6 +26,11 @@ class BrandAdminActionService
         }
 
         $query = PpBrand::query()->where('identify_name', '!=', '');
+
+        // Multi-tenant filtering: Merchants only see their own brand
+        if ($userType !== 'superadmin') {
+            $query->where('brand_id', $currentBrandId);
+        }
 
         if ($filterStart !== '') {
             $query->where('created_date', '>=', $filterStart . ' 00:00:00');
@@ -59,22 +64,12 @@ class BrandAdminActionService
             ];
         }
 
-        $timezone = $brandTimezone === '' || $brandTimezone === '--' ? 'Asia/Dhaka' : $brandTimezone;
-
-        $response = $rows->map(function (PpBrand $row) use ($timezone, $currentBrandId): array {
-            $deletable = 'true';
-            if ((int) $row->id === 1 || (string) $row->brand_id === $currentBrandId) {
-                $deletable = 'false';
-            }
-
+        $response = $rows->map(static function (PpBrand $row) use ($brandTimezone): array {
             return [
                 'id' => (string) $row->brand_id,
-                'db_id' => (int) $row->id,
-                'deleteable' => $deletable,
                 'identify_name' => (string) $row->identify_name,
-                'name' => (string) $row->name,
-                'created_date' => convertUTCtoUserTZ((string) $row->created_date, $timezone, 'M d, Y h:i A'),
-                'updated_date' => convertUTCtoUserTZ((string) $row->updated_date, $timezone, 'M d, Y h:i A'),
+                'brand_name' => (string) $row->name,
+                'created_date' => convertUTCtoUserTZ((string) $row->created_date, $brandTimezone, 'M d, Y h:i A'),
             ];
         })->values()->all();
 
@@ -90,114 +85,12 @@ class BrandAdminActionService
         ];
     }
 
-    public function bulkAction(string $actionId, array $selectedIds, string $currentBrandId, bool $canDelete): array
-    {
-        if ($selectedIds === []) {
-            return [
-                'status' => 'false',
-                'title' => 'Request Failed',
-                'message' => 'No brands selected.',
-            ];
-        }
-
-        $ids = array_values(array_filter(array_map(static fn ($id) => (string) $id, $selectedIds), static fn ($id) => $id !== ''));
-        if ($ids === []) {
-            return [
-                'status' => 'false',
-                'title' => 'Request Failed',
-                'message' => 'No brands selected.',
-            ];
-        }
-
-        foreach ($ids as $itemId) {
-            $brand = PpBrand::query()->where('brand_id', $itemId)->first();
-            if ($brand === null) {
-                continue;
-            }
-
-            if ($actionId === 'deleted') {
-                if ((int) $brand->id === 1 || (string) $brand->brand_id === $currentBrandId) {
-                    continue;
-                }
-
-                if (!$canDelete) {
-                    continue;
-                }
-
-                $this->deleteBrandWithDependencies((string) $brand->brand_id);
-            }
-        }
-
-        return [
-            'status' => 'true',
-            'title' => 'Brands ' . $actionId,
-            'message' => 'The selected brands have been ' . $actionId . ' successfully.',
-        ];
-    }
-
-    public function delete(string $itemId, string $currentBrandId): array
-    {
-        $brand = PpBrand::query()->where('brand_id', $itemId)->first();
-        if ($brand === null) {
-            return [
-                'status' => 'false',
-                'title' => 'Request Failed',
-                'message' => 'Invalid request',
-            ];
-        }
-
-        if ((int) $brand->id === 1 || (string) $brand->brand_id === $currentBrandId) {
-            return [
-                'status' => 'false',
-                'title' => 'Request Failed',
-                'message' => 'Invalid request',
-            ];
-        }
-
-        $this->deleteBrandWithDependencies((string) $brand->brand_id);
-
-        return [
-            'status' => 'true',
-            'title' => 'Brands Deleted',
-            'message' => 'The selected brand have been deleted successfully.',
-        ];
-    }
-
-    private function deleteBrandWithDependencies(string $brandId): void
-    {
-        DB::table('pp_brands')->where('brand_id', $brandId)->delete();
-        DB::table('pp_api')->where('brand_id', $brandId)->delete();
-        DB::table('pp_currency')->where('brand_id', $brandId)->delete();
-        DB::table('pp_customer')->where('brand_id', $brandId)->delete();
-        DB::table('pp_env')->where('brand_id', $brandId)->delete();
-        DB::table('pp_faq')->where('brand_id', $brandId)->delete();
-        DB::table('pp_gateways')->where('brand_id', $brandId)->delete();
-        DB::table('pp_gateways_parameter')->where('brand_id', $brandId)->delete();
-        DB::table('pp_invoice')->where('brand_id', $brandId)->delete();
-        DB::table('pp_invoice_items')->where('brand_id', $brandId)->delete();
-
-        $paymentLinkRefs = DB::table('pp_payment_link')
-            ->where('brand_id', $brandId)
-            ->pluck('ref')
-            ->map(static fn ($ref) => (string) $ref)
-            ->all();
-
-        foreach ($paymentLinkRefs as $ref) {
-            DB::table('pp_payment_link_field')->where('paymentLinkID', $ref)->delete();
-        }
-
-        DB::table('pp_payment_link')->where('brand_id', $brandId)->delete();
-        DB::table('pp_permission')->where('brand_id', $brandId)->delete();
-        DB::table('pp_transaction')->where('brand_id', $brandId)->delete();
-        DB::table('pp_webhook_log')->where('brand_id', $brandId)->delete();
-    }
-
-    private function buildPaginationHtml(int $page, int $totalPages): string
+    private function buildPaginationHtml(int $currentPage, int $totalPages): string
     {
         $html = '<ul class="pagination m-0 ms-auto">';
 
-        $html .= '<li class="page-item' . ($page <= 1 ? ' disabled' : '') . '">'
-            . '<button class="page-link" ' . ($page > 1 ? 'data-page="' . ($page - 1) . '"' : '') . '>'
+        $html .= '<li class="page-item' . ($currentPage <= 1 ? ' disabled' : '') . '">'
+            . '<button class="page-link" ' . ($currentPage > 1 ? 'data-page="' . ($currentPage - 1) . '"' : '') . '>'
             . '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">'
             . '<path d="M15 6l-6 6l6 6"></path>'
             . '</svg>'
@@ -205,112 +98,28 @@ class BrandAdminActionService
             . '</li>';
 
         for ($i = 1; $i <= $totalPages; $i++) {
-            $html .= '<li class="page-item' . ($i === $page ? ' active' : '') . '">'
+            $html .= '<li class="page-item' . ($i === $currentPage ? ' active' : '') . '">'
                 . '<button class="page-link" data-page="' . $i . '">' . $i . '</button>'
                 . '</li>';
         }
 
-        $html .= '<li class="page-item' . ($page >= $totalPages ? ' disabled' : '') . '">'
-            . '<button class="page-link" ' . ($page < $totalPages ? 'data-page="' . ($page + 1) . '"' : '') . '>'
+        $html .= '<li class="page-item' . ($currentPage >= $totalPages ? ' disabled' : '') . '">'
+            . '<button class="page-link" ' . ($currentPage < $totalPages ? 'data-page="' . ($currentPage + 1) . '"' : '') . '>'
             . '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-1">'
             . '<path d="M9 6l6 6l-6 6"></path>'
             . '</svg>'
             . '</button>'
             . '</li>';
 
+        $html .= '</ul>';
+
         return $html;
     }
 
-    public function createBrand(array $input, string $currentAdminRole, string $currentAdminAId): array|object
+    public function infoById(int $itemId): array
     {
-        $brandName = trim((string) ($input['brand-name'] ?? ''));
-
-        if ($brandName === '') {
-            return [
-                'status' => 'false',
-                'title' => 'Incomplete Information',
-                'message' => 'Please fill in all required fields before proceeding.',
-            ];
-        }
-
-        if (PpBrand::query()->where('identify_name', $brandName)->exists()) {
-            return [
-                'status' => 'false',
-                'title' => 'Duplicate Brand',
-                'message' => 'A brand with this name already exists. Please choose a different name.',
-            ];
-        }
-
-        $brandId = generateItemID();
-
-        PpBrand::query()->create([
-            'brand_id' => $brandId,
-            'identify_name' => $brandName,
-            'created_date' => now()->format('Y-m-d H:i:s'),
-            'updated_date' => now()->format('Y-m-d H:i:s'),
-        ]);
-
-        $permissionSchemaJson = json_encode(permissionSchema());
-
-        DB::table('pp_permission')->insert([
-            'brand_id' => $brandId,
-            'a_id' => $currentAdminAId,
-            'permission' => $permissionSchemaJson,
-            'created_date' => now()->format('Y-m-d H:i:s'),
-            'updated_date' => now()->format('Y-m-d H:i:s'),
-        ]);
-
-        DB::table('pp_currency')->insert([
-            'brand_id' => $brandId,
-            'code' => 'BDT',
-            'symbol' => '৳',
-            'created_date' => now()->format('Y-m-d H:i:s'),
-            'updated_date' => now()->format('Y-m-d H:i:s'),
-        ]);
-
-        if ($currentAdminRole !== 'admin') {
-            $admins = DB::table('pp_admin')->where('role', 'admin')->get(['a_id']);
-            foreach ($admins as $admin) {
-                DB::table('pp_permission')->insert([
-                    'brand_id' => $brandId,
-                    'a_id' => (string) $admin->a_id,
-                    'permission' => $permissionSchemaJson,
-                    'created_date' => now()->format('Y-m-d H:i:s'),
-                    'updated_date' => now()->format('Y-m-d H:i:s'),
-                ]);
-            }
-        }
-
-        return \Illuminate\Support\Facades\Response::json([
-            'status' => 'true',
-            'title' => 'Brand Created',
-            'message' => 'The brand has been created successfully.',
-        ])->cookie('pp_brand', $brandId, 60 * 24 * 365, '/');
-    }
-
-    public function editBrand(array $input, string $currentGlobalBrandId, bool $isSuper = false): array
-    {
-        $brandName = trim((string) ($input['brand-name'] ?? ''));
-        $brandId = trim((string) ($input['b_id'] ?? ''));
-
-        if ($brandName === '' || $brandId === '') {
-            return [
-                'status' => 'false',
-                'title' => 'Incomplete Information',
-                'message' => 'Please fill in all required fields before proceeding.',
-            ];
-        }
-
-        $brand = PpBrand::query()->where('brand_id', $brandId)->first();
+        $brand = PpBrand::query()->where('id', $itemId)->first();
         if ($brand === null) {
-            return [
-                'status' => 'false',
-                'title' => 'Request Failed',
-                'message' => 'Invalid brand id',
-            ];
-        }
-
-        if (((int) $brand->id === 1 && !$isSuper) || (string) $brand->brand_id === $currentGlobalBrandId) {
             return [
                 'status' => 'false',
                 'title' => 'Request Failed',
@@ -318,18 +127,78 @@ class BrandAdminActionService
             ];
         }
 
-        if ((string) $brand->identify_name !== $brandName) {
-            if (PpBrand::query()->where('identify_name', $brandName)->exists()) {
-                return [
-                    'status' => 'false',
-                    'title' => 'Duplicate Brand',
-                    'message' => 'A brand with this name already exists. Please choose a different name.',
-                ];
-            }
+        return [
+            'status' => 'true',
+            'response' => $brand->toArray(),
+        ];
+    }
+
+    public function create(array $postData, string $siteUrl): array
+    {
+        $brandName = trim((string) ($postData['brand_name'] ?? ''));
+        $identifyName = trim((string) ($postData['identify_name'] ?? ''));
+
+        if ($brandName === '' || $identifyName === '') {
+            return [
+                'status' => 'false',
+                'title' => 'Incomplete Information',
+                'message' => 'Please fill in all required fields.',
+            ];
+        }
+
+        if (PpBrand::query()->where('identify_name', $identifyName)->exists()) {
+            return [
+                'status' => 'false',
+                'title' => 'Identify Name Exists',
+                'message' => 'The identify name already exists.',
+            ];
+        }
+
+        $brandId = 'BRD' . strtoupper(\Illuminate\Support\Str::random(10));
+
+        PpBrand::create([
+            'brand_id' => $brandId,
+            'name' => $brandName,
+            'identify_name' => $identifyName,
+            'created_date' => now()->format('Y-m-d H:i:s'),
+            'updated_date' => now()->format('Y-m-d H:i:s'),
+            'theme' => 'twenty-six',
+            'timezone' => 'Asia/Dhaka',
+            'language' => 'en',
+            'currency_code' => 'BDT',
+        ]);
+
+        return [
+            'status' => 'true',
+            'title' => 'Brand Created',
+            'message' => 'The brand has been created successfully.',
+        ];
+    }
+
+    public function edit(array $postData): array
+    {
+        $itemId = (int) ($postData['ItemID'] ?? 0);
+        $brandName = trim((string) ($postData['brand_name'] ?? ''));
+
+        if ($brandName === '' || $itemId === 0) {
+            return [
+                'status' => 'false',
+                'title' => 'Incomplete Information',
+                'message' => 'Please fill in all required fields.',
+            ];
+        }
+
+        $brand = PpBrand::query()->where('id', $itemId)->first();
+        if ($brand === null) {
+            return [
+                'status' => 'false',
+                'title' => 'Request Failed',
+                'message' => 'Invalid request',
+            ];
         }
 
         $brand->update([
-            'identify_name' => $brandName,
+            'name' => $brandName,
             'updated_date' => now()->format('Y-m-d H:i:s'),
         ]);
 
@@ -337,6 +206,60 @@ class BrandAdminActionService
             'status' => 'true',
             'title' => 'Brand Updated',
             'message' => 'The brand has been updated successfully.',
+        ];
+    }
+
+    public function delete(int $itemId): array
+    {
+        $brand = PpBrand::query()->where('id', $itemId)->first();
+        if ($brand === null) {
+            return [
+                'status' => 'false',
+                'title' => 'Request Failed',
+                'message' => 'Invalid request',
+            ];
+        }
+
+        $brandId = (string) $brand->brand_id;
+
+        // Check if there are any admins or transactions for this brand
+        if (DB::table('pp_permission')->where('brand_id', $brandId)->exists()) {
+            return [
+                'status' => 'false',
+                'title' => 'Delete Failed',
+                'message' => 'This brand has associated users and cannot be deleted.',
+            ];
+        }
+
+        $brand->delete();
+
+        return [
+            'status' => 'true',
+            'title' => 'Brand Deleted',
+            'message' => 'The brand has been deleted successfully.',
+        ];
+    }
+
+    public function bulkAction(string $actionId, array $selectedIds): array
+    {
+        if (empty($selectedIds)) {
+            return [
+                'status' => 'false',
+                'title' => 'Request Failed',
+                'message' => 'No brands selected.',
+            ];
+        }
+
+        if ($actionId === 'delete') {
+            foreach ($selectedIds as $id) {
+                $this->delete((int) $id);
+            }
+        }
+
+        return [
+            'status' => 'true',
+            'title' => 'Bulk Action Successful',
+            'message' => 'The selected brands have been updated.',
         ];
     }
 

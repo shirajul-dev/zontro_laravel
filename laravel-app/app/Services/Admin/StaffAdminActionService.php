@@ -9,7 +9,7 @@ use App\Models\PpPermission;
 
 class StaffAdminActionService
 {
-    public function staffList(array $input, string $currentAdminAId, string $brandTimezone): array
+    public function staffList(array $input, string $currentAdminAId, string $brandTimezone, string $currentBrandId = '', string $userType = 'superadmin'): array
     {
         $searchInput = trim((string) ($input['search_input'] ?? ''));
         $filterStatus = trim((string) ($input['filter_status'] ?? ''));
@@ -24,26 +24,33 @@ class StaffAdminActionService
         }
 
         $query = PpAdmin::query()
-            ->where('role', 'staff')
-            ->where('a_id', '!=', $currentAdminAId);
+            ->select('pp_admin.*')
+            ->where('pp_admin.role', 'staff')
+            ->where('pp_admin.a_id', '!=', $currentAdminAId);
+
+        // Multi-tenant filtering: Merchants only see staff for their brand
+        if ($userType !== 'superadmin' && $currentBrandId !== '') {
+            $query->join('pp_permission', 'pp_admin.a_id', '=', 'pp_permission.a_id')
+                  ->where('pp_permission.brand_id', $currentBrandId);
+        }
 
         if ($filterStart !== '') {
-            $query->where('created_date', '>=', $filterStart . ' 00:00:00');
+            $query->where('pp_admin.created_date', '>=', $filterStart . ' 00:00:00');
         }
 
         if ($filterEnd !== '') {
-            $query->where('created_date', '<=', $filterEnd . ' 23:59:59');
+            $query->where('pp_admin.created_date', '<=', $filterEnd . ' 23:59:59');
         }
 
         if ($filterStatus !== '') {
-            $query->where('status', $filterStatus);
+            $query->where('pp_admin.status', $filterStatus);
         }
 
         if ($searchInput !== '') {
             $query->where(function ($q) use ($searchInput): void {
-                $q->where('full_name', 'like', "%{$searchInput}%")
-                    ->orWhere('email', 'like', "%{$searchInput}%")
-                    ->orWhere('username', 'like', "%{$searchInput}%");
+                $q->where('pp_admin.full_name', 'like', "%{$searchInput}%")
+                    ->orWhere('pp_admin.email', 'like', "%{$searchInput}%")
+                    ->orWhere('pp_admin.username', 'like', "%{$searchInput}%");
             });
         }
 
@@ -51,7 +58,7 @@ class StaffAdminActionService
         $offset = ($page - 1) * $showLimit;
 
         $rows = (clone $query)
-            ->orderByDesc('id')
+            ->orderByDesc('pp_admin.id')
             ->offset($offset)
             ->limit($showLimit)
             ->get();

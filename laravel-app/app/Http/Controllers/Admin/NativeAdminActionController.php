@@ -17,6 +17,7 @@ use App\Services\Admin\DomainAdminActionService;
 use App\Services\Admin\FaqAdminActionService;
 use App\Services\Admin\GatewayAdminActionService;
 use App\Services\Admin\InvoiceAdminActionService;
+use App\Services\Admin\MerchantAdminActionService;
 use App\Services\Admin\OptionalAdminActionService;
 use App\Services\Admin\PaymentLinkAdminActionService;
 use App\Services\Admin\ReportsAdminActionService;
@@ -54,10 +55,10 @@ class NativeAdminActionController extends Controller
         private readonly ReportsAdminActionService $reportsAdminActionService,
         private readonly InvoiceAdminActionService $invoiceAdminActionService,
         private readonly PaymentLinkAdminActionService $paymentLinkAdminActionService,
-        private readonly AddonAdminActionService $addonAdminActionService,
         private readonly StaffAdminActionService $staffAdminActionService,
         private readonly OptionalAdminActionService $optionalAdminActionService,
         private readonly SystemSettingsAdminActionService $systemSettingsAdminActionService,
+        private readonly MerchantAdminActionService $merchantAdminActionService,
     )
     {
     }
@@ -498,6 +499,14 @@ class NativeAdminActionController extends Controller
 
         if ($action === 'themes-new-active') {
             return $this->handleThemesNewActive($request);
+        }
+
+        if ($action === 'merchant-create') {
+            return $this->handleMerchantCreate($request);
+        }
+
+        if ($action === 'merchant-bulk-action') {
+            return $this->handleMerchantBulkAction($request);
         }
 
         if ($action === 'geneal-application-settings') {
@@ -1489,7 +1498,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'domains')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'domains')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1513,7 +1522,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'domains')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'domains')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1536,7 +1545,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'domains')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'domains')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1559,7 +1568,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'domains')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'domains')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1583,7 +1592,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'domains')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'domains')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1912,7 +1921,8 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        $result = $this->brandAdminActionService->list($request->all(), $currentBrandId, $this->brandTimezone($legacy));
+        $userType = (string) ($legacy['global_user_response']['response'][0]['user_type'] ?? 'staff');
+        $result = $this->brandAdminActionService->list($request->all(), $currentBrandId, $this->brandTimezone($legacy), $userType);
         $result['csrf_token'] = $newCsrfToken;
 
         return response()->json($result);
@@ -1927,7 +1937,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'brands')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'brands')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1962,7 +1972,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'brands')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'brands')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -1989,7 +1999,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'brands')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'brands')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -2022,7 +2032,7 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        if (!$this->hasPageAccess($legacy, 'brands')) {
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'brands')) {
             return $this->failure('Access denied', 'You need permission to perform this action. Please contact the admin.', $newCsrfToken);
         }
 
@@ -3116,7 +3126,9 @@ class NativeAdminActionController extends Controller
             return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
         }
 
-        $result = $this->staffAdminActionService->staffList($request->all(), $currentAdminAId, $this->brandTimezone($legacy));
+        $currentBrandId = (string) ($legacy['global_response_brand']['response'][0]['brand_id'] ?? '');
+        $userType = (string) ($legacy['global_user_response']['response'][0]['user_type'] ?? 'staff');
+        $result = $this->staffAdminActionService->staffList($request->all(), $currentAdminAId, $this->brandTimezone($legacy), $currentBrandId, $userType);
         $result['csrf_token'] = $newCsrfToken;
 
         return response()->json($result);
@@ -3792,6 +3804,52 @@ class NativeAdminActionController extends Controller
         }
     }
 
+
+    private function handleMerchantBulkAction(Request $request): JsonResponse
+    {
+        $newCsrfToken = (string) csrf_token();
+        $legacy = $this->setupLegacyGlobals($request);
+
+        if (!$this->isLegacyUserAuthorized($legacy)) {
+            return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
+        }
+
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'merchants')) {
+            return $this->failure('Access denied', 'You need permission to perform this action.', $newCsrfToken);
+        }
+
+        $actionId = (string) $request->input('action_id', '');
+        $selectedIds = (array) $request->input('selected_ids', []);
+
+        $result = $this->merchantAdminActionService->bulkAction($actionId, $selectedIds);
+        $result['csrf_token'] = $newCsrfToken;
+
+        return response()->json($result);
+    }
+
+    private function handleMerchantCreate(Request $request): JsonResponse
+    {
+        $newCsrfToken = (string) csrf_token();
+        $legacy = $this->setupLegacyGlobals($request);
+
+        if (!$this->isLegacyUserAuthorized($legacy)) {
+            return $this->failure('Request Failed', 'Invalid request', $newCsrfToken);
+        }
+
+        if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'merchants')) {
+            return $this->failure('Access denied', 'You need permission to perform this action.', $newCsrfToken);
+        }
+
+        $result = $this->merchantAdminActionService->create($request->all());
+        $result['csrf_token'] = $newCsrfToken;
+
+        return response()->json($result);
+    }
+
+    private function isSuperAdmin(array $legacy): bool
+    {
+        return ($legacy['global_user_response']['response'][0]['user_type'] ?? '') === 'superadmin';
+    }
 
     private function failure(string $title, string $message, string $csrfToken): JsonResponse
     {
