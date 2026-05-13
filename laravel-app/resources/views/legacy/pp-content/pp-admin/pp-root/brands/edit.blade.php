@@ -4,12 +4,16 @@
         exit('Direct access not allowed');
     }
 
-    if (!canAccessPage(json_decode($global_response_permission['response'][0]['permission'], true), 'brands', $global_user_response['response'][0]['role'])) {
+    $permissions = json_decode($global_response_permission['response'][0]['permission'] ?? '[]', true);
+    $userRole = strtolower($global_user_response['response'][0]['role'] ?? 'staff');
+    $isSuper = ($userRole === 'admin' || $userRole === 'root');
+
+    if (!canAccessPage($permissions, 'brands', $userRole)) {
         http_response_code(403);
         exit('Access denied. You need permission to perform this action. Please contact the admin.');
     }
 
-    if (!hasPermission(json_decode($global_response_permission['response'][0]['permission'], true), 'brands', 'edit', $global_user_response['response'][0]['role'])) {
+    if (!hasPermission($permissions, 'brands', 'edit', $userRole)) {
         http_response_code(403);
         exit('Access denied. You need permission to perform this action. Please contact the admin.');
     }
@@ -26,7 +30,7 @@
 
         $response_brands = json_decode(getData($db_prefix.'brands','WHERE brand_id = "'.$b_id.'"'),true);
         if($response_brands['status'] == true){
-            if($response_brands['response'][0]['id'] == 1){
+            if ($response_brands['response'][0]['id'] == 1 && !$isSuper) {
                 http_response_code(403);
                 exit("You can't edit default brand");
             }

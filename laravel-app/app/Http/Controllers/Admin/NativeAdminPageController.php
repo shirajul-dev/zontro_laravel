@@ -149,7 +149,7 @@ class NativeAdminPageController extends Controller
                         $injected['id'] = $extraSegments[0];
                         $injected['slug'] = $extraSegments[0];
                         $injected['ref'] = $extraSegments[0];
-                        
+
                         // Map multiple segments if needed
                         foreach ($extraSegments as $idx => $val) {
                             $injected['segment_' . ($idx + 1)] = $val;

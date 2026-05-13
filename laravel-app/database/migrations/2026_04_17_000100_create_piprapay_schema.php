@@ -42,6 +42,7 @@ return new class extends Migration
             $table->string('reset_limit', 10)->default('3');
             $table->enum('status', ['active', 'suspend'])->default('active');
             $table->enum('role', ['admin', 'staff'])->default('admin');
+            $table->enum('user_type', ['superadmin', 'merchant'])->default('merchant');
             $table->enum('2fa_status', ['enable', 'disable'])->default('disable');
             $table->string('2fa_secret', 20)->default('--');
             $table->string('created_date', 20);

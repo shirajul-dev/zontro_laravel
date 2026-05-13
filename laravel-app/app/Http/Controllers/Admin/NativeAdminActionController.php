@@ -1971,8 +1971,10 @@ class NativeAdminActionController extends Controller
         }
 
         $globalBrandId = (string) ($legacy['brand']->brand_id ?? '');
+        $userRole = strtolower($legacy['global_user_response']['response'][0]['role'] ?? 'staff');
+        $isSuper = ($userRole === 'admin' || $userRole === 'root');
 
-        $result = $this->brandAdminActionService->editBrand($request->all(), $globalBrandId);
+        $result = $this->brandAdminActionService->editBrand($request->all(), $globalBrandId, $isSuper);
         $result['csrf_token'] = $newCsrfToken;
 
         return response()->json($result);

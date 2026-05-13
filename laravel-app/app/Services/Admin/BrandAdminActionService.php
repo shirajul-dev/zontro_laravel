@@ -69,6 +69,7 @@ class BrandAdminActionService
 
             return [
                 'id' => (string) $row->brand_id,
+                'db_id' => (int) $row->id,
                 'deleteable' => $deletable,
                 'identify_name' => (string) $row->identify_name,
                 'name' => (string) $row->name,
@@ -287,7 +288,7 @@ class BrandAdminActionService
         ])->cookie('pp_brand', $brandId, 60 * 24 * 365, '/');
     }
 
-    public function editBrand(array $input, string $currentGlobalBrandId): array
+    public function editBrand(array $input, string $currentGlobalBrandId, bool $isSuper = false): array
     {
         $brandName = trim((string) ($input['brand-name'] ?? ''));
         $brandId = trim((string) ($input['b_id'] ?? ''));
@@ -309,7 +310,7 @@ class BrandAdminActionService
             ];
         }
 
-        if ((int) $brand->id === 1 || (string) $brand->brand_id === $currentGlobalBrandId) {
+        if (((int) $brand->id === 1 && !$isSuper) || (string) $brand->brand_id === $currentGlobalBrandId) {
             return [
                 'status' => 'false',
                 'title' => 'Request Failed',
