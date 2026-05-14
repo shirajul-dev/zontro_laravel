@@ -457,6 +457,90 @@ class SystemSettingsAdminActionService
             }
 
             if (function_exists('copyFolder')) {
+                // Map legacy paths to new structure in temp directory before copying to root
+                $mappings = [
+                    'pp-content/pp-modules/pp-addons' => 'app/Modules/addons',
+                    'pp-content/pp-modules/pp-gateways' => 'app/Modules/gateways',
+                    'pp-content/pp-modules/pp-themes' => 'resources/views/theme',
+                    'pp-content/pp-media' => 'storage/app/public/media',
+                    'public/pp-content' => 'storage/app/public/media', // Some packages might have this
+                ];
+
+                foreach ($mappings as $oldRel => $newRel) {
+                    $oldPath = rtrim($tempDir, '/') . '/' . $oldRel;
+                    $newPath = rtrim($tempDir, '/') . '/' . $newRel;
+
+                    if (is_dir($oldPath)) {
+                        if (!is_dir(dirname($newPath))) {
+                            @mkdir(dirname($newPath), 0755, true);
+                        }
+                        
+                        // If destination already exists, we use copyFolder to merge, then delete
+                        if (is_dir($newPath)) {
+                            copyFolder($oldPath, $newPath);
+                            if (function_exists('deleteFolder')) {
+                                deleteFolder($oldPath);
+                            }
+                        } else {
+                            @rename($oldPath, $newPath);
+                        }
+                    }
+                }
+
+                // Auto-detection for addons/themes that might be at the root of the ZIP
+                $topDirs = array_filter(glob($tempDir . '*'), 'is_dir');
+                $knownRootDirs = ['app', 'config', 'database', 'public', 'resources', 'routes', 'storage', 'tests', 'vendor', 'bootstrap', 'pp-content'];
+                
+                foreach ($topDirs as $dirPath) {
+                    $dirName = basename($dirPath);
+                    if (in_array($dirName, $knownRootDirs)) {
+                        continue;
+                    }
+
+                    // Check for Addon (class.php)
+                    if (file_exists($dirPath . '/class.php')) {
+                        $targetDir = app_path('Modules/addons/' . $dirName);
+                        if (!is_dir(dirname($targetDir))) {
+                            @mkdir(dirname($targetDir), 0755, true);
+                        }
+                        if (is_dir($targetDir)) {
+                            copyFolder($dirPath, $targetDir);
+                            if (function_exists('deleteFolder')) {
+                                deleteFolder($dirPath);
+                            }
+                        } else {
+                            @rename($dirPath, $targetDir);
+                        }
+                    }
+                    // Check for Theme (info.php)
+                    elseif (file_exists($dirPath . '/info.php') || file_exists($dirPath . '/index.blade.php')) {
+                        $targetDir = resource_path('views/theme/' . $dirName);
+                        if (!is_dir(dirname($targetDir))) {
+                            @mkdir(dirname($targetDir), 0755, true);
+                        }
+                        if (is_dir($targetDir)) {
+                            copyFolder($dirPath, $targetDir);
+                            if (function_exists('deleteFolder')) {
+                                deleteFolder($dirPath);
+                            }
+                        } else {
+                            @rename($dirPath, $targetDir);
+                        }
+                    }
+                }
+
+                // Remove the empty or processed legacy folders from tempDir so they aren't recreated in root
+                if (is_dir($tempDir . 'pp-content')) {
+                    if (function_exists('deleteFolder')) {
+                        deleteFolder($tempDir . 'pp-content');
+                    }
+                }
+                if (is_dir($tempDir . 'public')) {
+                    if (function_exists('deleteFolder')) {
+                        deleteFolder($tempDir . 'public');
+                    }
+                }
+
                 copyFolder($tempDir, $root);
             }
 

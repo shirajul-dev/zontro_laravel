@@ -11,9 +11,15 @@ use Illuminate\Http\Response;
 
 class InvoiceController extends Controller
 {
+    use \App\Http\Controllers\Payment\Traits\HandlesPaymentActions;
+
     public function __construct(
         private readonly ThemeService $themeService,
-        private readonly LegacyRuntimeService $legacyRuntimeService
+        private readonly LegacyRuntimeService $legacyRuntimeService,
+        private readonly \App\Services\Payment\PaymentService $paymentService,
+        private readonly \App\Services\Common\MoneyService $moneyService,
+        private readonly \App\Services\Common\BrandingService $brandingService,
+        private readonly \App\Services\Payment\PaymentVerificationService $verificationService
     ) {
     }
 
@@ -22,6 +28,10 @@ class InvoiceController extends Controller
      */
     public function show(Request $request, string $ref)
     {
+        if ($request->isMethod('post') && $request->has('action-v2')) {
+            return $this->handleAction($request);
+        }
+
         return $this->themeService->renderInvoice($request, $ref);
     }
 
