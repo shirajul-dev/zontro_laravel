@@ -422,7 +422,7 @@ class SmsDataAdminActionService
             return;
         }
 
-        $legacyFunctionsPath = base_path('pp-content/pp-include/pp-functions.php');
+        $legacyFunctionsPath = base_path('app/Support/zp-functions.php');
         if (file_exists($legacyFunctionsPath)) {
             require_once $legacyFunctionsPath;
         }

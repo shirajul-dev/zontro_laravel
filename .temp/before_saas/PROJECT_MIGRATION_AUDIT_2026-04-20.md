@@ -68,7 +68,7 @@ Conclusion:
 
 7) Legacy helper static analysis warnings indicate maintainability debt
 - Evidence:
-  - get_errors reported issues in pp-content/pp-include/pp-functions.php:18,1706,1710,1715,1717,2327.
+  - get_errors reported issues in app/Support/zp-functions.php:18,1706,1710,1715,1717,2327.
 - Notes:
   - url()->full() appears valid at runtime in this app context (method exists).
   - Imagick and FPDF warnings are environment/type-resolution related and can be runtime-safe if extension/classes are available.
@@ -98,7 +98,7 @@ Conclusion:
   - laravel-app/routes/web.php:40-46
   - Controller: laravel-app/app/Http/Controllers/Admin/NativeAdminPageController.php
   - Rendering: Blade views under laravel-app/resources/views/legacy/pp-content/pp-admin
-  - Still loads legacy helpers from pp-content/pp-include/pp-functions.php.
+  - Still loads legacy helpers from app/Support/zp-functions.php.
 
 - POST admin actions:
   - laravel-app/routes/web.php:47-50
@@ -116,7 +116,7 @@ Conclusion:
   - CheckoutController uses ThemeService.
   - InvoiceController uses ThemeService for show, LegacyRuntimeService for webhook.
 - ThemeService loads:
-  - pp-content/pp-include/pp-functions.php
+  - app/Support/zp-functions.php
   - pp-content/pp-modules/pp-themes/{slug}/class.php
 - Templates execute in legacy-compatible context.
 
@@ -152,7 +152,7 @@ If you remove raw PHP now, these parts will break:
 - index.php
 - pp-config.php
 - pp-404.php
-- pp-content/pp-include/pp-functions.php
+- app/Support/zp-functions.php
 - pp-content/pp-include/pp-adapter.php
 - pp-content/pp-modules/pp-gateways (gateway class.php files)
 - pp-content/pp-modules/pp-themes (theme class.php files)

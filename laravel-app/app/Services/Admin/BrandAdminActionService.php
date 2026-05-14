@@ -4,7 +4,7 @@ namespace App\Services\Admin;
 
 // Ensure legacy money_sanitize and related functions are available
 if (!function_exists('money_sanitize')) {
-    require_once base_path('pp-content/pp-include/pp-functions.php');
+    require_once base_path('app/Support/zp-functions.php');
 }
 
 use App\Models\PpBrand;

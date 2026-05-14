@@ -13,7 +13,7 @@ if (!defined('PipraPay_INIT')) {
 }
 
 // Load legacy functions once
-$functionsPath = base_path('pp-content/pp-include/pp-functions.php');
+$functionsPath = base_path('app/Support/zp-functions.php');
 if (file_exists($functionsPath)) {
     require_once $functionsPath;
 }
@@ -78,7 +78,7 @@ class NativeAdminPageController extends Controller
             return redirect()->to(url('2fa'));
         }
 
-        return view('legacy.pp-content.pp-admin.index', $this->viewData($request));
+        return view('admin.layouts.app', $this->viewData($request));
     }
 
     private function renderPage(Request $request, string $viewName): View|RedirectResponse
@@ -100,7 +100,7 @@ class NativeAdminPageController extends Controller
             return view($viewName, $data);
         }
 
-        return view('legacy.pp-content.pp-admin.index', $data);
+        return view('admin.layouts.app', $data);
     }
 
     /**
@@ -137,8 +137,8 @@ class NativeAdminPageController extends Controller
 
             $path = implode('.', $baseSegments);
             $candidates = [
-                'legacy.pp-content.pp-admin.pp-root.' . $path,
-                'legacy.pp-content.pp-admin.pp-root.' . $path . '.index',
+                'admin.pages.' . $path,
+                'admin.pages.' . $path . '.index',
             ];
 
             foreach ($candidates as $candidate) {

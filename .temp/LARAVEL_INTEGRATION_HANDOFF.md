@@ -68,7 +68,7 @@ Compatibility layer:
   - defines PipraPay_INIT compatibility constant for legacy guard checks
 
 Legacy helper collision protection:
-- pp-content/pp-include/pp-functions.php
+- app/Support/zp-functions.php
   - now guarded with function_exists wrappers for overlapping helper names
 
 Shell and page fragments:

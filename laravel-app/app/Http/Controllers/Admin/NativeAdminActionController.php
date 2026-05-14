@@ -2564,6 +2564,8 @@ class NativeAdminActionController extends Controller
         $result = $this->reportsAdminActionService->generate($request->all(), $brandId, $brandCurrencyCode);
         $result['csrf_token'] = $newCsrfToken;
 
+
+
         return response()->json($result);
     }
 

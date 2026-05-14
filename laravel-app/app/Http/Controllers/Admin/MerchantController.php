@@ -27,7 +27,7 @@ class MerchantController extends Controller
         }
 
         $legacy = $this->setupLegacyGlobals($request);
-        
+
         if (!$this->hasPageAccess($legacy, 'merchants')) {
             abort(403, 'Access denied. You need permission to perform this action.');
         }
@@ -35,10 +35,10 @@ class MerchantController extends Controller
         $data = $this->viewData($request, $legacy);
 
         if ($request->has('content') || $request->ajax()) {
-            return view('admin.merchants.index', $data);
+            return view('admin.pages.merchants.index', $data);
         }
 
-        return view('legacy.pp-content.pp-admin.index', $data);
+        return view('admin.layouts.app', $data);
     }
 
     /**
@@ -51,7 +51,7 @@ class MerchantController extends Controller
         }
 
         $legacy = $this->setupLegacyGlobals($request);
-        
+
         // Creation of NEW merchants is strictly for SuperAdmins
         if (!$this->isSuperAdmin($legacy) || !$this->hasPageAccess($legacy, 'merchants')) {
             abort(403, 'Access denied. Only system administrators can create new merchants.');
@@ -64,7 +64,7 @@ class MerchantController extends Controller
             return view('admin.merchants.create', $data);
         }
 
-        return view('legacy.pp-content.pp-admin.index', $data);
+        return view('admin.layouts.app', $data);
     }
 
     /**
@@ -73,7 +73,7 @@ class MerchantController extends Controller
     public function list(Request $request): JsonResponse
     {
         $legacy = $this->setupLegacyGlobals($request);
-        
+
         if (!$this->hasPageAccess($legacy, 'merchants')) {
             return response()->json([
                 'status' => 'false',

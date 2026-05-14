@@ -73,7 +73,7 @@ Optional quick runtime check:
 
 ### Phase 6: Query conversion
 
-- pp-content/pp-include/pp-functions.php
+- app/Support/zp-functions.php
 
 ### Phase 7: Authentication and session
 

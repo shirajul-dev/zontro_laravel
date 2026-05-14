@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * PaymentVerificationService
- * 
+ *
  * Handles manual and automated transaction verification requests
  * submitted by users (e.g., Transaction ID entry, slip upload).
  */
@@ -28,7 +28,7 @@ class PaymentVerificationService
         }
 
         if (!function_exists('pp_set_transaction_status')) {
-            require_once base_path('pp-content/pp-include/pp-functions.php');
+            require_once base_path('app/Support/zp-functions.php');
         }
     }
 
@@ -36,7 +36,7 @@ class PaymentVerificationService
     {
         $ref = (string) ($request->input('transaction-id') ?? $request->input('bpid') ?? '');
         $gatewayId = (string) ($request->input('gateway-id') ?? '');
-        
+
         if ($ref === '') {
             return ['status' => 'false', 'title' => 'Invalid Request', 'message' => 'Transaction reference is missing.'];
         }
@@ -58,7 +58,7 @@ class PaymentVerificationService
         // Handle Slip Upload
         $sourceInfo = $request->except(['action-v2', 'transaction-id', 'bpid', 'gateway-id', '_token']);
         $trxId = '';
-        
+
         // Find the first value that looks like a Trx ID
         foreach ($sourceInfo as $value) {
             if (is_string($value) && $value !== '') {
@@ -89,21 +89,21 @@ class PaymentVerificationService
         // Update transaction with initial info
         $transaction->gateway_id = $gatewayId;
         $transaction->trx_id = $trxId;
-        
+
         // Check if pending is allowed
         $allowPendingParam = $gateway->parameters()->where('option_name', 'pending_payment')->first()?->value;
         $allowPending = in_array(strtolower((string)$allowPendingParam), ['enable', 'enabled', 'active']);
-        
+
         if ($gateway->tab === 'bank' || isset($sourceInfo['payment_slip'])) {
             $allowPending = true;
         }
 
         $targetStatus = $allowPending ? 'pending' : 'initiated';
-        
+
         // Use native driver if available for automated verification
         $driver = $this->gatewayRegistry->resolve($gateway);
         $verified = false;
-        
+
         if ($driver) {
             $verified = $driver->verify($request);
         }
@@ -111,9 +111,9 @@ class PaymentVerificationService
         if ($verified) {
             pp_set_transaction_status($ref, 'completed', $gatewayId, $trxId, $sourceInfo);
             return [
-                'status' => 'true', 
-                'is_completed' => 'true', 
-                'title' => 'Verified Successfully', 
+                'status' => 'true',
+                'is_completed' => 'true',
+                'title' => 'Verified Successfully',
                 'message' => 'Your payment has been verified and processed.'
             ];
         }
@@ -123,16 +123,16 @@ class PaymentVerificationService
 
         if ($allowPending) {
             return [
-                'status' => 'true', 
-                'is_completed' => 'false', 
-                'title' => 'Under Verification', 
+                'status' => 'true',
+                'is_completed' => 'false',
+                'title' => 'Under Verification',
                 'message' => 'We have received your request. It is under verification, please wait a moment.'
             ];
         }
 
         return [
-            'status' => 'false', 
-            'title' => 'Verification Failed', 
+            'status' => 'false',
+            'title' => 'Verification Failed',
             'message' => 'Payment record not found. Please ensure you have sent the correct amount and try again after a few moments.'
         ];
     }

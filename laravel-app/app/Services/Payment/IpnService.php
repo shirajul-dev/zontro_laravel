@@ -131,7 +131,7 @@ class IpnService
         }
 
         $slug = (string) $gatewayRow->slug;
-        $classFile = base_path('pp-content/pp-modules/pp-gateways/' . $slug . '/class.php');
+        $classFile = app_path('Modules/gateways/' . $slug . '/class.php');
 
         if (!file_exists($classFile)) {
             return [

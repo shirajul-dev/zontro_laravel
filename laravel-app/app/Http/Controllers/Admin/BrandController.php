@@ -27,7 +27,7 @@ class BrandController extends Controller
         }
 
         $legacy = $this->setupLegacyGlobals($request);
-        
+
         if (!$this->hasPageAccess($legacy, 'brands')) {
             abort(403, 'Access denied. You need permission to perform this action.');
         }
@@ -36,11 +36,11 @@ class BrandController extends Controller
 
         // If it's an AJAX content request (from load_content in JS)
         if ($request->has('content') || $request->ajax()) {
-            return view('admin.brands.index', $data);
+            return view('admin.pages.brands.index', $data);
         }
 
         // Full page load returns the shell layout
-        return view('legacy.pp-content.pp-admin.index', $data);
+        return view('admin.layouts.app', $data);
     }
 
     /**
@@ -49,7 +49,7 @@ class BrandController extends Controller
     public function list(Request $request): JsonResponse
     {
         $legacy = $this->setupLegacyGlobals($request);
-        
+
         if (!$this->hasPageAccess($legacy, 'brands')) {
             return response()->json([
                 'status' => 'false',

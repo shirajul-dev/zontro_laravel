@@ -69,7 +69,7 @@ These areas still execute legacy runtime code directly for parity:
 
 - Root legacy dispatcher file at index.php.
 - Legacy include runtime files:
-  - pp-content/pp-include/pp-functions.php
+  - app/Support/zp-functions.php
   - pp-content/pp-include/pp-adapter.php
 - Theme gateway and addon class loading via legacy require paths.
 - Legacy page rendering and branch logic under pp-content and pp-modules.

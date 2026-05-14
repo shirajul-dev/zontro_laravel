@@ -1,5 +1,5 @@
 <?php
-$file = 'pp-content/pp-include/pp-functions.php';
+$file = 'app/Support/zp-functions.php';
 $content = file_get_contents($file);
 
 $functions = [

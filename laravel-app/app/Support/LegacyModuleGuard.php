@@ -21,8 +21,15 @@ class LegacyModuleGuard
             return null;
         }
 
-        $base = realpath($legacyRoot . '/pp-content/pp-modules/' . $moduleTypeDir);
-        if ($base === false) {
+        // Map old pp-content names to new Laravel-standard locations
+        $base = match ($moduleTypeDir) {
+            'pp-gateways' => app_path('Modules/gateways'),
+            'pp-addons'   => app_path('Modules/addons'),
+            'pp-themes'   => resource_path('views/theme'),
+            default       => realpath($legacyRoot . '/pp-content/pp-modules/' . $moduleTypeDir),
+        };
+
+        if ($base === false || !is_dir($base)) {
             return null;
         }
 
@@ -33,7 +40,8 @@ class LegacyModuleGuard
             return null;
         }
 
-        if (str_starts_with($real, $base . DIRECTORY_SEPARATOR)) {
+        // Ensure the resolved file is still within the intended base directory
+        if (str_starts_with($real, $base)) {
             return $real;
         }
 

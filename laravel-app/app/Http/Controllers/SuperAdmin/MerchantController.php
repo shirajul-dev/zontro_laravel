@@ -54,7 +54,7 @@ class MerchantController extends Controller
     {
         // Ensure legacy functions are loaded for helper functions
         if (!function_exists('generateItemID')) {
-            $functionsPath = base_path('pp-content/pp-include/pp-functions.php');
+            $functionsPath = base_path('app/Support/zp-functions.php');
             if (file_exists($functionsPath)) {
                 if (!defined('PipraPay_INIT')) {
                     define('PipraPay_INIT', true);

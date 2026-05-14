@@ -99,7 +99,7 @@ class OptionalAdminActionService
             ];
         }
 
-        $moduleFile = base_path('pp-content/pp-modules/pp-addons/' . $addon . '/class.php');
+        $moduleFile = app_path('Modules/addons/' . $addon . '/class.php');
         if (!file_exists($moduleFile)) {
             return [
                 'status' => 'false',
@@ -110,7 +110,7 @@ class OptionalAdminActionService
 
         require_once $moduleFile;
 
-        $slug = basename(base_path('pp-content/pp-modules/pp-addons/' . $addon));
+        $slug = basename(app_path('Modules/addons/' . $addon));
         $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $slug))) . 'Addon';
         if (!class_exists($class)) {
             return [

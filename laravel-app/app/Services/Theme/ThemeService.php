@@ -32,7 +32,7 @@ class ThemeService
      */
     private function registerThemeViewNamespace(string $slug): void
     {
-        $themePath = $this->legacyRoot . '/pp-content/pp-modules/pp-themes/' . $slug;
+        $themePath = resource_path('views/theme/' . $slug);
         view()->addNamespace('theme', $themePath);
     }
 
@@ -500,7 +500,7 @@ class ThemeService
 
         // Load pp-functions (includes DB setup, all helper functions)
         if (!isset($GLOBALS['pp_functions_loaded'])) {
-            $functionsFile = $this->legacyRoot . '/pp-content/pp-include/pp-functions.php';
+            $functionsFile = $this->legacyRoot . '/app/Support/zp-functions.php';
             if (file_exists($functionsFile)) {
                 require_once $functionsFile;
             }
@@ -627,7 +627,7 @@ class ThemeService
             ],
         ];
     }
-    
+
     private function resolveAssetUrl(?string $path, string $default): string
     {
         if (!$path || $path === '--') {

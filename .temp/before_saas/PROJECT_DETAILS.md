@@ -95,7 +95,7 @@ The system provides a robust API for external integrations.
 When a user visits the admin panel:
 1.  Laravel's `web.php` captures the route (e.g., `/admin/transactions`).
 2.  `NativeAdminPageController` resolves the request and checks authentication.
-3.  It sets up a "Legacy Environment" by loading functions from `pp-content/pp-include/pp-functions.php`.
+3.  It sets up a "Legacy Environment" by loading functions from `app/Support/zp-functions.php`.
 4.  It renders a Blade view located in `resources/views/legacy/pp-content/pp-admin/pp-root/`.
 
 ### 2. Form Submissions (The Action Dispatcher)

@@ -8,7 +8,7 @@
     <div class="container-xl">
         <div class="row g-2 align-items-center">
             <div class="col">
-                <div class="page-pretitle">Dashboard</div>
+                <div class="page-pretitle">{{ config('app.name') }}</div>
                 <h2 class="page-title">Dashboard</h2>
             </div>
 
@@ -186,7 +186,7 @@
     function renderSparkline(id, labels, data, colorClass) {
         if (!window.ApexCharts) return;
         const color = `var(--tblr-${colorClass})`;
-        
+
         new ApexCharts(document.getElementById(id), {
             chart: {
                 type: "area",

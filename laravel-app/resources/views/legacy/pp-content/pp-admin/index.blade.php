@@ -998,7 +998,7 @@
                         initChoices('.js-select');
                     }
                     if (typeof initTags === 'function') initTags();
-                    
+
                     // Safe re-init of dropdowns using getOrCreateInstance
                     if (typeof tabler !== 'undefined' && tabler.bootstrap) {
                         document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(el => {

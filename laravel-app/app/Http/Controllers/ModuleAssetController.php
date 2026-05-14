@@ -21,20 +21,28 @@ class ModuleAssetController extends Controller
             abort(403, 'Forbidden');
         }
 
-        $basePath = realpath(base_path('pp-content/pp-modules'));
-
-        // Map type to directory
-        $typeMap = [
-            'theme'   => 'pp-themes',
-            'gateway' => 'pp-gateways',
-            'addon'   => 'pp-addons',
+        // Map type to directory (handle both singular and plural)
+        $basePathMap = [
+            'theme'    => resource_path('views/theme'),
+            'themes'   => resource_path('views/theme'),
+            'gateway'  => app_path('Modules/gateways'),
+            'gateways' => app_path('Modules/gateways'),
+            'addon'    => app_path('Modules/addons'),
+            'addons'   => app_path('Modules/addons'),
         ];
 
-        if (!isset($typeMap[$type])) {
+        if (!isset($basePathMap[$type])) {
             abort(404, 'Invalid module type');
         }
 
-        $assetPath = $basePath . DIRECTORY_SEPARATOR . $typeMap[$type] . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . $path;
+        $baseDir = $basePathMap[$type];
+        
+        // Try direct path first, then try with /assets prefix
+        $assetPath = $baseDir . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . ltrim($path, '/');
+        
+        if (!file_exists($assetPath) || is_dir($assetPath)) {
+            $assetPath = $baseDir . DIRECTORY_SEPARATOR . $module . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . ltrim($path, '/');
+        }
 
         if (!file_exists($assetPath) || is_dir($assetPath)) {
             abort(404, 'Asset not found');

@@ -22,7 +22,7 @@ $cronPath = trim((string) config('piprapay.paths.cron', 'cron'), '/');
 | These routes handle the frontend website and public-facing features.
 */
 Route::get('/', function () {
-    return 'Home';
+    return view('welcome');
 })->name('home');
 
 Route::post('/', [LegacyRouteDispatchController::class, 'handleRootPost'])->name('home.post');
@@ -71,6 +71,11 @@ Route::match(['get', 'post'], '/' . $paymentLinkPath . '/{ref}', [CheckoutContro
 | Utilities & Dynamic Assets
 |--------------------------------------------------------------------------
 */
+Route::get('/module-asset/{type}/{module}/{path}', [ModuleAssetController::class, 'serve'])
+    ->where('type', 'theme|themes|gateway|gateways|addon|addons')
+    ->where('path', '.*')
+    ->name('module.asset.v2');
+
 Route::get('/pp-{type}/{module}/assets/{path}', [ModuleAssetController::class, 'serve'])
     ->where('type', 'theme|gateway|addon')
     ->where('path', '.*')

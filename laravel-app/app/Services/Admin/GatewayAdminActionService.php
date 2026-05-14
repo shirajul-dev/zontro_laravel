@@ -4,7 +4,7 @@ namespace App\Services\Admin;
 
 // Ensure legacy money_sanitize and related functions are available
 if (!function_exists('money_sanitize')) {
-    require_once base_path('pp-content/pp-include/pp-functions.php');
+    require_once base_path('app/Support/zp-functions.php');
 }
 
 use App\Models\PpGateway;
@@ -22,7 +22,7 @@ class GatewayAdminActionService
             ];
         }
 
-        $moduleFile = base_path('pp-content/pp-modules/pp-gateways/' . $gateway . '/class.php');
+        $moduleFile = app_path('Modules/gateways/' . $gateway . '/class.php');
         if (!file_exists($moduleFile)) {
             return [
                 'status' => 'false',
@@ -33,7 +33,7 @@ class GatewayAdminActionService
 
         require_once $moduleFile;
 
-        $slug = basename(base_path('pp-content/pp-modules/pp-gateways/' . $gateway));
+        $slug = basename(app_path('Modules/gateways/' . $gateway));
         $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $slug))) . 'Gateway';
 
         if (!class_exists($class)) {
@@ -57,7 +57,7 @@ class GatewayAdminActionService
             'slug' => $slug,
             'name' => (string) ($gatewayInfo['title'] ?? ''),
             'display' => (string) ($gatewayInfo['title'] ?? ''),
-            'logo' => $siteUrl . 'pp-content/pp-modules/pp-gateways/' . $gateway . '/' . (string) ($gatewayInfo['logo'] ?? ''),
+            'logo' => $siteUrl . 'module-asset/gateways/' . $slug . '/' . (string) ($gatewayInfo['logo'] ?? ''),
             'currency' => (string) ($gatewayInfo['currency'] ?? ''),
             'primary_color' => (string) ($gatewayColor['primary_color'] ?? ''),
             'text_color' => (string) ($gatewayColor['text_color'] ?? ''),

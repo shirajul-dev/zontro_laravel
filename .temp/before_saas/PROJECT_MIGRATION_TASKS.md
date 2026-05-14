@@ -67,7 +67,7 @@ This document tracks the progress of the migration from legacy procedural PHP to
 - [ ] Enable CSRF protection on all public forms (add `@csrf`)
 - [ ] Remove `LegacyRuntimeService.php`
 - [ ] Delete `resources/legacy-index.php`
-- [ ] Delete `pp-content/pp-include/pp-functions.php`
+- [ ] Delete `app/Support/zp-functions.php`
 - [ ] Remove `index.php` from project root (if still present)
 - [ ] Final end-to-end testing of the payment flow
 

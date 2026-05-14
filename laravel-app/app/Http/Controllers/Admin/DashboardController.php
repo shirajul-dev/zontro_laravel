@@ -27,6 +27,7 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
+
         if (!Auth::guard('pp_admin')->check()) {
             return redirect()->route('native.auth.login');
         }
@@ -63,7 +64,7 @@ class DashboardController extends Controller
         }
 
         // Full page load returns the shell layout
-        return view('legacy.pp-content.pp-admin.index', $data);
+        return view('admin.layouts.app', $data);
     }
 
     private function getSparklineData(string $modelClass, string $brandId, ?string $status = null, array $excludeStatus = []): array

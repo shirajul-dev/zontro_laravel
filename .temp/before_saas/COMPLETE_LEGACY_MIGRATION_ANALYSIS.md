@@ -124,7 +124,7 @@ pp-content/
    - Database queries (raw SQL/PDO)
    - Business rule implementations
    - Utility functions (1000+)
-   - Files: `pp-content/pp-include/pp-functions.php`
+   - Files: `app/Support/zp-functions.php`
 
 #### 🟡 **50-60% HYBRID** (Partially Migrated)
 
@@ -180,7 +180,7 @@ GET /admin/dashboard
 
 #### Legacy Dependencies
 - Dashboard page file: `pp-content/pp-admin/pp-root/dashboard.php` (150+ LOC)
-- Query functions: `pp-content/pp-include/pp-functions.php` (functions like `get_dashboard_stats()`)
+- Query functions: `app/Support/zp-functions.php` (functions like `get_dashboard_stats()`)
 - Chart libraries: Legacy JavaScript & PHP helpers
 - Database: Direct queries, no Eloquent
 
