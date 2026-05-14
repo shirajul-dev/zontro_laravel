@@ -3802,7 +3802,7 @@ class NativeAdminActionController extends Controller
     private function ensureGoogleAuthenticatorLoaded(): void
     {
         if (!class_exists('PHPGangsta_GoogleAuthenticator')) {
-            require_once public_path('pp-media/sdk/GoogleAuthenticator.php');
+            require_once app_path('Support/SDK/GoogleAuthenticator.php');
         }
     }
 

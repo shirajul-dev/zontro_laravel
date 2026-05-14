@@ -285,7 +285,7 @@ class MerchantAdminActionService
     public function uploadFile(UploadedFile $file, string $type): string
     {
         $filename = $type . '_' . Str::random(10) . '_' . time() . '.' . $file->getClientOriginalExtension();
-        $path = public_path('pp-media/storage');
+        $path = storage_path('app/public/media');
         
         if (!file_exists($path)) {
             mkdir($path, 0777, true);
@@ -294,6 +294,6 @@ class MerchantAdminActionService
         $file->move($path, $filename);
         
         // Return full URL path as expected by the legacy system
-        return url('pp-media/storage/' . $filename);
+        return url('storage/media/' . $filename);
     }
 }

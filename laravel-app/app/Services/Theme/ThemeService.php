@@ -638,7 +638,7 @@ class ThemeService
             return $path;
         }
 
-        return rtrim(config('app.url'), '/') . '/pp-media/storage/branding_media/' . ltrim($path, '/');
+        return asset('storage/media/branding_media/' . ltrim($path, '/'));
     }
 
     /**

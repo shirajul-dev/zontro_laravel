@@ -83,9 +83,9 @@ class AddonAdminActionService
                 $ext = strtolower($file->getClientOriginalExtension());
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
                     $filename = strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $ext);
-                    $path = public_path('pp-media/storage');
+                    $path = storage_path('app/public/media');
                     $file->move($path, $filename);
-                    $configData[$key] = rtrim($siteUrl, '/') . '/pp-media/storage/' . $filename;
+                    $configData[$key] = rtrim($siteUrl, '/') . '/storage/media/' . $filename;
                 }
             }
         }

@@ -139,7 +139,7 @@ class SystemSettingsAdminActionService
         }
 
         $url = 'https://updates.piprapay.com/download.php?version=' . urlencode($latestUpdateVersion);
-        $saveDir = rtrim(public_path('pp-media/storage/updates'), '/');
+        $saveDir = rtrim(storage_path('app/public/media/updates'), '/');
 
         if (!is_dir($saveDir)) {
             @mkdir($saveDir, 0755, true);
@@ -204,7 +204,7 @@ class SystemSettingsAdminActionService
         }
 
         $root = base_path();
-        $storage = rtrim(public_path('pp-media/storage'), '/') . '/';
+        $storage = rtrim(storage_path('app/public/media'), '/') . '/';
         $backupDir = $storage . 'backup/';
         $tempDir = $storage . 'temp/' . $latestUpdateVersion . '/';
         $zipFile = $storage . 'updates/' . $latestUpdateVersion . '.zip';
@@ -328,10 +328,10 @@ class SystemSettingsAdminActionService
 
                 $filename = strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $extension);
                 
-                $uploadPath = public_path('pp-media/storage');
+                $uploadPath = storage_path('app/public/media');
                 $file->move($uploadPath, $filename);
 
-                $this->setEnvValue($optionName, rtrim($siteUrl, '/') . '/pp-media/storage/' . $filename, $brandId);
+                $this->setEnvValue($optionName, rtrim($siteUrl, '/') . '/storage/media/' . $filename, $brandId);
             }
         }
 
@@ -422,7 +422,7 @@ class SystemSettingsAdminActionService
         }
 
         $root = base_path();
-        $storage = rtrim(public_path('pp-media/storage'), '/') . '/';
+        $storage = rtrim(storage_path('app/public/media'), '/') . '/';
         $updatesDir = $storage . 'import/';
 
         if (!is_dir($storage)) {

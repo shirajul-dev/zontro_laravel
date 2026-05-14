@@ -1700,14 +1700,15 @@ function generateRandomFilename($extension)
 
 function uploadImage($file, $max_file_size)
 {
-    if (!is_dir(__DIR__ . '/../../public/pp-media/storage')) {
-        if (mkdir(__DIR__ . '/../../public/pp-media/storage', 0755, true)) {
-            $upload_directory = __DIR__ . '/../../public/pp-media/storage/';
+    $storagePath = base_path('storage/app/public/media');
+    if (!is_dir($storagePath)) {
+        if (mkdir($storagePath, 0755, true)) {
+            $upload_directory = $storagePath . '/';
         } else {
-            return json_encode(['status' => false, 'message' => 'Failed to create folder!']);
+            return json_encode(['status' => false, 'message' => 'Failed to create upload directory.']);
         }
     } else {
-        $upload_directory = __DIR__ . '/../../public/pp-media/storage/';
+        $upload_directory = $storagePath . '/';
     }
 
     // ─────────── VALIDATION ───────────
@@ -1780,7 +1781,7 @@ function uploadImage($file, $max_file_size)
 function deleteImage($file)
 {
     // Define the local image directory path
-    $upload_directory = __DIR__ . '/../../public/pp-media/storage/'; // Update path if different
+    $upload_directory = base_path('storage/app/public/media/'); // Update path if different
 
     // Sanitize the filename to prevent directory traversal attacks
     $filename = basename($file);

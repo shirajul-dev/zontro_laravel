@@ -49,8 +49,7 @@ class BrandingService
             return $path;
         }
 
-        $baseUrl = rtrim(config('app.url'), '/');
-        return "{$baseUrl}/pp-media/storage/{$type}/" . ltrim($path, '/');
+        return asset("storage/media/{$type}/" . ltrim($path, '/'));
     }
 
     private function getDefaultAsset(string $type): string

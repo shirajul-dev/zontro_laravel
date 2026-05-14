@@ -310,9 +310,9 @@ class BrandAdminActionService
                 $ext = strtolower($faviconFile->getClientOriginalExtension());
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
                     $filename = strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $ext);
-                    $path = public_path('pp-media/storage');
+                    $path = storage_path('app/public/media');
                     $faviconFile->move($path, $filename);
-                    $brandingFavicon = rtrim($siteUrl, '/') . '/pp-media/storage/' . $filename;
+                    $brandingFavicon = rtrim($siteUrl, '/') . '/storage/media/' . $filename;
                 }
             }
         }
@@ -325,9 +325,9 @@ class BrandAdminActionService
                 $ext = strtolower($logoFile->getClientOriginalExtension());
                 if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true)) {
                     $filename = strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $ext);
-                    $path = public_path('pp-media/storage');
+                    $path = storage_path('app/public/media');
                     $logoFile->move($path, $filename);
-                    $brandingLogo = rtrim($siteUrl, '/') . '/pp-media/storage/' . $filename;
+                    $brandingLogo = rtrim($siteUrl, '/') . '/storage/media/' . $filename;
                 }
             }
         }

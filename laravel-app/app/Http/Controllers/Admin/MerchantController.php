@@ -61,7 +61,7 @@ class MerchantController extends Controller
         $data['plans'] = \App\Models\PpPlan::where('is_active', true)->get();
 
         if ($request->has('content') || $request->ajax()) {
-            return view('admin.merchants.create', $data);
+            return view('admin.pages.merchants.create', $data);
         }
 
         return view('admin.layouts.app', $data);

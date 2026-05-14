@@ -77,7 +77,7 @@ class TelegramNotificationProAddon
                 echo "Site root: " . $root . "
 ";
                 foreach ([
-                    $root . '/pp-media/storage/',
+                    $root . '/storage/media/',
                     $root . '/pp-media/',
                     sys_get_temp_dir() . '/',
                     $root . '/tgnp-webhook/',
@@ -643,7 +643,7 @@ class TelegramNotificationProAddon
             case 'clear_debug_log':
                 $root = $this->siteRoot();
                 foreach ([
-                    $root . '/pp-media/storage/tgnp-debug.log',
+                    $root . '/storage/media/tgnp-debug.log',
                     $root . '/pp-media/tgnp-debug.log',
                     sys_get_temp_dir() . '/tgnp-debug.log',
                 ] as $lf) {
@@ -1064,7 +1064,7 @@ function tgnp_send(string $token, string $method, array $params): array {
 
 function tgnp_log(string $site_root, string $msg): void {
     foreach ([
-        $site_root.'/pp-media/storage/',
+        $site_root.'/storage/media/',
         $site_root.'/pp-media/',
         sys_get_temp_dir().'/',
         __DIR__.'/',  // tgnp-webhook/ dir itself as last resort
@@ -1184,7 +1184,7 @@ Options -Indexes
         $root = $this->siteRoot();
         $msg  = implode("\n", $lines) . "\n---\n";
         foreach ([
-            $root . '/pp-media/storage/',
+            $root . '/storage/media/',
             $root . '/pp-media/',
             sys_get_temp_dir() . '/',
             dirname(dirname(__FILE__)) . '/',  // addon dir fallback

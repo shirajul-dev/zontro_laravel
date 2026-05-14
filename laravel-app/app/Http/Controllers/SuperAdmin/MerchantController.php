@@ -96,8 +96,8 @@ class MerchantController extends Controller
             if ($request->hasFile('logo')) {
                 $file = $request->file('logo');
                 $filename = strtolower(Str::random(10) . '_' . time() . '.' . $file->getClientOriginalExtension());
-                $file->move(public_path('pp-media/storage'), $filename);
-                $logoPath = url('pp-media/storage/' . $filename);
+                $file->move(storage_path('app/public/media'), $filename);
+                $logoPath = url('storage/media/' . $filename);
             }
 
             // 3. Create Admin/Merchant User
@@ -270,8 +270,8 @@ class MerchantController extends Controller
             if ($request->hasFile('logo')) {
                 $logo = $request->file('logo');
                 $logoName = time() . '_' . $logo->getClientOriginalName();
-                $logo->move(public_path('storage/logos'), $logoName);
-                $brandData['logo'] = 'storage/logos/' . $logoName;
+                $logo->move(storage_path('app/public/media/logos'), $logoName);
+                $brandData['logo'] = 'storage/media/logos/' . $logoName;
             }
 
             DB::table('pp_brands')->where('brand_id', $brand->brand_id)->update($brandData);
