@@ -74,11 +74,11 @@ class TelegramNotificationProAddon
                 echo "Bot token set: " . (!empty($this->options['bot_token']) ? 'YES' : 'NO') . "
 ";
                 $root = $this->siteRoot();
+                $storageMedia = $this->storageMedia();
                 echo "Site root: " . $root . "
 ";
                 foreach ([
-                    $root . '/pp-media/storage/',
-                    $root . '/pp-media/',
+                    $storageMedia . '/',
                     sys_get_temp_dir() . '/',
                     $root . '/tgnp-webhook/',
                 ] as $d) {
@@ -619,20 +619,22 @@ class TelegramNotificationProAddon
 
             case 'diagnose_paths':
                 $sr = $this->siteRoot();
+                $sm = $this->storageMedia();
                 $wh_dir  = $sr . '/tgnp-webhook';
                 $wh_file = $wh_dir . '/index.php';
                 $tmp     = sys_get_temp_dir();
                 $diag = implode("\n", [
                     '__FILE__       = ' . __FILE__,
                     'siteRoot()     = ' . $sr,
+                    'storageMedia() = ' . $sm,
                     'wh_dir        = ' . $wh_dir,
                     'wh_dir exists = ' . (is_dir($wh_dir)       ? 'YES' : 'NO'),
                     'wh_file exists= ' . (file_exists($wh_file) ? 'YES' : 'NO'),
                     'sr writable   = ' . (is_writable($sr)      ? 'YES' : 'NO'),
                     'tmp           = ' . $tmp,
                     'tmp writable  = ' . (is_writable($tmp)     ? 'YES' : 'NO'),
-                    'pp-media      = ' . $sr . '/pp-media -> ' . (is_dir($sr.'/pp-media') ? 'exists' : 'missing'),
-                    'pp-media writ = ' . (is_writable($sr.'/pp-media') ? 'YES' : 'NO'),
+                    'media dir     = ' . $sm . ' -> ' . (is_dir($sm) ? 'exists' : 'missing'),
+                    'media writ    = ' . (is_writable($sm) ? 'YES' : 'NO'),
                 ]);
                 // Store in DB so view can read it, and also return in message
                 $this->dbSave($addon_id, ['tgnp_diag' => $diag, 'tgnp_action' => '']);
@@ -642,9 +644,9 @@ class TelegramNotificationProAddon
 
             case 'clear_debug_log':
                 $root = $this->siteRoot();
+                $storageMedia = $this->storageMedia();
                 foreach ([
-                    $root . '/pp-media/storage/tgnp-debug.log',
-                    $root . '/pp-media/tgnp-debug.log',
+                    $storageMedia . '/tgnp-debug.log',
                     sys_get_temp_dir() . '/tgnp-debug.log',
                 ] as $lf) {
                     if (@file_exists($lf)) @unlink($lf);
@@ -1063,9 +1065,9 @@ function tgnp_send(string $token, string $method, array $params): array {
 }
 
 function tgnp_log(string $site_root, string $msg): void {
+    $storageMedia = function_exists('storage_path') ? storage_path('app/public/media') : $site_root . '/storage/app/public/media';
     foreach ([
-        $site_root.'/pp-media/storage/',
-        $site_root.'/pp-media/',
+        $storageMedia . '/',
         sys_get_temp_dir().'/',
         __DIR__.'/',  // tgnp-webhook/ dir itself as last resort
     ] as $d) {
@@ -1166,26 +1168,33 @@ Options -Indexes
     // ================================================================
     private function siteRoot(): string
     {
-        // class.php: <root>/pp-content/pp-modules/pp-addons/<slug>/class.php
-        // dirname x1 = <slug> dir
-        // dirname x2 = pp-addons
-        // dirname x3 = pp-modules
-        // dirname x4 = pp-content
-        // dirname x5 = <root>
+        if (function_exists('base_path')) {
+            return base_path();
+        }
+        // Fallback for standalone/legacy
         static $root = null;
         if ($root === null) {
+            // New structure: <root>/app/Modules/addons/<slug>/class.php
+            // x5 gets us to root
             $root = dirname(dirname(dirname(dirname(dirname(__FILE__)))));
         }
         return $root;
     }
 
+    private function storageMedia(): string
+    {
+        if (function_exists('storage_path')) {
+            return storage_path('app/public/media');
+        }
+        return $this->siteRoot() . '/storage/app/public/media';
+    }
+
     private function writeLog(array $lines): void
     {
-        $root = $this->siteRoot();
+        $storageMedia = $this->storageMedia();
         $msg  = implode("\n", $lines) . "\n---\n";
         foreach ([
-            $root . '/pp-media/storage/',
-            $root . '/pp-media/',
+            $storageMedia . '/',
             sys_get_temp_dir() . '/',
             dirname(dirname(__FILE__)) . '/',  // addon dir fallback
         ] as $dir) {

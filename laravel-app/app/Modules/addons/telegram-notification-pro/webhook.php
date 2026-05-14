@@ -15,20 +15,36 @@
  * (some server configs allow specific subdirectories).
  */
 
-// Bootstrap PipraPay
-$root = __DIR__;
-for ($i = 0; $i < 10; $i++) {
-    if (file_exists($root . '/pp-content/pp-include/pp-adapter.php')) break;
-    $root = dirname($root);
+// Bootstrap Laravel if called directly (not via route)
+if (!function_exists('app')) {
+    $root = __DIR__;
+    for ($i = 0; $i < 10; $i++) {
+        if (file_exists($root . '/bootstrap/app.php')) break;
+        $root = dirname($root);
+    }
+
+    if (file_exists($root . '/bootstrap/app.php')) {
+        require $root . '/vendor/autoload.php';
+        $app = require_once $root . '/bootstrap/app.php';
+        $app->make(\Illuminate\Contracts\Console\Kernel::class)->bootstrap();
+    }
 }
 
-if (!file_exists($root . '/pp-content/pp-include/pp-adapter.php')) {
-    http_response_code(200); // Always 200 to Telegram
-    exit();
+// Define PipraPay_INIT to allow including zp-functions.php
+if (!defined('PipraPay_INIT')) {
+    define('PipraPay_INIT', true);
 }
 
-define('PipraPay_INIT', true);
-require $root . '/pp-content/pp-include/pp-adapter.php';
+// Ensure zp-functions.php is loaded
+if (function_exists('app')) {
+    $functionsPath = app_path('Support/zp-functions.php');
+} else {
+    $functionsPath = dirname(dirname(dirname(dirname(__DIR__)))) . '/app/Support/zp-functions.php';
+}
+
+if (file_exists($functionsPath)) {
+    require_once $functionsPath;
+}
 
 if (!class_exists('TelegramNotificationProAddon')) {
     require __DIR__ . '/class.php';

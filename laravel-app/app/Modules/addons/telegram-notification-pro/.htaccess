@@ -1,4 +1,0 @@
-# Allow webhook.php to be accessed directly (needed for Telegram webhook)
-RewriteEngine On
-RewriteCond %{REQUEST_URI} webhook\.php [NC]
-RewriteRule ^ - [L]

@@ -6,7 +6,7 @@ A complete port of the original Telegram Bot Notification Pro V2 plugin, rebuilt
 
 1. Copy the `telegram-notification-pro` folder into:
    ```
-   /pp-content/pp-modules/pp-addons/telegram-notification-pro/
+   /app/Modules/addons/telegram-notification-pro/
    ```
 2. Go to **Admin → Addons → New Addon**, select **Telegram Bot Notification Pro**, and click **Create**.
 3. Click **Edit** on the newly created addon to open the configuration page.
@@ -46,7 +46,7 @@ A complete port of the original Telegram Bot Notification Pro V2 plugin, rebuilt
 ## Webhook URL
 When you connect the bot, the webhook is automatically set to:
 ```
-https://yoursite.com/pp-content/pp-modules/pp-addons/telegram-notification-pro/webhook.php
+https://yoursite.com/app/Modules/addons/telegram-notification-pro/webhook.php
 ```
 
 ## Message Template Placeholders

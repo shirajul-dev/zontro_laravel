@@ -1,2 +1,4 @@
 # Ignore all ZIP files anywhere in the project
 *.zip
+# Ignore the .delete folder anywhere in the project
+.delete

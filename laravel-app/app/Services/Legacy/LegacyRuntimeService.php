@@ -19,7 +19,8 @@ class LegacyRuntimeService
         $legacyIndex = base_path('resources/legacy-index.php');
 
         if (!file_exists($legacyIndex)) {
-            return response('Legacy index.php not found at encapsulated path.', 404);
+
+            return response(view('404'), 404);
         }
 
         $path = $overridePage;

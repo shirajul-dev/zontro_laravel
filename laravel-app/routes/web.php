@@ -81,6 +81,28 @@ Route::get('/pp-{type}/{module}/assets/{path}', [ModuleAssetController::class, '
     ->where('path', '.*')
     ->name('module.asset');
 
+/**
+ * Addon Webhook Dispatcher
+ * Supports direct access to webhook.php files inside the new module structure.
+ */
+Route::match(['get', 'post'], '/app/Modules/addons/{slug}/webhook.php', function($slug) {
+    $path = app_path('Modules/addons/' . $slug . '/webhook.php');
+    if (file_exists($path)) {
+        require $path;
+        return;
+    }
+    abort(404);
+})->name('addon.webhook.direct');
+
+Route::match(['get', 'post'], '/addon-webhook/{slug}', function($slug) {
+    $path = app_path('Modules/addons/' . $slug . '/webhook.php');
+    if (file_exists($path)) {
+        require $path;
+        return;
+    }
+    abort(404);
+})->name('addon.webhook');
+
 Route::match(['get', 'post'], '/' . $cronPath . '/{token?}', [CronController::class, 'handle'])
     ->where('token', '.*')
     ->name('admin.cron');
