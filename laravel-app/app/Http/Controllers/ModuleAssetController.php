@@ -23,8 +23,8 @@ class ModuleAssetController extends Controller
 
         // Map type to directory (handle both singular and plural)
         $basePathMap = [
-            'theme'    => resource_path('views/theme'),
-            'themes'   => resource_path('views/theme'),
+            'theme'    => resource_path('views/merchant'),
+            'themes'   => resource_path('views/merchant'),
             'gateway'  => app_path('Modules/gateways'),
             'gateways' => app_path('Modules/gateways'),
             'addon'    => app_path('Modules/addons'),

@@ -314,7 +314,7 @@ if (!function_exists('senderWhitelist')) {
                 'currency' => 'BDT',
                 'balance_verify' => 'true',
                 'senders'  => ['telecash'],
-            ],            
+            ],
             'ipay' => [
                 'name'     => 'Ipay',
                 'currency' => 'BDT',
@@ -347,7 +347,7 @@ if (!function_exists('senderWhitelist')) {
                     }
                 }
             }
-            return false; 
+            return false;
         }
 
         if ($providerKey !== null) {
@@ -533,3 +533,54 @@ if (!function_exists('pp_theme_asset')) {
         ]);
     }
 }
+if (!function_exists('m_view')) {
+    /**
+     * Get the theme-based view for the merchant dashboard.
+     * Falls back to 'default' theme if the view doesn't exist in the current theme.
+     */
+    function m_view(string $view, array $data = []): \Illuminate\Contracts\View\View
+    {
+        $theme = config('piprapay.merchant_theme', 'default');
+
+        $viewPath = "merchant.{$theme}.pages.{$view}";
+
+        if (!view()->exists($viewPath)) {
+            $viewPath = "merchant.default.pages.{$view}";
+        }
+
+        return view($viewPath, $data);
+    }
+}
+
+if (!function_exists('m_asset')) {
+    /**
+     * Get the theme-based asset URL.
+     */
+    function m_asset(string $path, ?string $theme = null): string
+    {
+        $theme = $theme ?: config('piprapay.merchant_theme', 'default');
+        return route('module.asset.v2', [
+            'type' => 'themes',
+            'module' => $theme,
+            'path' => ltrim($path, '/')
+        ]);
+    }
+}
+
+if (!function_exists('m_layout')) {
+    /**
+     * Get the theme-based layout path.
+     */
+    function m_layout(string $layout): string
+    {
+        $theme = config('piprapay.merchant_theme', 'default');
+        $layoutPath = "merchant.{$theme}.layouts.{$layout}";
+
+        if (!view()->exists($layoutPath)) {
+            $layoutPath = "merchant.default.layouts.{$layout}";
+        }
+
+        return $layoutPath;
+    }
+}
+

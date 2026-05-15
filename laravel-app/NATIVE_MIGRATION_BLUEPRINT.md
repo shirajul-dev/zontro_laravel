@@ -67,12 +67,13 @@ The Native layer will move away from full-page reloads for actions.
 ### Phase 1: Authentication (The Foundation)
 1. **Database**: Create `zp_admins` table migration.
 2. **Model**: Create `ZpAdmin` model with `HasApiTokens` and `Authenticatable`.
-3. **Auth Guard**: Define a new `merchant` guard in `config/auth.php`.
-4. **Views**: Build a premium, standalone login page at `/merchant/login`.
+3. **Auth Guard**: Define a new `merchant` guard in `config/auth.php`. 
+4. **Views**: Build the blade file with a sinle text and the login ui and ask for design the developer manually., standalone login page at `/merchant/login`.
 5. **Logic**: Implement `AuthController` with JSON response support and loading-state UI.
 
 ### Phase 2: Dashboard & Shell
 1. **Layout**: Create a new `resources/views/merchant/layouts/app.blade.php` (completely different from the legacy layout).
+2. **Dashboard UI**: Ask the user to Design dashboard ui by the developer manually.
 2. **Dashboard**: Build the `DashboardController` using `Zp*` models to fetch data.
 
 ### Phase 3: Module Migration (One by One)
@@ -87,5 +88,5 @@ The Native layer will move away from full-page reloads for actions.
 1. **NEVER** modify any file prefixed with `Pp` or any code inside `App\Http\Controllers\Admin`.
 2. **ALWAYS** write new logic inside `App\Http\Controllers\Merchant` or `App\Http\Controllers\Api\v2`.
 3. **ALWAYS** use `Zp*` models for the new migration.
-4. **UI**: Ensure all new views are premium, responsive, and include micro-interactions (loading, toasts).
+4. **UI**: Ensure after create all blade file for ui ask the developer manually to implement ui, then ai agent will implement logic. (loading, toasts, data fetch based on that ui).
 5. **Standard**: Follow PSR-12, use strict typing, and favor Dependency Injection over globals.

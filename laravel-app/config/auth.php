@@ -52,6 +52,11 @@ return [
             'driver' => 'session',
             'provider' => 'superadmins',
         ],
+
+        'merchant' => [
+            'driver' => 'session',
+            'provider' => 'merchants',
+        ],
     ],
 
     /*
@@ -82,10 +87,10 @@ return [
             'model' => App\Models\SuperAdmin::class,
         ],
 
-        // 'pp_admins' => [
-        //     'driver' => 'database',
-        //     'table' => 'pp_admin',
-        // ],
+        'merchants' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\ZpAdmin::class,
+        ],
     ],
 
     /*

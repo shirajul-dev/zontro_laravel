@@ -30,4 +30,7 @@ return [
         'strict_api_methods_enabled' => env('PIPRAPAY_STRICT_API_METHODS_ENABLED', false),
         'strict_csrf_scope_enabled' => env('PIPRAPAY_STRICT_CSRF_SCOPE_ENABLED', false),
     ],
+
+    // Merchant Theme configuration
+    'merchant_theme' => env('PIPRAPAY_MERCHANT_THEME', 'default'),
 ];

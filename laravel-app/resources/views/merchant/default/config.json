@@ -1,0 +1,23 @@
+{
+    "name": "MerchantDefault",
+    "slug": "default",
+    "version": "1.0.0",
+    "author": "ZontroPay",
+    "author_url": "https://zontropay.com",
+    "description": "The official high-fidelity native merchant dashboard theme for ZontroPay. Built for performance and modern user experience.",
+    "role": "merchant",
+    "preview": "assets/images/logo.png",
+    "license": "Proprietary",
+    "support_url": "https://support.zontropay.com",
+    "documentation_url": "https://docs.zontropay.com/themes/default",
+    "settings": {
+        "sidebar_style": "compact",
+        "primary_color": "#2563eb",
+        "dark_mode_supported": true,
+        "rtl_supported": false
+    },
+    "requirements": {
+        "laravel_version": "^11.0",
+        "php_version": "^8.2"
+    }
+}

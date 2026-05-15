@@ -1,0 +1,33 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\ZpAdmin;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+class MerchantSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        ZpAdmin::updateOrCreate(
+            ['username' => 'merchant'],
+            [
+                'a_id' => 'M' . strtoupper(Str::random(10)),
+                'username' => 'merchant',
+                'email' => 'merchant@zontropay',
+                'full_name' => 'Default Merchant',
+                'password' => Hash::make('12345678'),
+                'role' => 'admin',
+                'status' => 'active',
+                'user_type' => 'merchant',
+            ]
+        );
+
+        $this->command->info('Default merchant created: merchant@zontropay / 12345678');
+    }
+}

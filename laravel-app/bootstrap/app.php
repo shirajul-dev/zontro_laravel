@@ -30,6 +30,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // Admin routes third
             Route::middleware('web')
                 ->group(base_path('routes/admin.php'));
+
+            // Merchant routes (Native)
+            Route::middleware('web')
+                ->group(base_path('routes/merchant.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
