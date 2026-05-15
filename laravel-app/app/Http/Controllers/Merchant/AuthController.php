@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Auth\Events\PasswordReset;
+use App\Notifications\PasswordChangedNotification;
 
 class AuthController extends Controller
 {
@@ -84,6 +85,7 @@ class AuthController extends Controller
                 $user->save();
 
                 event(new PasswordReset($user));
+                $user->notify(new PasswordChangedNotification());
             }
         );
 

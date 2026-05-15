@@ -21,7 +21,7 @@
                 <div class="mb-5 sm:mb-8">
 
                     {{-- show logo only for mobile. --}}
-                    <div class="md:hidden mobile-only-logo">
+                    <div class="sm:hidden mobile-only-logo">
                         <img src="{{ asset('assets/images/favicon-dark.png') }}" alt="{{ config('app.name') }} Logo"
                             class="w-12 h-12 rounded-xl mb-6">
                     </div>
@@ -58,10 +58,13 @@
                                 })
                                 .then(response => response.json().then(data => ({ status: response.status, data })))
                                 .then(({ status, data }) => {
-                                    if (status === 200 && data.redirect) {
-                                        window.location.href = data.redirect;
+                                    this.loading = false;
+                                    if (status === 200) {
+                                        this.$dispatch('open-modal', {
+                                            id: 'success-modal',
+                                            message: data.message
+                                        });
                                     } else {
-                                        this.loading = false;
                                         this.error = data.message || 'Something went wrong. Please try again.';
                                     }
                                 })
@@ -72,9 +75,22 @@
                         }
                     }" @submit.prevent="submitForm">
                         @csrf
+
+
+
+                        <!-- Token (Hidden) -->
                         <input type="hidden" name="token" value="{{ $token }}" x-ref="token">
 
                         <div class="space-y-5">
+                            <!-- Email -->
+                            <div>
+                                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                    Email Address <span class="text-error-500">*</span>
+                                </label>
+                                <input type="email" id="email" name="email" value="{{ request()->email }}" readonly
+                                    x-ref="email" placeholder="Enter your email address"
+                                    class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-gray-50 px-4 py-2.5 text-sm text-gray-500 shadow-theme-xs cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-white/50" />
+                            </div>
 
                             <div x-show="error" x-transition
                                 class="rounded-xl border border-error-500 bg-error-50 p-4 dark:border-error-500/30 dark:bg-error-500/15">
@@ -92,16 +108,6 @@
                                         <p class="text-sm text-gray-800 dark:text-white/60" x-text="error"></p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Email -->
-                            <div>
-                                <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                    Email Address <span class="text-error-500">*</span>
-                                </label>
-                                <input type="email" id="email" name="email" value="{{ request()->email }}" required
-                                    x-ref="email" placeholder="Enter your email address"
-                                    class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800" />
                             </div>
 
                             <!-- Password -->
@@ -155,6 +161,24 @@
                                 </button>
                             </div>
                         </div>
+
+                        {{-- Success Modal --}}
+                        <x-m::modal
+                            id="success-modal"
+                            type="brand"
+                            title="Password Changed!"
+                            actionTitle="Proceed to Login"
+                            :actionRoute="route('merchant.login')"
+                            :isDispose="false"
+                        >
+                            <x-slot name="icon">
+                                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-success-50 text-success-500 dark:bg-success-500/10 mb-6">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </x-slot>
+                        </x-m::modal>
                     </form>
                 </div>
             </div>

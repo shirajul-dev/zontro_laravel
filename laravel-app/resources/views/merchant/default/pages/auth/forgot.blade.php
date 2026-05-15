@@ -77,24 +77,7 @@
                     }" @submit.prevent="submitForm">
                         @csrf
 
-                        {{-- Success Modal --}}
-                        <x-m::modal
-                            id="success-modal"
-                            type="brand"
-                            title="Successfully Sent!"
-                            actionTitle="Back to Login"
-                            :actionRoute="route('merchant.login')"
-                            :isDispose="false"
-                        >
-                            <x-slot name="icon">
-                                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </div>
-                            </x-slot>
-                        </x-m::modal>
+
 
                         <div class="space-y-5">
 
@@ -157,6 +140,25 @@
                                 </button>
                             </div>
                         </div>
+
+                        {{-- Success Modal --}}
+                        <x-m::modal
+                            id="success-modal"
+                            type="brand"
+                            title="Successfully Sent!"
+                            actionTitle="Back to Login"
+                            :actionRoute="route('merchant.login')"
+                            :isDispose="false"
+                        >
+                            <x-slot name="icon">
+                                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                        <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
+                                </div>
+                            </x-slot>
+                        </x-m::modal>
                     </form>
                 </div>
             </div>

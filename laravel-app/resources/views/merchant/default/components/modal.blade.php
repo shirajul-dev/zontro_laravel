@@ -59,7 +59,7 @@
 
             <div class="text-center">
                 <!-- Icon Section -->
-                <div class="relative flex items-center justify-center z-1 mb-4">
+                <div class="relative flex items-center justify-center z-1 mb-2">
                     @if(isset($icon))
                         {{ $icon }}
                     @else
