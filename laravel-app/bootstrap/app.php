@@ -77,7 +77,18 @@ return Application::configure(basePath: dirname(__DIR__))
                 return route('superadmin.login');
             }
 
+            if ($request->is('merchant/*') || $request->is('merchant')) {
+                return route('merchant.login');
+            }
+
             return '/admin/login';
+        });
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            if (auth()->guard('merchant')->check()) {
+                return route('merchant.dashboard');
+            }
+            return '/admin/dashboard';
         });
 
         $middleware->appendToGroup('web', SyncLegacyAdminSession::class);

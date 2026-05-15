@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('merchant')->name('merchant.')->group(function () {
-    
+
     // Guest Routes
     Route::middleware('guest:merchant')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -19,10 +19,14 @@ Route::prefix('merchant')->name('merchant.')->group(function () {
 
     // Authenticated Routes
     Route::middleware('auth:merchant')->group(function () {
+        Route::get('/', function () {
+            return redirect()->route('merchant.dashboard');
+        });
+
         Route::get('/dashboard', function () {
             return "Merchant Dashboard (Native)";
         })->name('dashboard');
-        
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 });
