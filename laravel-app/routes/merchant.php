@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Merchant\AuthController;
+use App\Http\Controllers\Merchant\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -28,9 +29,7 @@ Route::prefix('merchant')->name('merchant.')->group(function () {
             return redirect()->route('merchant.dashboard');
         });
 
-        Route::get('/dashboard', function () {
-            return "Merchant Dashboard (Native)";
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
