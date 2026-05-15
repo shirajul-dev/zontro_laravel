@@ -7,6 +7,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Auth\Events\PasswordReset;
 
 class AuthController extends Controller
 {
@@ -16,6 +20,85 @@ class AuthController extends Controller
     public function showLogin(): \Illuminate\Contracts\View\View
     {
         return view('m::auth.login');
+    }
+
+    /**
+     * Show the forgot password form.
+     */
+    public function showForgotForm(): \Illuminate\Contracts\View\View
+    {
+        return view('m::auth.forgot');
+    }
+
+    /**
+     * Send a reset link to the given user.
+     */
+    public function sendResetLink(Request $request): JsonResponse|RedirectResponse
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $status = Password::broker('merchants')->sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'success', 'message' => __($status)]);
+            }
+            return back()->with(['status' => __($status)]);
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'error', 'message' => __($status)], 422);
+        }
+
+        return back()->withErrors(['email' => __($status)]);
+    }
+
+    /**
+     * Show the reset password form.
+     */
+    public function showResetForm(string $token): \Illuminate\Contracts\View\View
+    {
+        return view('m::auth.reset', ['token' => $token]);
+    }
+
+    /**
+     * Handle a reset password request.
+     */
+    public function resetPassword(Request $request): JsonResponse|RedirectResponse
+    {
+        $request->validate([
+            'token' => 'required',
+            'email' => 'required|email',
+            'password' => 'required|min:8|confirmed',
+        ]);
+
+        $status = Password::broker('merchants')->reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->setRememberToken(Str::random(60));
+
+                $user->save();
+
+                event(new PasswordReset($user));
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            if ($request->expectsJson()) {
+                return response()->json(['status' => 'success', 'message' => __($status), 'redirect' => route('merchant.login')]);
+            }
+            return redirect()->route('merchant.login')->with('status', __($status));
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['status' => 'error', 'message' => __($status)], 422);
+        }
+
+        return back()->withErrors(['email' => [__($status)]]);
     }
 
     /**

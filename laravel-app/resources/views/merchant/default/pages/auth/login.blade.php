@@ -21,7 +21,7 @@
                 <div class="mb-5 sm:mb-8">
 
                     {{-- show logo only for mobile. --}}
-                    <div class="sm:hidden">
+                    <div class="sm:hidden mobile-only-logo">
                         <img src="{{ asset('assets/images/favicon-dark.png') }}" alt="{{ config('app.name') }} Logo"
                             class="w-12 h-12 rounded-xl mb-6">
                     </div>
@@ -196,7 +196,7 @@
                                         Keep me logged in
                                     </label>
                                 </div>
-                                <a href="/reset-password.html"
+                                <a href="{{ route('merchant.password.request') }}"
                                     class="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400">Forgot
                                     password?</a>
                             </div>

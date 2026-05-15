@@ -10,6 +10,14 @@
     <link rel="icon" href="{{ asset('assets/images/favicon-light.png') }}">
     <link href="{{ m_asset('assets/css/style.css') }}" rel="stylesheet">
 
+    <style>
+        @media (min-width: 768px) {
+            .mobile-only-logo {
+                display: none !important;
+            }
+        }
+    </style>
+
     @stack('styles')
 </head>
 
