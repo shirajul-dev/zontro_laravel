@@ -31,17 +31,31 @@ class MerchantSeeder extends Seeder
 
         // Create a default brand for this merchant using the new ZpBrand model
         ZpBrand::updateOrCreate(
-            ['admin_id' => $merchant->id, 'identify_name' => 'Default'],
+            ['admin_id' => $merchant->id, 'is_default' => true],
             [
                 'brand_id' => 'B' . strtoupper(Str::random(10)),
-                'name' => 'My Native Brand',
+                'name' => 'Default',
+                'is_default' => true,
                 'currency_code' => 'BDT',
                 'timezone' => 'Asia/Dhaka',
                 'language' => 'en',
             ]
         );
 
+        // Create a secondary brand for cross-checking
+        ZpBrand::updateOrCreate(
+            ['admin_id' => $merchant->id, 'name' => 'PipraPay Pro'],
+            [
+                'brand_id' => 'B' . strtoupper(Str::random(10)),
+                'name' => 'PipraPay Pro',
+                'is_default' => false,
+                'currency_code' => 'USD',
+                'timezone' => 'UTC',
+                'language' => 'en',
+            ]
+        );
+
         $this->command->info('Default merchant created: merchant@zontropay / 12345678');
-        $this->command->info('Default ZpBrand created for the merchant.');
+        $this->command->info('Two ZpBrands created for the merchant.');
     }
 }

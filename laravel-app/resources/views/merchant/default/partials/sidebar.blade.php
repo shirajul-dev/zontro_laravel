@@ -24,7 +24,15 @@
 
                       <!-- Right Logo -->
                       <div class="flex-shrink-0">
-                          <img class="h-8 w-8 rounded-lg object-contain" src="{{ $activeBrand && $activeBrand->favicon ? asset($activeBrand->favicon) : asset('assets/images/favicon-dark.png') }}" alt="Logo" />
+                          @if($activeBrand && $activeBrand->favicon)
+                              <img class="h-8 w-8 rounded-lg object-contain" src="{{ asset($activeBrand->favicon) }}" alt="Logo" />
+                          @else
+                              <div class="h-8 w-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+                                  <svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
+                                  </svg>
+                              </div>
+                          @endif
                       </div>
                   </div>
 
@@ -44,10 +52,26 @@
 
                       <ul class="flex flex-col relative z-10 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
                           @forelse($merchantBrands ?? [] as $brand)
+                          @php
+                              $isActive = ($activeBrand && $brand->id === $activeBrand->id);
+                          @endphp
                           <li>
-                              <a href="#" class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-800' : '' }} transition-colors">
-                                  <img class="w-5 h-5 rounded object-contain" src="{{ $brand->favicon ? asset($brand->favicon) : asset('assets/images/favicon-dark.png') }}" alt="">
-                                  {{ $brand->name }}
+                              <a href="{{ $isActive ? 'javascript:void(0)' : route('merchant.switch-brand', $brand->id) }}" 
+                                 class="flex items-center justify-between px-4 py-3.5 text-[15px] font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-800' : '' }} {{ $isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-400' }}">
+                                  <div class="flex items-center gap-3">
+                                      @if($brand->favicon)
+                                          <img class="w-5 h-5 rounded object-contain" src="{{ asset($brand->favicon) }}" alt="">
+                                      @else
+                                          <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
+                                          </svg>
+                                      @endif
+                                      <span>{{ $brand->name }}</span>
+                                  </div>
+                                  
+                                  @if($isActive)
+                                      <span class="w-2 h-2 rounded-full bg-success-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                                  @endif
                               </a>
                           </li>
                           @empty
@@ -70,9 +94,16 @@
               </div>
 
               <!-- Collapsed State -->
-              <a href="index.html" class="logo-icon" :class="sidebarToggle ? 'lg:block' : 'hidden'">
-                  <img class="h-8 w-8 rounded-lg object-contain mx-auto"
-                      src="{{ $activeBrand && $activeBrand->favicon ? asset($activeBrand->favicon) : asset('assets/images/favicon-dark.png') }}" alt="Logo" />
+              <a href="{{ route('merchant.dashboard') }}" class="logo-icon" :class="sidebarToggle ? 'lg:block' : 'hidden'">
+                  @if($activeBrand && $activeBrand->favicon)
+                      <img class="h-8 w-8 rounded-lg object-contain mx-auto" src="{{ asset($activeBrand->favicon) }}" alt="Logo" />
+                  @else
+                      <div class="h-10 w-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto">
+                          <svg class="w-6 h-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
+                          </svg>
+                      </div>
+                  @endif
               </a>
           </div>
           <!-- SIDEBAR HEADER -->

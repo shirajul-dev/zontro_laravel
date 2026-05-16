@@ -30,6 +30,7 @@ Route::prefix('merchant')->name('merchant.')->group(function () {
         });
 
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/switch-brand/{id}', [DashboardController::class, 'switchBrand'])->name('switch-brand');
 
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });

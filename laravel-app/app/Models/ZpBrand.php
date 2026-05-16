@@ -13,6 +13,7 @@ class ZpBrand extends Model
 
     protected $fillable = [
         'admin_id',
+        'is_default',
         'brand_id',
         'identify_name',
         'name',

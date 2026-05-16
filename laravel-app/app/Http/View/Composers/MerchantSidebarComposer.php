@@ -16,7 +16,17 @@ class MerchantSidebarComposer
         
         if ($merchant) {
             $brands = $merchant->brands()->get();
-            $activeBrand = $brands->first(); // Default to first brand
+            
+            $activeBrandId = session('active_brand_id');
+            $activeBrand = null;
+            
+            if ($activeBrandId) {
+                $activeBrand = $brands->where('id', $activeBrandId)->first();
+            }
+            
+            if (!$activeBrand) {
+                $activeBrand = $brands->where('is_default', true)->first() ?? $brands->first();
+            }
             
             $view->with('activeBrand', $activeBrand);
             $view->with('merchantBrands', $brands);

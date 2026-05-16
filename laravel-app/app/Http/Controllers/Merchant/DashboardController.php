@@ -11,4 +11,14 @@ class DashboardController extends Controller
     {
         return view('m::dashboard.index');
     }
+
+    public function switchBrand($id)
+    {
+        $merchant = auth()->guard('merchant')->user();
+        $brand = $merchant->brands()->where('id', $id)->firstOrFail();
+
+        session(['active_brand_id' => $brand->id]);
+
+        return redirect()->back()->with('success', 'Switched to ' . $brand->name);
+    }
 }
