@@ -70,4 +70,9 @@ class ZpAdmin extends Authenticatable
     {
         $this->notify(new \App\Notifications\MerchantResetPasswordNotification($token));
     }
+
+    public function brands()
+    {
+        return $this->hasMany(ZpBrand::class, 'admin_id');
+    }
 }

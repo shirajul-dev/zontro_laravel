@@ -23,18 +23,20 @@ class MerchantServiceProvider extends ServiceProvider
         $theme = config('piprapay.merchant_theme', 'default');
         
         // Register the 'm' namespace for professional theme management
-        // It will look in the 'pages' directory first, then the theme root (for layouts)
         View::addNamespace('m', [
             resource_path("views/merchant/{$theme}/pages"),
             resource_path("views/merchant/{$theme}"),
         ]);
         
-        // Fallback to default theme if the active theme doesn't have the view
+        // Fallback to default theme
         if ($theme !== 'default') {
             View::addNamespace('m', [
                 resource_path("views/merchant/default/pages"),
                 resource_path("views/merchant/default"),
             ]);
         }
+
+        // Register View Composers
+        View::composer('merchant.default.partials.sidebar', \App\Http\View\Composers\MerchantSidebarComposer::class);
     }
 }

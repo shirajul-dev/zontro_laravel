@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\ZpAdmin;
+use App\Models\ZpBrand;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -14,7 +15,7 @@ class MerchantSeeder extends Seeder
      */
     public function run(): void
     {
-        ZpAdmin::updateOrCreate(
+        $merchant = ZpAdmin::updateOrCreate(
             ['username' => 'merchant'],
             [
                 'a_id' => 'M' . strtoupper(Str::random(10)),
@@ -28,6 +29,19 @@ class MerchantSeeder extends Seeder
             ]
         );
 
+        // Create a default brand for this merchant using the new ZpBrand model
+        ZpBrand::updateOrCreate(
+            ['admin_id' => $merchant->id, 'identify_name' => 'Default'],
+            [
+                'brand_id' => 'B' . strtoupper(Str::random(10)),
+                'name' => 'My Native Brand',
+                'currency_code' => 'BDT',
+                'timezone' => 'Asia/Dhaka',
+                'language' => 'en',
+            ]
+        );
+
         $this->command->info('Default merchant created: merchant@zontropay / 12345678');
+        $this->command->info('Default ZpBrand created for the merchant.');
     }
 }

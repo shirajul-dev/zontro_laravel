@@ -11,7 +11,7 @@
                       <!-- Switcher Text (Left) -->
                       <div class="flex flex-col justify-center group">
                           <div class="flex items-center gap-1 text-gray-900 dark:text-white font-semibold text-[17px] leading-none">
-                              <span>PipraPay</span>
+                              <span>{{ $activeBrand->name ?? 'PipraPay' }}</span>
                               <svg class="w-4 h-4 text-gray-500 transition-transform duration-200" :class="brandDropdownOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                               </svg>
@@ -24,7 +24,7 @@
 
                       <!-- Right Logo -->
                       <div class="flex-shrink-0">
-                          <img class="h-8 w-8 rounded-lg object-contain" src="{{ asset('assets/images/favicon-dark.png') }}" alt="Logo" />
+                          <img class="h-8 w-8 rounded-lg object-contain" src="{{ $activeBrand && $activeBrand->favicon ? asset($activeBrand->favicon) : asset('assets/images/favicon-dark.png') }}" alt="Logo" />
                       </div>
                   </div>
 
@@ -43,15 +43,21 @@
                       <div class="absolute -top-[6px] right-6 w-3 h-3 rotate-45 border-l border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 rounded-tl-[2px]"></div>
 
                       <ul class="flex flex-col relative z-10 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
+                          @forelse($merchantBrands ?? [] as $brand)
                           <li>
-                              <a href="#" class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 border-b border-gray-100 dark:border-gray-800 transition-colors">
-                                  <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
-                                  </svg>
-                                  Default
+                              <a href="#" class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-800' : '' }} transition-colors">
+                                  <img class="w-5 h-5 rounded object-contain" src="{{ $brand->favicon ? asset($brand->favicon) : asset('assets/images/favicon-dark.png') }}" alt="">
+                                  {{ $brand->name }}
                               </a>
                           </li>
+                          @empty
                           <li>
+                              <a href="#" class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
+                                  No Brands Found
+                              </a>
+                          </li>
+                          @endforelse
+                          <li class="border-t border-gray-100 dark:border-gray-800">
                               <a href="#" class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
                                   <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
                                       <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -66,7 +72,7 @@
               <!-- Collapsed State -->
               <a href="index.html" class="logo-icon" :class="sidebarToggle ? 'lg:block' : 'hidden'">
                   <img class="h-8 w-8 rounded-lg object-contain mx-auto"
-                      src="{{ asset('assets/images/favicon-dark.png') }}" alt="Logo" />
+                      src="{{ $activeBrand && $activeBrand->favicon ? asset($activeBrand->favicon) : asset('assets/images/favicon-dark.png') }}" alt="Logo" />
               </a>
           </div>
           <!-- SIDEBAR HEADER -->
@@ -93,14 +99,9 @@
                       <ul class="flex flex-col gap-4 mb-6">
                           <!-- Menu Item Dashboard -->
                           <li>
-                              <a href="#" @click.prevent="selected = (selected === 'Dashboard' ? '':'Dashboard')"
-                                  class="menu-item group"
-                                  :class="(selected === 'Dashboard') || (page === 'ecommerce' || page === 'analytics' ||
-                                      page === 'marketing' || page === 'crm' || page === 'stocks') ?
-                                  'menu-item-active' : 'menu-item-inactive'">
-                                  <svg :class="(selected === 'Dashboard') || (page === 'ecommerce' || page === 'analytics' ||
-                                      page === 'marketing' || page === 'crm' || page === 'stocks') ?
-                                  'menu-item-icon-active' : 'menu-item-icon-inactive'"
+                               <a href="{{ route('merchant.dashboard') }}" @click="selected = 'Dashboard'"
+                                  class="menu-item group {{ request()->routeIs('merchant.dashboard') ? 'menu-item-active' : 'menu-item-inactive' }}">
+                                  <svg class="{{ request()->routeIs('merchant.dashboard') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"
                                       width="24" height="24" viewBox="0 0 24 24" fill="none"
                                       xmlns="http://www.w3.org/2000/svg">
                                       <path fill-rule="evenodd" clip-rule="evenodd"
