@@ -149,7 +149,7 @@
                             <!-- Password -->
                             <div>
                                 <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
-                                    Password<span class="text-error-500">*</span>
+                                    Password <span class="text-error-500">*</span>
                                 </label>
                                 <div class="relative">
                                     <input :type="showPassword ? 'text' : 'password'" name="password" required

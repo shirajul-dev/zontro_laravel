@@ -39,6 +39,12 @@ class MerchantSeeder extends Seeder
                 'currency_code' => 'BDT',
                 'timezone' => 'Asia/Dhaka',
                 'language' => 'en',
+                'support_email' => 'support@piprapay.com',
+                'support_phone' => '+880123456789',
+                'street_address' => '123 Business Way',
+                'city_town' => 'Dhaka',
+                'country' => 'Bangladesh',
+                'telegram' => '@piprapay_support',
             ]
         );
 
@@ -52,6 +58,10 @@ class MerchantSeeder extends Seeder
                 'currency_code' => 'USD',
                 'timezone' => 'UTC',
                 'language' => 'en',
+                'support_email' => 'pro@piprapay.com',
+                'street_address' => '456 Global Tower',
+                'city_town' => 'Singapore',
+                'country' => 'Singapore',
             ]
         );
 

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Blade;
 
 class MerchantServiceProvider extends ServiceProvider
 {
@@ -27,6 +28,9 @@ class MerchantServiceProvider extends ServiceProvider
             resource_path("views/merchant/{$theme}/pages"),
             resource_path("views/merchant/{$theme}"),
         ]);
+        
+        // Register anonymous components for the merchant theme
+        Blade::anonymousComponentPath(resource_path("views/merchant/{$theme}/components"));
         
         // Fallback to default theme
         if ($theme !== 'default') {

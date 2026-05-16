@@ -21,4 +21,9 @@ class DashboardController extends Controller
 
         return redirect()->back()->with('success', 'Switched to ' . $brand->name);
     }
+
+    public function settings()
+    {
+        return view('m::settings.index');
+    }
 }
