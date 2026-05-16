@@ -69,6 +69,8 @@
                                   @endphp
                                   <li>
                                       <a href="{{ $isActive ? 'javascript:void(0)' : route('merchant.switch-brand', $brand->id) }}"
+                                          data-turbo="false"
+                                          onclick="if(!{{ $isActive ? 'true' : 'false' }}) window.location.href = this.href;"
                                           class="flex items-center justify-between px-4 py-3.5 text-[15px] font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-800' : '' }} {{ $isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-400' }}">
                                           <div class="flex items-center gap-3">
                                               @if ($brand->favicon)
@@ -137,7 +139,9 @@
 
               <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                   <!-- Sidebar Menu -->
-                  <nav x-data="{ selected: $persist('Dashboard') }">
+                  <nav x-data="{ 
+                      selected: '{{ request()->is('merchant/dashboard*') ? 'Dashboard' : (request()->is('merchant/settings*') ? 'Settings' : '') }}'
+                  }">
                       <!-- Menu Group -->
                       <div>
                           <h3 class="mb-4 text-xs uppercase leading-[20px] text-gray-400">
@@ -158,8 +162,9 @@
                               <!-- Menu Item Dashboard -->
                               <li>
                                   <a href="{{ route('merchant.dashboard') }}" @click="selected = 'Dashboard'"
-                                      class="menu-item group {{ request()->routeIs('merchant.dashboard') ? 'menu-item-active' : 'menu-item-inactive' }}">
-                                      <svg class="{{ request()->routeIs('merchant.dashboard') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"
+                                      class="menu-item group"
+                                      :class="selected === 'Dashboard' ? 'menu-item-active' : 'menu-item-inactive'">
+                                      <svg :class="selected === 'Dashboard' ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
                                           width="24" height="24" viewBox="0 0 24 24" fill="none"
                                           xmlns="http://www.w3.org/2000/svg">
                                           <path fill-rule="evenodd" clip-rule="evenodd"
@@ -179,8 +184,9 @@
                               <!-- Menu Item Settings -->
                               <li>
                                   <a href="{{ route('merchant.settings') }}" @click="selected = 'Settings'"
-                                      class="menu-item group {{ request()->routeIs('merchant.settings') ? 'menu-item-active' : 'menu-item-inactive' }}">
-                                      <svg class="{{ request()->routeIs('merchant.settings') ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"
+                                      class="menu-item group"
+                                      :class="selected === 'Settings' ? 'menu-item-active' : 'menu-item-inactive'">
+                                      <svg :class="selected === 'Settings' ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
                                           width="24" height="24" viewBox="0 0 24 24" fill="none"
                                           xmlns="http://www.w3.org/2000/svg">
                                           <path fill-rule="evenodd" clip-rule="evenodd"
