@@ -198,18 +198,17 @@ class SettingsController extends Controller
     /**
      * Display the Currencies page.
      */
-    public function currencies()
+    public function currencies(Request $request)
     {
         $brand = $this->getActiveBrand();
-        if (!$brand) {
-            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
-        }
+        if (!$brand) abort(401);
 
-        if (request()->ajax()) {
+        // Handle both AJAX and requests with data table parameters
+        if ($request->ajax() || $request->has('search_input') || $request->has('page') || $request->has('show_limit')) {
             return $this->handleCurrencyList($brand);
         }
 
-        return view('m::pages.settings.currencies', compact('brand'));
+        return view('merchant.default.pages.settings.currencies', compact('brand'));
     }
 
     /**
@@ -335,7 +334,7 @@ class SettingsController extends Controller
 
         $query = ZpCurrency::where('brand_id', $brand->brand_id);
 
-        if ($search) {
+        if ($search !== null && $search !== '') {
             $query->where(function($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
                   ->orWhere('symbol', 'like', "%{$search}%");
@@ -364,6 +363,7 @@ class SettingsController extends Controller
         return response()->json([
             'status' => 'true',
             'response' => $response,
+            'search_term' => $search, // For debugging
             'datatableInfo' => "Showing <strong>" . ($currencies->total() > 0 ? $currencies->firstItem() : 0) . " to " . ($currencies->total() > 0 ? $currencies->lastItem() : 0) . "</strong> of <strong>{$currencies->total()} entries</strong>",
             'pagination' => $this->buildPagination($currencies)
         ]);
@@ -389,10 +389,21 @@ class SettingsController extends Controller
         // Desktop Page List
         $html .= '<ul class="hidden items-center gap-0.5 sm:flex">';
         
-        // Simple pagination logic for now, could be improved to show range
-        for ($i = 1; $i <= $lastPage; $i++) {
-            $activeClass = ($i === $currentPage) ? 'bg-brand-500 text-white' : 'hover:bg-brand-500 text-gray-700 dark:text-gray-400 hover:text-white dark:hover:text-white';
-            $html .= '<li><button data-page="' . $i . '" class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium ' . $activeClass . '"><span>' . $i . '</span></button></li>';
+        $elements = $paginator->onEachSide(1)->linkCollection();
+        
+        foreach ($elements as $element) {
+            // Skip prev/next as they are handled manually
+            if ($element['label'] == '&laquo; Previous' || $element['label'] == 'Next &raquo;') {
+                continue;
+            }
+
+            if ($element['label'] == '...') {
+                $html .= '<li><span class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium text-gray-500">...</span></li>';
+            } else {
+                $i = $element['label'];
+                $activeClass = ($element['active']) ? 'bg-brand-500 text-white' : 'hover:bg-brand-500 text-gray-700 dark:text-gray-400 hover:text-white dark:hover:text-white';
+                $html .= '<li><button data-page="' . $i . '" class="flex h-10 w-10 items-center justify-center rounded-lg text-sm font-medium ' . $activeClass . '"><span>' . $i . '</span></button></li>';
+            }
         }
         $html .= '</ul>';
 

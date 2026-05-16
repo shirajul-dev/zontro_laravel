@@ -96,7 +96,7 @@
                     </div>
 
                     <div class="relative">
-                        <button class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
+                        <button type="button" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
                             <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" clip-rule="evenodd"
@@ -106,6 +106,7 @@
                         </button>
 
                         <input type="text" id="search-input" placeholder="Search currencies..."
+                            oninput="debouncedLoadCurrencies()"
                             class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-11 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[300px]">
                     </div>
                 </div>
@@ -238,23 +239,33 @@
                     };
                 }
 
-                async function loadCurrencies(page = 1) {
+                window.loadCurrencies = async function(page = 1) {
                     currentPage = page;
                     const tableBody = document.getElementById('currency-table-body');
-                    const searchInput = document.getElementById('search-input').value;
-                    const showLimit = document.getElementById('show-limit').value;
+                    const searchVal = document.querySelector('#settings-container #search-input')?.value || '';
+                    const limitVal = document.getElementById('show-limit')?.value || 10;
 
                     tableBody.innerHTML =
                         `<tr><td colspan="4" class="px-5 py-20 text-center"><x-loader show-text="true" text="Fetching currency data..." /></td></tr>`;
 
                     try {
-                        const response = await fetch(
-                            `{{ route('merchant.settings.currencies') }}?page=${page}&search_input=${searchInput}&show_limit=${showLimit}`, {
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest'
-                                }
-                            });
+                        const params = new URLSearchParams({
+                            page: page,
+                            search_input: searchVal,
+                            show_limit: limitVal
+                        });
+
+                        const fullUrl = `{{ route('merchant.settings.currencies') }}?${params.toString()}`;
+                        console.log('Fetching URL:', fullUrl);
+
+                        const response = await fetch(fullUrl, {
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
                         const data = await response.json();
+
+                        console.log('Server confirmed search term:', data.search_term);
 
                         if (data.status === 'true') {
                             let html = '';
@@ -285,18 +296,38 @@
                                         <p class="text-sm text-gray-600 dark:text-gray-400">${item.updated_date}</p>
                                     </td>
                                     <td class="px-5 py-4 text-right">
-                                        <button type="button" onclick="editCurrency(${JSON.stringify(item).replace(/"/g, '&quot;')})"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-white/10 transition-colors">
-                                            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                            </svg>
-                                        </button>
-                                        <button type="button" onclick="syncSingleRate('${item.id}')"
-                                            class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 hover:text-brand-500 dark:text-gray-400 dark:hover:bg-white/10 transition-colors ml-1">
-                                            <svg class="h-4.5 w-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                                            </svg>
-                                        </button>
+                                        <div x-data="{openDropDown: false}" class="relative inline-block text-left">
+                                            <button @click="openDropDown = !openDropDown" class="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.05] transition-colors shadow-theme-xs border border-gray-200 dark:border-gray-800">
+                                                Actions
+                                                <svg class="duration-200 ease-in-out fill-current" :class="openDropDown && 'rotate-180'" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M4.79199 7.396L10.0003 12.6043L15.2087 7.396" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                </svg>
+                                            </button>
+                                            <div x-show="openDropDown" @click.outside="openDropDown = false" x-transition
+                                                class="absolute right-0 top-full z-40 mt-2 w-[260px] rounded-2xl border border-gray-200 bg-white p-1.5 shadow-theme-lg dark:border-gray-800 dark:bg-[#1E2635]"
+                                                style="display: none;">
+                                                <ul class="flex flex-col gap-0.5">
+                                                    <li>
+                                                        <button @click="openDropDown = false; editCurrency(${JSON.stringify(item).replace(/"/g, '&quot;')})"
+                                                            class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors">
+                                                            <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                            </svg>
+                                                            Edit Currency
+                                                        </button>
+                                                    </li>
+                                                    <li>
+                                                        <button @click="openDropDown = false; syncSingleRate('${item.id}')"
+                                                            class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors">
+                                                            <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                                            </svg>
+                                                            Sync Rate
+                                                        </button>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>`;
                                 });
@@ -308,6 +339,11 @@
                             document.querySelectorAll('#pagination-container button[data-page]').forEach(btn => {
                                 btn.onclick = () => loadCurrencies(btn.dataset.page);
                             });
+
+                            // Re-initialize Alpine for the new dropdowns
+                            if (window.Alpine) {
+                                Alpine.initTree(tableBody);
+                            }
                         }
                     } catch (error) {
                         console.error('Fetch error:', error);
@@ -315,6 +351,8 @@
                             `<tr><td colspan="4" class="px-5 py-10 text-center text-error-500 font-medium">Failed to load currencies. Please try again.</td></tr>`;
                     }
                 }
+
+                window.debouncedLoadCurrencies = debounce(() => loadCurrencies(1), 500);
 
                 window.editCurrency = function(item) {
                     document.getElementById('edit_currency_id').value = item.id;
@@ -363,19 +401,14 @@
                     }
                 }
 
-                const searchInput = document.getElementById('search-input');
-                if (searchInput) {
-                    searchInput.addEventListener('input', debounce(() => loadCurrencies(1), 500));
+                const lSelect = document.getElementById('show-limit');
+                if (lSelect) {
+                    lSelect.onchange = () => loadCurrencies(1);
                 }
 
-                const showLimit = document.getElementById('show-limit');
-                if (showLimit) {
-                    showLimit.addEventListener('change', () => loadCurrencies(1));
-                }
-
-                const syncRatesBtn = document.getElementById('sync-rates-btn');
-                if (syncRatesBtn) {
-                    syncRatesBtn.onclick = async function() {
+                const sBtn = document.getElementById('sync-rates-btn');
+                if (sBtn) {
+                    sBtn.onclick = async function() {
                         this.disabled = true;
                         const originalText = this.innerHTML;
                         this.innerHTML =
@@ -405,9 +438,9 @@
                     };
                 }
 
-                const confirmImportBtn = document.getElementById('confirm-import-btn');
-                if (confirmImportBtn) {
-                    confirmImportBtn.onclick = async function() {
+                const iBtn = document.getElementById('confirm-import-btn');
+                if (iBtn) {
+                    iBtn.onclick = async function() {
                         const btn = this;
                         btn.disabled = true;
                         const originalText = btn.innerHTML;
@@ -442,16 +475,16 @@
                     };
                 }
 
-                const submitEditBtn = document.getElementById('submit-edit-currency-btn');
-                if (submitEditBtn) {
-                    submitEditBtn.onclick = function() {
+                const eBtn = document.getElementById('submit-edit-currency-btn');
+                if (eBtn) {
+                    eBtn.onclick = function() {
                         document.getElementById('edit-currency-form').requestSubmit();
                     };
                 }
 
-                const editCurrencyForm = document.getElementById('edit-currency-form');
-                if (editCurrencyForm) {
-                    editCurrencyForm.onsubmit = async function(e) {
+                const eForm = document.getElementById('edit-currency-form');
+                if (eForm) {
+                    eForm.onsubmit = async function(e) {
                         e.preventDefault();
                         const formData = new FormData(this);
                         try {
