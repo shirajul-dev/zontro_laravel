@@ -1,145 +1,31 @@
       <div class="dark" style="display: contents;">
           <aside :class="sidebarToggle ? 'translate-x-0 lg:w-[90px]' : '-translate-x-full'"
-              class="sidebar fixed left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white px-5 dark:border-gray-800 dark:bg-black lg:static lg:translate-x-0">
+              class="sidebar fixed left-0 top-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-hidden border-r border-gray-200 bg-white px-5 duration-300 ease-linear dark:border-gray-800 dark:bg-black lg:static lg:translate-x-0">
               <!-- SIDEBAR HEADER -->
-              <div :class="sidebarToggle ? 'justify-center' : 'justify-between'"
-                  class="flex items-center gap-2 pt-8 sidebar-header pb-7 w-full">
+              <div class="flex items-center justify-between pt-8 pb-7 w-full px-2 overflow-hidden"
+                  :class="sidebarToggle ? 'justify-center' : 'justify-between'">
 
                   <!-- Expanded State -->
-                  <div class="logo w-full relative" :class="sidebarToggle ? 'hidden' : 'block'" x-data="{ brandDropdownOpen: false }">
-                      <div @click="brandDropdownOpen = !brandDropdownOpen"
-                          class="flex items-center justify-between w-full cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 p-2.5 -mx-2.5 rounded-xl transition-colors">
-                          <!-- Switcher Text (Left) -->
-                          <div class="flex flex-col justify-center group">
-                              <div
-                                  class="flex items-center gap-1 text-gray-900 dark:text-white font-semibold text-[17px] leading-none">
-                                  <span>{{ $activeBrand->name ?? 'PipraPay' }}</span>
-                                  <svg class="w-4 h-4 text-gray-500 transition-transform duration-200"
-                                      :class="brandDropdownOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24"
-                                      stroke="currentColor">
-                                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M19 9l-7 7-7-7" />
-                                  </svg>
-                              </div>
-                              <div class="flex items-center gap-1.5 mt-2">
-                                  <span class="w-2 h-2 rounded-full bg-success-500"></span>
-                                  <span class="text-[13px] text-gray-500 dark:text-gray-400 leading-none">Active
-                                      brand</span>
-                              </div>
-                          </div>
-
-                          <!-- Right Logo -->
-                          <div class="flex-shrink-0">
-                              @if ($activeBrand && $activeBrand->favicon)
-                                  <img class="h-8 w-8 rounded-lg object-contain"
-                                      src="{{ asset($activeBrand->favicon) }}" alt="Logo" />
-                              @else
-                                  <div
-                                      class="h-8 w-8 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-                                      <svg class="w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg"
-                                          fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                          <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
-                                      </svg>
-                                  </div>
-                              @endif
-                          </div>
-                      </div>
-
-                      <!-- Dropdown Menu -->
-                      <div x-show="brandDropdownOpen" @click.outside="brandDropdownOpen = false"
-                          x-transition:enter="transition ease-out duration-200"
-                          x-transition:enter-start="opacity-0 translate-y-1"
-                          x-transition:enter-end="opacity-100 translate-y-0"
-                          x-transition:leave="transition ease-in duration-150"
-                          x-transition:leave-start="opacity-100 translate-y-0"
-                          x-transition:leave-end="opacity-0 translate-y-1"
-                          class="absolute left-0 top-full mt-3 w-full rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900 z-[99999]"
-                          style="display: none;">
-
-                          <!-- Arrow pointing up -->
-                          <div
-                              class="absolute -top-[6px] right-6 w-3 h-3 rotate-45 border-l border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900 rounded-tl-[2px]">
-                          </div>
-
-                          <ul class="flex flex-col relative z-10 bg-white dark:bg-gray-900 rounded-xl overflow-hidden">
-                              @forelse($merchantBrands ?? [] as $brand)
-                                  @php
-                                      $isActive = $activeBrand && $brand->id === $activeBrand->id;
-                                  @endphp
-                                  <li>
-                                      <a href="{{ $isActive ? 'javascript:void(0)' : route('merchant.switch-brand', $brand->id) }}"
-                                          data-turbo="false"
-                                          onclick="if(!{{ $isActive ? 'true' : 'false' }}) window.location.href = this.href;"
-                                          class="flex items-center justify-between px-4 py-3.5 text-[15px] font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800 {{ !$loop->last ? 'border-b border-gray-100 dark:border-gray-800' : '' }} {{ $isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-400' }}">
-                                          <div class="flex items-center gap-3">
-                                              @if ($brand->favicon)
-                                                  <img class="w-5 h-5 rounded object-contain"
-                                                      src="{{ asset($brand->favicon) }}" alt="">
-                                              @else
-                                                  <svg class="w-5 h-5 text-gray-400" xmlns="http://www.w3.org/2000/svg"
-                                                      fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                                                      stroke="currentColor">
-                                                      <path stroke-linecap="round" stroke-linejoin="round"
-                                                          d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
-                                                  </svg>
-                                              @endif
-                                              <span>{{ $brand->name }}</span>
-                                          </div>
-
-                                          @if ($isActive)
-                                              <span
-                                                  class="w-2 h-2 rounded-full bg-success-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
-                                          @endif
-                                      </a>
-                                  </li>
-                              @empty
-                                  <li>
-                                      <a href="#"
-                                          class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                                          No Brands Found
-                                      </a>
-                                  </li>
-                              @endforelse
-                              <li class="border-t border-gray-100 dark:border-gray-800">
-                                  <a href="#"
-                                      class="flex items-center gap-3 px-4 py-3.5 text-[15px] font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-800 transition-colors">
-                                      <svg class="w-5 h-5 text-gray-500 dark:text-gray-400"
-                                          xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                                          stroke-width="1.5" stroke="currentColor">
-                                          <path stroke-linecap="round" stroke-linejoin="round"
-                                              d="M12 4.5v15m7.5-7.5h-15" />
-                                      </svg>
-                                      Create New
-                                  </a>
-                              </li>
-                          </ul>
-                      </div>
+                  <div class="logo !flex items-center justify-between w-full" :class="sidebarToggle ? 'hidden' : 'flex'">
+                      <a href="{{ route('merchant.dashboard') }}">
+                          <img class="h-7 object-contain" src="{{ asset('assets/images/logo-light.png') }}" alt="Logo" />
+                      </a>
+                      <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                          {{ config('zontropay.version') }}
+                      </span>
                   </div>
 
                   <!-- Collapsed State -->
-                  <a href="{{ route('merchant.dashboard') }}" class="logo-icon"
-                      :class="sidebarToggle ? 'lg:block' : 'hidden'">
-                      @if ($activeBrand && $activeBrand->favicon)
-                          <img class="h-8 w-8 rounded-lg object-contain mx-auto"
-                              src="{{ asset($activeBrand->favicon) }}" alt="Logo" />
-                      @else
-                          <div
-                              class="h-10 w-10 rounded-xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mx-auto">
-                              <svg class="w-6 h-6 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-                                  viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round"
-                                      d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.999 2.999 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.999 2.999 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .415.336.75.75.75z" />
-                              </svg>
-                          </div>
-                      @endif
+                  <a href="{{ route('merchant.dashboard') }}" class="logo-icon" :class="sidebarToggle ? 'block' : 'hidden'">
+                      <img class="h-8 w-8 object-contain mx-auto" src="{{ asset('assets/images/favicon-dark.png') }}" alt="Logo" />
                   </a>
               </div>
+              <!-- SIDEBAR HEADER -->
               <!-- SIDEBAR HEADER -->
 
               <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                   <!-- Sidebar Menu -->
-                  <nav x-data="{ 
+                  <nav x-data="{
                       selected: '{{ request()->is('merchant/dashboard*') ? 'Dashboard' : (request()->is('merchant/settings*') ? 'Settings' : '') }}'
                   }">
                       <!-- Menu Group -->
