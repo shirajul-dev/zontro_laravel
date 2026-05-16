@@ -8,7 +8,7 @@
                   <!-- Expanded State -->
                   <div class="logo !flex items-center justify-between w-full" :class="sidebarToggle ? 'hidden' : 'flex'">
                       <a href="{{ route('merchant.dashboard') }}">
-                          <img class="h-7 object-contain" src="{{ asset('assets/images/logo-shade.png') }}" alt="Logo" />
+                          <img class="h-7 object-contain" src="{{ asset('assets/images/logo-light.png') }}" alt="Logo" />
                       </a>
                       <span class="text-sm font-medium text-gray-500 dark:text-gray-400">
                           {{ config('zontropay.version') }}
