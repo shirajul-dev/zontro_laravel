@@ -9,6 +9,6 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        return view('m::dashboard');
+        return view('m::dashboard.index');
     }
 }
