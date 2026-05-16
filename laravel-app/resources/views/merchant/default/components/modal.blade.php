@@ -49,7 +49,7 @@
              x-transition:leave-start="opacity-100 scale-100"
              x-transition:leave-end="opacity-0 scale-95"
              @click.outside="isDispose && (isModalOpen = false)"
-             class="relative w-full max-w-[600px] rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-10">
+             class="relative max-w-[600px] rounded-3xl bg-white p-6 dark:bg-gray-900 lg:p-10">
 
             <!-- Close Button -->
             <button x-show="isDispose" @click="isModalOpen = false"
