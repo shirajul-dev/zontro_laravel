@@ -167,13 +167,12 @@
                                     <div x-data="{ switcherToggle: {{ $brand->auto_exchange ? 'true' : 'false' }} }">
                                         <label for="auto_exchange" class="relative inline-block cursor-pointer">
                                             <input type="checkbox" id="auto_exchange" name="auto_exchange" value="1"
-                                                class="sr-only" :checked="switcherToggle"
-                                                @change="switcherToggle = !switcherToggle">
-                                            <div class="block h-6 w-11 rounded-full bg-brand-500 dark:bg-brand-500"
-                                                :class="switcherToggle ? 'bg-brand-500 dark:bg-brand-500' : 'bg-gray-200 dark:bg-white/10'">
+                                                class="sr-only" x-model="switcherToggle">
+                                            <div class="block h-6 w-11 rounded-full transition-colors duration-200"
+                                                :class="switcherToggle ? 'bg-brand-500' : 'bg-gray-200 dark:bg-white/10'">
                                             </div>
                                             <div :class="switcherToggle ? 'translate-x-full' : 'translate-x-0'"
-                                                class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white duration-200 ease-linear">
+                                                class="shadow-theme-sm absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white duration-200 ease-linear transform">
                                             </div>
                                         </label>
                                     </div>

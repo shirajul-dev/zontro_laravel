@@ -4,7 +4,7 @@
         <div class="h-20 w-20 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent"></div>
 
         <!-- Inner Pulsing Circle with Favicon -->
-        <div class="absolute h-14 w-14 overflow-hidden rounded-full bg-white p-1 shadow-lg dark:bg-gray-900 animate-pulse border border-gray-100 dark:border-gray-800">
+        <div class="absolute h-14 w-14 overflow-hidden rounded-full bg-white shadow-lg dark:bg-gray-900 animate-pulse border border-gray-100 dark:border-gray-800">
             <img src="{{ asset('assets/images/favicon-dark.png') }}" alt="Loading..." class="h-full w-full object-contain rounded-full">
         </div>
     </div>

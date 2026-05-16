@@ -41,6 +41,6 @@ class MerchantServiceProvider extends ServiceProvider
         }
 
         // Register View Composers
-        View::composer('merchant.default.partials.sidebar', \App\Http\View\Composers\MerchantSidebarComposer::class);
+        View::composer(['merchant.default.partials.sidebar', 'merchant.default.partials.header'], \App\Http\View\Composers\MerchantSidebarComposer::class);
     }
 }
