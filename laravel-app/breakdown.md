@@ -52,12 +52,15 @@ Currently, the application runs in a Hybrid state, marrying legacy procedural co
 - [x] **Driver Stabilization**: Verified and fixed bKash (Tokenized API) and SSLCommerz drivers to support the new AJAX flow, including strict amount formatting (2 decimal places) for bKash compatibility.
 - [x] **Legacy Bridge Synchronization**: Successfully bootstrapped legacy globals (`db_prefix`, `PipraPay_INIT`) inside native services to allow seamless usage of legacy database functions.
 
-### Phase 3: IPN & Webhook Security (Completed)
-- [x] **Hardened IPN Verification**: Shifted from passive callback trust to a strict **API-to-API validation model** for bKash and SSLCommerz. Transactions are now verified directly with the gateway servers before status updates.
-- [x] **Merchant Webhook System**: Implemented a secure, real-time notification engine for merchants. 
-- [x] **HMAC-SHA256 Signing**: All webhooks are now cryptographically signed using the merchant's `api_key` as a secret, ensuring notifications are tamper-proof.
-- [x] **Webhook Delivery Logging**: Integrated a detailed logging system in the `pp_webhook_log` table to track every delivery attempt, response code, and payload for easier merchant troubleshooting.
-- [x] **Documentation**: Created a comprehensive [payment_verification_guide.md](file:///Volumes/Project/Personal%20Project/ZontroPay/PipraPay-Laravel%20%28Non%20SaaS%29/laravel-app/payment_verification_guide.md) for developers.
+### Phase 4: Merchant Settings & Credentials Suite (Current Session)
+- [x] **Brand Settings FAQ Integration**: Successfully moved legacy FAQs from brand settings to native Laravel MVC. Designed a premium, modern dashboard utilizing reusable dynamic modals.
+- [x] **Dynamic Confirmation Modal Framework**: Created a highly reusable modal component (`x-m::modal` and dynamic confirmation dialog wrappers) to standardize alerts across settings. Added alert confirmations to:
+  * Bulk action status updates (active, inactive, delete).
+  * Bulk currencies activation/deactivation/deletion.
+  * Direct synchronization buttons.
+- [x] **API Credentials Management Porting**: Native migration of merchant API Keys/Credentials module to Laravel standard MVC architecture.
+- [x] **Polished Table & Pagination UX**: Completely overhauled the API Credentials data table pagination, status badge system, limit filters, and action dropdown lists to align 100% with the visually polished FAQs dashboard.
+- [x] **Secure API Actions & Clipboard Integrations**: Refactored clipboard copying behavior to use an inline secure feedback layout, and integrated background AJAX workflows for key creation, details editing, and deletions.
 
 ---
 

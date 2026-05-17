@@ -581,4 +581,246 @@ class SettingsController extends Controller
         $html .= '</div>';
         return $html;
     }
+
+    /**
+     * API Credentials management view / AJAX routing
+     */
+    public function apiKeys(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) abort(401);
+
+        if ($request->ajax()) {
+            return $this->apiKeyList();
+        }
+
+        return view('m::pages.settings.api-keys', compact('brand'));
+    }
+
+    /**
+     * Get AJAX formatted API keys list
+     */
+    public function apiKeyList()
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $service = app(\App\Services\Admin\ApiAdminActionService::class);
+        $result = $service->list(request()->all(), $brand->brand_id, $brand->timezone ?? 'Asia/Dhaka');
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Create new API Key
+     */
+    public function apiKeyCreate(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $mappedInput = [
+            'api_name' => $request->input('api_name'),
+            'apiExpiryDate' => $request->input('apiExpiryDate'),
+            'api_status' => $request->input('api_status', 'active'),
+            'scopes' => $request->input('api_scopes', []),
+        ];
+
+        $service = app(\App\Services\Admin\ApiAdminActionService::class);
+        $result = $service->create($mappedInput, $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Get single API Key info for editing
+     */
+    public function apiKeyInfo($id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $service = app(\App\Services\Admin\ApiAdminActionService::class);
+        $result = $service->infoById($id, $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Edit API Key
+     */
+    public function apiKeyEdit(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $mappedInput = [
+            'api_id' => $request->input('api_id'),
+            'api_name' => $request->input('api_name'),
+            'apiExpiryDate' => $request->input('apiExpiryDate'),
+            'api_status' => $request->input('api_status'),
+            'scopes' => $request->input('api_scopes', []),
+        ];
+
+        $service = app(\App\Services\Admin\ApiAdminActionService::class);
+        $result = $service->edit($mappedInput, $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Delete individual API key
+     */
+    public function apiKeyDelete($id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $service = app(\App\Services\Admin\ApiAdminActionService::class);
+        $result = $service->delete($id, $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Bulk actions for API keys (activate, deactivate, delete)
+     */
+    public function apiKeyBulkAction(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $actionId = $request->input('actionID');
+        $selectedIds = json_decode($request->input('selected_ids', '[]'), true) ?: [];
+
+        $service = app(\App\Services\Admin\ApiAdminActionService::class);
+        $result = $service->bulkAction($actionId, $selectedIds, $brand->brand_id, true, true);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Whitelisted Domains management view / AJAX routing
+     */
+    public function domains(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) abort(401);
+
+        if ($request->ajax()) {
+            return $this->domainList();
+        }
+
+        return view('m::pages.settings.domains', compact('brand'));
+    }
+
+    /**
+     * Get AJAX whitelisted domains list
+     */
+    public function domainList()
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $service = app(\App\Services\Admin\DomainAdminActionService::class);
+        $result = $service->list(request()->all(), $brand->timezone ?? 'Asia/Dhaka');
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Whitelist a new domain
+     */
+    public function domainCreate(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $mappedInput = [
+            'domain_name' => $request->input('domain_name'),
+            'domain_status' => $request->input('domain_status', 'active'),
+        ];
+
+        $service = app(\App\Services\Admin\DomainAdminActionService::class);
+        $result = $service->create($mappedInput);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Fetch whitelisted domain detail for edit modal
+     */
+    public function domainInfo($id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $service = app(\App\Services\Admin\DomainAdminActionService::class);
+        $result = $service->infoById((int)$id);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Edit whitelisted domain
+     */
+    public function domainEdit(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $mappedInput = [
+            'domain_id' => $request->input('domain_id'),
+            'domain_name' => $request->input('domain_name'),
+            'domain_status' => $request->input('domain_status'),
+        ];
+
+        $service = app(\App\Services\Admin\DomainAdminActionService::class);
+        $result = $service->edit($mappedInput);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Remove domain from whitelist
+     */
+    public function domainDelete($id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $service = app(\App\Services\Admin\DomainAdminActionService::class);
+        $result = $service->delete((int)$id);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
+
+    /**
+     * Bulk actions for whitelisted domains (activate, deactivate, delete)
+     */
+    public function domainBulkAction(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $actionId = $request->input('actionID');
+        $selectedIds = json_decode($request->input('selected_ids', '[]'), true) ?: [];
+
+        $service = app(\App\Services\Admin\DomainAdminActionService::class);
+        $result = $service->bulkAction($actionId, $selectedIds, true, true);
+        $result['csrf_token'] = csrf_token();
+
+        return response()->json($result);
+    }
 }

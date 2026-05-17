@@ -42,7 +42,8 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
 
-                        <button type="button" id="sync-rates-btn"
+                        <button type="button"
+                            @click="window.dispatchEvent(new CustomEvent('open-modal', { detail: { id: 'sync-all-currencies-modal' } }))"
                             class="shadow-theme-xs inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-3 text-sm font-medium text-gray-700 ring-1 ring-gray-300 transition hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:ring-gray-700 dark:hover:bg-white/[0.03]">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -175,6 +176,32 @@
                     <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                    </svg>
+                </div>
+            </x-slot>
+        </x-m::modal>
+
+        <!-- Sync All Currencies Confirmation Modal -->
+        <x-m::modal id="sync-all-currencies-modal" type="brand" title="Sync All Exchange Rates"
+            description="Are you sure you want to sync all exchange rates? This will fetch the latest global market rates and update all currencies for your brand."
+            actionTitle="Yes, Sync All" actionId="confirm-sync-all-btn" :cancelButtonShow="true" :isDispose="true">
+            <x-slot name="icon">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6 mx-auto">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </div>
+            </x-slot>
+        </x-m::modal>
+
+        <!-- Sync Single Currency Confirmation Modal -->
+        <x-m::modal id="sync-single-currency-modal" type="brand" title="Sync Exchange Rate"
+            description="Are you sure you want to sync the exchange rate for this currency?"
+            actionTitle="Yes, Sync" actionId="confirm-sync-single-btn" :cancelButtonShow="true" :isDispose="true">
+            <x-slot name="icon">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6 mx-auto">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
                 </div>
             </x-slot>
@@ -317,7 +344,7 @@
                                                         </button>
                                                     </li>
                                                     <li>
-                                                        <button @click="openDropDown = false; syncSingleRate('${item.id}')"
+                                                        <button @click="openDropDown = false; syncSingleRatePrompt('${item.id}')"
                                                             class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors">
                                                             <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -376,29 +403,52 @@
                     }));
                 }
 
-                window.syncSingleRate = async function(id) {
-                    try {
-                        const response = await fetch("{{ route('merchant.settings.currencies.sync') }}", {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                ItemID: id
-                            })
-                        });
-                        const result = await response.json();
-                        if (result.status === 'true') {
-                            showToast('success', result.message);
-                            loadCurrencies(currentPage);
-                        } else {
-                            showToast('error', result.message);
+                let targetSyncCurrencyId = null;
+                window.syncSingleRatePrompt = function(id) {
+                    targetSyncCurrencyId = id;
+                    window.dispatchEvent(new CustomEvent('open-modal', {
+                        detail: { id: 'sync-single-currency-modal' }
+                    }));
+                };
+
+                const confirmSyncSingleBtn = document.getElementById('confirm-sync-single-btn');
+                if (confirmSyncSingleBtn) {
+                    confirmSyncSingleBtn.onclick = async function() {
+                        if (!targetSyncCurrencyId) return;
+
+                        const originalText = confirmSyncSingleBtn.innerHTML;
+                        confirmSyncSingleBtn.disabled = true;
+                        confirmSyncSingleBtn.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Syncing...`;
+
+                        try {
+                            const response = await fetch("{{ route('merchant.settings.currencies.sync') }}", {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                },
+                                body: JSON.stringify({
+                                    ItemID: targetSyncCurrencyId
+                                })
+                            });
+                            const result = await response.json();
+                            if (result.status === 'true') {
+                                showToast('success', result.message);
+                                window.dispatchEvent(new CustomEvent('close-modal', {
+                                    detail: { id: 'sync-single-currency-modal' }
+                                }));
+                                loadCurrencies(currentPage);
+                            } else {
+                                showToast('error', result.message);
+                            }
+                        } catch (error) {
+                            showToast('error', 'Sync failed');
+                        } finally {
+                            confirmSyncSingleBtn.disabled = false;
+                            confirmSyncSingleBtn.innerHTML = originalText;
                         }
-                    } catch (error) {
-                        showToast('error', 'Sync failed');
-                    }
+                    };
                 }
 
                 const lSelect = document.getElementById('show-limit');
@@ -406,13 +456,12 @@
                     lSelect.onchange = () => loadCurrencies(1);
                 }
 
-                const sBtn = document.getElementById('sync-rates-btn');
+                const sBtn = document.getElementById('confirm-sync-all-btn');
                 if (sBtn) {
                     sBtn.onclick = async function() {
-                        this.disabled = true;
-                        const originalText = this.innerHTML;
-                        this.innerHTML =
-                            `<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Syncing...`;
+                        const originalText = sBtn.innerHTML;
+                        sBtn.disabled = true;
+                        sBtn.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Syncing...`;
 
                         try {
                             const response = await fetch("{{ route('merchant.settings.currencies.sync') }}", {
@@ -425,6 +474,9 @@
                             const result = await response.json();
                             if (result.status === 'true') {
                                 showToast('success', result.message);
+                                window.dispatchEvent(new CustomEvent('close-modal', {
+                                    detail: { id: 'sync-all-currencies-modal' }
+                                }));
                                 loadCurrencies(1);
                             } else {
                                 showToast('error', result.message);
@@ -432,8 +484,8 @@
                         } catch (error) {
                             showToast('error', 'Sync failed');
                         } finally {
-                            this.disabled = false;
-                            this.innerHTML = originalText;
+                            sBtn.disabled = false;
+                            sBtn.innerHTML = originalText;
                         }
                     };
                 }

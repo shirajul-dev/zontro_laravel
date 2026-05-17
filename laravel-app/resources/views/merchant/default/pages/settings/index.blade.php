@@ -63,6 +63,30 @@
                     </svg>
                 </x-slot:icon>
             </x-settings-card>
+
+            <x-settings-card
+                href="{{ route('merchant.settings.api-keys') }}"
+                title="API Credentials"
+                data-nav-link
+                description="Manage your API keys, sandbox credentials, and access scopes for third-party checkout integrations.">
+                <x-slot:icon>
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m-9-3h.01M5.071 19.071c1.758-1.758 4.29-2.012 6.315-.815l7.15-7.15a3 3 0 114.243 4.243l-7.15 7.15c-1.197 2.025-1.451 4.557.307 6.315a6.002 6.002 0 01-8.544 0 6.002 6.002 0 010-8.544z"></path>
+                    </svg>
+                </x-slot:icon>
+            </x-settings-card>
+
+            <x-settings-card
+                href="{{ route('merchant.settings.domains') }}"
+                title="Whitelisted Domains"
+                data-nav-link
+                description="Whitelist target checkout domains to prevent unauthorized API requests and secure hosted checkout redirection.">
+                <x-slot:icon>
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
+                    </svg>
+                </x-slot:icon>
+            </x-settings-card>
         </div>
     </div>
 </div>

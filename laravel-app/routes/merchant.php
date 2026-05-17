@@ -52,6 +52,24 @@ Route::prefix('merchant')->name('merchant.')->group(function () {
         Route::post('/settings/faqs/bulk', [SettingsController::class, 'faqBulkAction'])->name('settings.faqs.bulk');
         Route::post('/settings/faqs/{id}/delete', [SettingsController::class, 'faqDelete'])->name('settings.faqs.delete');
 
+        // API Keys settings
+        Route::get('/settings/api-keys', [SettingsController::class, 'apiKeys'])->name('settings.api-keys');
+        Route::post('/settings/api-keys/list', [SettingsController::class, 'apiKeyList'])->name('settings.api-keys.list');
+        Route::post('/settings/api-keys/create', [SettingsController::class, 'apiKeyCreate'])->name('settings.api-keys.create');
+        Route::get('/settings/api-keys/{id}/info', [SettingsController::class, 'apiKeyInfo'])->name('settings.api-keys.info');
+        Route::post('/settings/api-keys/edit', [SettingsController::class, 'apiKeyEdit'])->name('settings.api-keys.edit');
+        Route::post('/settings/api-keys/{id}/delete', [SettingsController::class, 'apiKeyDelete'])->name('settings.api-keys.delete');
+        Route::post('/settings/api-keys/bulk', [SettingsController::class, 'apiKeyBulkAction'])->name('settings.api-keys.bulk');
+
+        // Whitelisted Domains settings
+        Route::get('/settings/domains', [SettingsController::class, 'domains'])->name('settings.domains');
+        Route::post('/settings/domains/list', [SettingsController::class, 'domainList'])->name('settings.domains.list');
+        Route::post('/settings/domains/create', [SettingsController::class, 'domainCreate'])->name('settings.domains.create');
+        Route::get('/settings/domains/{id}/info', [SettingsController::class, 'domainInfo'])->name('settings.domains.info');
+        Route::post('/settings/domains/edit', [SettingsController::class, 'domainEdit'])->name('settings.domains.edit');
+        Route::post('/settings/domains/{id}/delete', [SettingsController::class, 'domainDelete'])->name('settings.domains.delete');
+        Route::post('/settings/domains/bulk', [SettingsController::class, 'domainBulkAction'])->name('settings.domains.bulk');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 });

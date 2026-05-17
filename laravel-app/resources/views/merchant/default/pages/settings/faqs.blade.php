@@ -280,6 +280,19 @@
             </x-slot>
         </x-m::modal>
 
+        <!-- Bulk Action Confirmation Modal -->
+        <x-m::modal id="bulk-action-modal" type="brand" title="Confirm Bulk Action"
+            description="Are you sure you want to apply this bulk action to the selected FAQs?"
+            actionTitle="Apply Action" actionId="confirm-bulk-action-btn" :cancelButtonShow="true" :isDispose="true">
+            <x-slot name="icon">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6 mx-auto">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                </div>
+            </x-slot>
+        </x-m::modal>
+
         <script>
             (function() {
                 let currentPage = 1;
@@ -451,9 +464,12 @@
                 }
 
                 // Bulk Action submit
+                let activeBulkAction = null;
+                let activeBulkIds = [];
+
                 const applyBulkBtn = document.getElementById('apply-bulk-action-btn');
                 if (applyBulkBtn) {
-                    applyBulkBtn.onclick = async function() {
+                    applyBulkBtn.onclick = function() {
                         const action = document.getElementById('bulk-action-select').value;
                         if (!action) {
                             showToast('error', 'Please select a bulk action.');
@@ -466,13 +482,30 @@
                             return;
                         }
 
-                        if (action === 'delete' && !confirm('Are you sure you want to delete ' + selectedIds.length + ' selected FAQs?')) {
-                            return;
-                        }
+                        activeBulkAction = action;
+                        activeBulkIds = selectedIds;
 
-                        this.disabled = true;
-                        const originalText = this.innerHTML;
-                        this.innerHTML = `<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>`;
+                        let actionLabel = action === 'delete' ? 'delete' : (action === 'active' ? 'activate' : 'deactivate');
+                        let customMsg = `Are you sure you want to ${actionLabel} the ${selectedIds.length} selected FAQs?`;
+
+                        window.dispatchEvent(new CustomEvent('open-modal', {
+                            detail: {
+                                id: 'bulk-action-modal',
+                                title: 'Confirm Bulk Action',
+                                message: customMsg
+                            }
+                        }));
+                    };
+                }
+
+                const confirmBulkActionBtn = document.getElementById('confirm-bulk-action-btn');
+                if (confirmBulkActionBtn) {
+                    confirmBulkActionBtn.onclick = async function() {
+                        if (!activeBulkAction || activeBulkIds.length === 0) return;
+
+                        const originalText = confirmBulkActionBtn.innerHTML;
+                        confirmBulkActionBtn.disabled = true;
+                        confirmBulkActionBtn.innerHTML = `<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Applying...`;
 
                         try {
                             const response = await fetch("{{ route('merchant.settings.faqs.bulk') }}", {
@@ -483,13 +516,25 @@
                                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                                 },
                                 body: JSON.stringify({
-                                    action: action,
-                                    ids: selectedIds
+                                    action: activeBulkAction,
+                                    ids: activeBulkIds
                                 })
                             });
                             const result = await response.json();
                             if (result.status === 'true') {
                                 showToast('success', result.message);
+                                window.dispatchEvent(new CustomEvent('close-modal', {
+                                    detail: { id: 'bulk-action-modal' }
+                                }));
+                                // Clear checkboxes
+                                const mainCheckbox = document.getElementById('select-all-faqs');
+                                if (mainCheckbox) mainCheckbox.checked = false;
+                                document.querySelectorAll('.faq-row-checkbox').forEach(chk => chk.checked = false);
+                                const bulkContainer = document.getElementById('bulk-actions-container');
+                                if (bulkContainer) {
+                                    bulkContainer.classList.add('hidden');
+                                    bulkContainer.classList.remove('flex');
+                                }
                                 loadFaqs(currentPage);
                             } else {
                                 showToast('error', result.message);
@@ -497,8 +542,8 @@
                         } catch (error) {
                             showToast('error', 'Bulk action failed');
                         } finally {
-                            this.disabled = false;
-                            this.innerHTML = originalText;
+                            confirmBulkActionBtn.disabled = false;
+                            confirmBulkActionBtn.innerHTML = originalText;
                         }
                     };
                 }

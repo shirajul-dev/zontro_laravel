@@ -94,6 +94,21 @@ All brand, profile, and system configuration sections for a merchant are central
   * **Automated Sync Engine**: Integrated fawazahmed0 Currency API endpoint to pull the latest global market rates for the active brand's base currency and bulk update the exchange rates in one-click.
   * **Single Rate Update**: Dynamic edit popup to manually override specific symbols and rate values.
 
+#### 5. API Credentials Settings
+* **Path**: `/merchant/settings/api-keys`
+* **Features**: State-of-the-art developer API credentials management interface:
+  * **Endpoint Quick Copy Widgets**: Live integration links (Base API URL, checkout URL, validation, refund URL) featuring real-time green clipboard toast micro-animations.
+  * **Scoped Permissions**: Dynamic JSON-serialized array checkboxes for precise API keys permissions (e.g. `create_payment`, `verify_payment`, `refund_payment`, `view_balance`, `view_transactions`).
+  * **Live Expiry Engine**: Auto-checks credential expiration dates, formatting reactive UI badges (`active` / `inactive` / `expired`) instantly.
+  * **Robust Modals & Bulk Actions**: Uses custom Alpine.js prompt warnings and multi-row selected bulk updates/deletions.
+
+#### 6. Whitelisted Domains Settings
+* **Path**: `/merchant/settings/domains`
+* **Features**: Dynamic site checkout safety management deck:
+  * **Smart Domain Normalization**: Converts incoming domain names and store URLs (e.g., `https://myawesome shop.com/checkout/`) automatically into validated hostnames (`myawesome_shop.com`).
+  * **Instant AJAX Datatable**: AJAX search, filters, pagination, and status buttons.
+  * **Bulk and Individual Control**: Fully secure warning prompt dialogues for individual deletions and multiple rows checkout domains removals.
+
 ---
 
 ## 🔍 3. Legacy Project Analysis & Next Modules to Move
@@ -141,12 +156,8 @@ Merchants must be able to configure checkout payment keys for their brand.
   * `resources/views/merchant/default/pages/gateways/edit.blade.php`: Dynamic form to toggle a gateway (Active/Inactive), set a processing fee type (Percentage or Flat), and insert API Credentials (e.g., Client Secret, App Key, Password) securely.
 * **Security Note**: Ensure API credentials are saved with robust encryption inside the database.
 
-### Phase 3: API Credentials & Whitelisted Domains (🔴 High Priority)
-Merchants need credentials to hook up their WooCommerce store or custom SDK integrations.
-* **Controller**: Create `Merchant\ApiKeyController`.
-* **Views**:
-  * `resources/views/merchant/default/pages/api-keys/index.blade.php`: Displays API Keys, Secret Keys, and HMAC signing keys. Includes quick copy buttons, a "Regenerate Keys" AJAX modal, and an active Webhooks endpoint setup.
-  * `resources/views/merchant/default/pages/api-keys/domains.blade.php`: Whitelisted Checkout Domains list with AJAX CRUD (Add Domain, Delete Domain) to prevent CSRF hijack or unauthorized checkouts from third-party websites.
+### Phase 3: API Credentials & Whitelisted Domains (✅ 100% Completed & Verified)
+All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space.
 
 ### Phase 4: Invoices & Payment Links (🟡 Medium Priority)
 Enables direct billing and quick payment buttons.
@@ -177,4 +188,4 @@ While checkouts from the legacy project show `system-settings/` and `addons/` mo
    * Total Completed Count, Pending Count, Failed Count
    * Live transaction chart (AJAX-loaded monthly transaction summary using Chart.js)
 2. **Begin Phase 1 (Transactions)**: Create the routes for transactions and start building the AJAX datatable for transaction records.
-3. **Upgrade Sidebar Navigation**: Replace default TailAdmin placeholder navigation (Calendar, Charts, Forms) inside [sidebar.blade.php](file:///Volumes/Project/Personal%20Project/ZontroPay/PipraPay-Laravel%20%28Non%20SaaS%29/laravel-app/resources/views/merchant/default/partials/sidebar.blade.php) with the actual migrated links.
+3. **Upgrade Sidebar Navigation (Deferred / On Hold)**: As per design feedback, the generic placeholder template menu items inside [sidebar.blade.php](file:///Volumes/Project/Personal%20Project/ZontroPay/PipraPay-Laravel%20%28Non%20SaaS%29/laravel-app/resources/views/merchant/default/partials/sidebar.blade.php) are preserved. All advanced brand configurations remain centralized inside the unified settings hub.
