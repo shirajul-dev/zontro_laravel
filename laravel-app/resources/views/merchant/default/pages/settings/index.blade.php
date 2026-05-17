@@ -41,13 +41,13 @@
             </x-settings-card>
 
             <x-settings-card
-                href="{{ route('merchant.settings.social') }}"
-                title="Social Profiles"
+                href="{{ route('merchant.settings.faqs') }}"
+                title="FAQ Settings"
                 data-nav-link
-                description="Connect your Telegram, WhatsApp, and Facebook profiles to improve customer reach.">
+                description="Configure Frequently Asked Questions (FAQs) to display on your checkout page to resolve customer doubts.">
                 <x-slot:icon>
                     <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                 </x-slot:icon>
             </x-settings-card>

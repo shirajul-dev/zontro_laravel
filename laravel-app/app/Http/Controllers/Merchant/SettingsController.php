@@ -90,21 +90,72 @@ class SettingsController extends Controller
     }
 
     /**
-     * Display the Social Profiles page.
+     * Display the FAQ Settings index view or handle AJAX datatable requests.
      */
-    public function social()
+    public function faqs(Request $request)
     {
         $brand = $this->getActiveBrand();
-        if (!$brand) {
-            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
+        if (!$brand) abort(401);
+
+        if ($request->ajax()) {
+            return $this->handleFaqList($brand);
         }
 
-        if (request()->ajax()) {
-            return view('m::pages.settings.sections.social', compact('brand'))->render();
-        }
-
-        return view('m::pages.settings.social', compact('brand'));
+        return view('merchant.default.pages.settings.faqs', compact('brand'));
     }
+
+    /**
+     * Handle AJAX FAQ list for the datatable.
+     */
+    protected function handleFaqList($brand)
+    {
+        $search = request('search_input');
+        $status = request('filter_status');
+        $limit = request('show_limit', 10);
+
+        $query = \App\Models\ZpFaq::where('brand_id', $brand->brand_id);
+
+        if ($search !== null && $search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        }
+
+        if ($status !== null && $status !== '') {
+            $query->where('status', $status);
+        }
+
+        $faqs = $query->orderBy('id', 'desc')->paginate($limit);
+
+        $response = $faqs->map(function ($item) {
+            return [
+                'id' => $item->id,
+                'title' => $item->title,
+                'description' => \Illuminate\Support\Str::limit(strip_tags($item->description), 60),
+                'status' => $item->status,
+                'updated_date' => $item->updated_at->format('M d, Y h:i A'),
+            ];
+        });
+
+        return response()->json([
+            'status' => 'true',
+            'response' => $response,
+            'datatableInfo' => "Showing <strong>" . ($faqs->total() > 0 ? $faqs->firstItem() : 0) . " to " . ($faqs->total() > 0 ? $faqs->lastItem() : 0) . "</strong> of <strong>{$faqs->total()} entries</strong>",
+            'pagination' => $this->buildPagination($faqs)
+        ]);
+    }
+
+    /**
+     * Route handler for faqList AJAX request.
+     */
+    public function faqList()
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        return $this->handleFaqList($brand);
+    }
+
 
     /**
      * Update General Settings.
@@ -171,28 +222,143 @@ class SettingsController extends Controller
     }
 
     /**
-     * Update Social Profiles.
+     * Create a new brand FAQ.
      */
-    public function updateSocial(Request $request)
+    public function faqCreate(Request $request)
     {
         $brand = $this->getActiveBrand();
-        if (!$brand) {
-            return response()->json(['status' => 'error', 'message' => 'No active brand found.'], 404);
-        }
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
 
         $validated = $request->validate([
-            'whatsapp_number' => 'nullable|string|max:20',
-            'telegram' => 'nullable|string|max:50',
-            'facebook_messenger' => 'nullable|string|max:100',
-            'facebook_page' => 'nullable|url',
+            'faq_title' => 'required|string|max:255',
+            'faq_description' => 'required|string',
+            'faq_status' => 'required|in:active,inactive',
         ]);
 
-        $brand->update($validated);
+        \App\Models\ZpFaq::create([
+            'brand_id' => $brand->brand_id,
+            'title' => $validated['faq_title'],
+            'description' => $validated['faq_description'],
+            'status' => $validated['faq_status'],
+        ]);
 
         return response()->json([
-            'status' => 'success',
-            'message' => 'Social profiles updated successfully.',
-            'brand' => $brand
+            'status' => 'true',
+            'title' => 'FAQ Created',
+            'message' => 'The FAQ has been created successfully.'
+        ]);
+    }
+
+    /**
+     * Get single FAQ info by ID for editing.
+     */
+    public function faqInfo($id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $faq = \App\Models\ZpFaq::where('brand_id', $brand->brand_id)->find($id);
+        if (!$faq) {
+            return response()->json(['status' => 'false', 'message' => 'FAQ not found.'], 404);
+        }
+
+        return response()->json([
+            'status' => 'true',
+            'title' => $faq->title,
+            'description' => $faq->description,
+            'fstatus' => $faq->status,
+        ]);
+    }
+
+    /**
+     * Edit / Update an existing FAQ.
+     */
+    public function faqEdit(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $validated = $request->validate([
+            'faq_id' => 'required|integer',
+            'faq_title' => 'required|string|max:255',
+            'faq_description' => 'required|string',
+            'faq_status' => 'required|in:active,inactive',
+        ]);
+
+        $faq = \App\Models\ZpFaq::where('brand_id', $brand->brand_id)->find($validated['faq_id']);
+        if (!$faq) {
+            return response()->json(['status' => 'false', 'title' => 'Request Failed', 'message' => 'Invalid FAQ ID']);
+        }
+
+        $faq->update([
+            'title' => $validated['faq_title'],
+            'description' => $validated['faq_description'],
+            'status' => $validated['faq_status'],
+        ]);
+
+        return response()->json([
+            'status' => 'true',
+            'title' => 'FAQ Updated',
+            'message' => 'The FAQ has been updated successfully.'
+        ]);
+    }
+
+    /**
+     * Delete a single FAQ.
+     */
+    public function faqDelete($id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $faq = \App\Models\ZpFaq::where('brand_id', $brand->brand_id)->find($id);
+        if (!$faq) {
+            return response()->json(['status' => 'false', 'title' => 'Delete Failed', 'message' => 'FAQ not found.']);
+        }
+
+        $faq->delete();
+
+        return response()->json([
+            'status' => 'true',
+            'title' => 'FAQ Deleted',
+            'message' => 'The FAQ has been deleted successfully.'
+        ]);
+    }
+
+    /**
+     * Handle bulk actions for selected FAQs.
+     */
+    public function faqBulkAction(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+
+        $action = $request->input('action');
+        $ids = $request->input('ids');
+
+        if (empty($ids) || !is_array($ids)) {
+            return response()->json(['status' => 'false', 'title' => 'Action Failed', 'message' => 'No FAQs selected.']);
+        }
+
+        $query = \App\Models\ZpFaq::where('brand_id', $brand->brand_id)->whereIn('id', $ids);
+
+        if ($action === 'delete') {
+            $query->delete();
+            $msg = 'selected FAQs have been deleted successfully.';
+        } elseif ($action === 'active') {
+            $query->update(['status' => 'active']);
+            $msg = 'selected FAQs have been activated successfully.';
+        } elseif ($action === 'inactive') {
+            $query->update(['status' => 'inactive']);
+            $msg = 'selected FAQs have been inactivated successfully.';
+        } else {
+            return response()->json(['status' => 'false', 'title' => 'Action Failed', 'message' => 'Invalid bulk action.']);
+        }
+
+        return response()->json([
+            'status' => 'true',
+            'title' => 'Bulk Action Executed',
+            'message' => 'The ' . $msg
         ]);
     }
     /**

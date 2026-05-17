@@ -149,6 +149,11 @@ $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(valu
                             oldScript.parentNode.replaceChild(newScript, oldScript);
                         });
 
+                        // Re-initialize Alpine components in the newly loaded page
+                        if (window.Alpine) {
+                            window.Alpine.initTree(mainContent);
+                        }
+
                         window.scrollTo({
                             top: 0,
                             behavior: 'smooth'
