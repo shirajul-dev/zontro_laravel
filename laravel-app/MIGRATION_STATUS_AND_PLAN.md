@@ -13,6 +13,10 @@ The native Laravel migration is governed by the principles laid out in [NATIVE_M
 * **Native Layer**: Lives under `/merchant`, uses the new `zp_` database prefix, and uses `Zp*` models. It uses modern, standard Laravel MVC.
 * **Verification**: We strictly followed this! All new tables use `zp_` (e.g., `zp_admins`, `zp_brands`, `zp_currencies`) and models are cleanly encapsulated under the `App\Models` namespace.
 
+### 🔒 Absolute Legacy Isolation Rule (100% Untouchable)
+* **Rule**: All legacy `Admin` views, controllers, models, and service files inside legacy areas (such as `app/Http/Controllers/Admin/`, `app/Services/Admin/`, `resources/views/admin/`) are **100% untouchable and must remain completely pristine and unmodified**.
+* **Merchant-Only Separation**: We must perform all migrations, customizations, and upgrades strictly inside the merchant panel namespace (e.g., `app/Http/Controllers/Merchant/`, `resources/views/merchant/`, etc.). If legacy service layers are called, any visual customization (such as refactoring pagination styling or table formatting) must be intercepted and formatted cleanly inside the merchant controllers/views without modifying a single line of legacy code.
+
 ### 💾 Dual-Prefix DB & Model Strategy
 * Models like `ZpAdmin.php`, `ZpBrand.php`, and `ZpCurrency.php` map directly to standard Laravel-migrated tables with auto-increment IDs and standard `timestamps()`.
 * Schema modifications are done via granular Laravel migrations (e.g., `add_is_default_to_zp_brands_table.php` and `add_additional_fields_to_zp_brands_table.php`) rather than single legacy sql schemas.
@@ -98,8 +102,8 @@ All brand, profile, and system configuration sections for a merchant are central
 * **Path**: `/merchant/settings/api-keys`
 * **Features**: State-of-the-art developer API credentials management interface:
   * **Endpoint Quick Copy Widgets**: Live integration links (Base API URL, checkout URL, validation, refund URL) featuring real-time green clipboard toast micro-animations.
-  * **Scoped Permissions**: Dynamic JSON-serialized array checkboxes for precise API keys permissions (e.g. `create_payment`, `verify_payment`, `refund_payment`, `view_balance`, `view_transactions`).
-  * **Live Expiry Engine**: Auto-checks credential expiration dates, formatting reactive UI badges (`active` / `inactive` / `expired`) instantly.
+  * **Scoped Permissions**: State-of-the-art developer visual checkboxes mapped inside interactive card grids, featuring read/write/admin scope badges and clear descriptions of allowed actions.
+  * **Interactive Expiry Engine**: Auto-checks credential expiration dates, formatting reactive UI badges (`active` / `inactive` / `expired`) instantly. The date input triggers the native browser date picker directly on field click/focus with smooth pointer cursor animations.
   * **Robust Modals & Bulk Actions**: Uses custom Alpine.js prompt warnings and multi-row selected bulk updates/deletions.
 
 #### 6. Whitelisted Domains Settings
@@ -159,6 +163,8 @@ Merchants must be able to configure checkout payment keys for their brand.
 
 ### Phase 3: API Credentials & Whitelisted Domains (✅ 100% Completed & Visually Polished)
 All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space. Both the API Credentials and Whitelisted Domains panels have been 100% redesigned and polished to match the modern visual aesthetics, checkboxes, bulk confirmation modals, and action dropdown mechanics established by the FAQ module.
+* **Unified Pagination Component**: A premium, reusable Blade component `<x-pagination>` has been implemented under `resources/views/merchant/default/components/pagination.blade.php`.
+* **Zero-Touch Admin Policy**: Standard Eloquent dynamic paginators are safely intercepted and rendered inside the merchant-side `SettingsController` to feed the new pagination component. Not a single line of the legacy `app/Services/Admin/` files is touched, maintaining absolute legacy code isolation.
 
 ### Phase 4: Invoices & Payment Links (🟡 Medium Priority)
 Enables direct billing and quick payment buttons.

@@ -258,38 +258,77 @@
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Expire Date</label>
-                    <input type="date" name="apiExpiryDate"
-                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <input type="date" name="apiExpiryDate" onclick="this.showPicker()" onfocus="this.showPicker()"
+                        class="cursor-pointer dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                     <p class="mt-1 text-xs text-gray-400">Leave blank for no expiration date.</p>
                 </div>
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Access Scopes / Permissions</label>
-                    <div class="rounded-xl border border-gray-150 p-4 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.01] grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Create Payment Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="create_payment" checked
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>Create Payment</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>Create Payment</span>
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">Write</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Generate payment orders & checkouts.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- Verify Payment Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="verify_payment" checked
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>Verify Payment</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>Verify Payment</span>
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">Write</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Query transaction status checks.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- Refund Payment Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="refund_payment" checked
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>Refund Payment</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>Refund Payment</span>
+                                    <span class="inline-flex items-center rounded-md bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">Admin</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Initiate refunds for completed pays.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- View Balance Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="view_balance" checked
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>View Balance</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>View Balance</span>
+                                    <span class="inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">Read</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">View active brand balances & payouts.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- View Transactions Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="view_transactions" checked
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>View Transactions</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>View Transactions</span>
+                                    <span class="inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">Read</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">List, export, and search pay records.</span>
+                            </div>
                         </label>
                     </div>
                 </div>
@@ -335,38 +374,77 @@
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Expire Date</label>
-                    <input type="date" name="apiExpiryDate" id="edit_api_expiry"
-                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                    <input type="date" name="apiExpiryDate" id="edit_api_expiry" onclick="this.showPicker()" onfocus="this.showPicker()"
+                        class="cursor-pointer dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
                     <p class="mt-1 text-xs text-gray-400">Leave blank for no expiration date.</p>
                 </div>
 
                 <div>
                     <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Access Scopes / Permissions</label>
-                    <div class="rounded-xl border border-gray-150 p-4 dark:border-gray-800 bg-gray-50/50 dark:bg-white/[0.01] grid grid-cols-2 gap-3">
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <!-- Create Payment Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="create_payment" id="scope_create_payment"
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>Create Payment</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>Create Payment</span>
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">Write</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Generate payment orders & checkouts.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- Verify Payment Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="verify_payment" id="scope_verify_payment"
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>Verify Payment</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>Verify Payment</span>
+                                    <span class="inline-flex items-center rounded-md bg-blue-50 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-500/10 dark:text-blue-400">Write</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Query transaction status checks.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- Refund Payment Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="refund_payment" id="scope_refund_payment"
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>Refund Payment</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>Refund Payment</span>
+                                    <span class="inline-flex items-center rounded-md bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold text-red-700 dark:bg-red-500/10 dark:text-red-400">Admin</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">Initiate refunds for completed pays.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- View Balance Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="view_balance" id="scope_view_balance"
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>View Balance</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>View Balance</span>
+                                    <span class="inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">Read</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">View active brand balances & payouts.</span>
+                            </div>
                         </label>
-                        <label class="flex items-center gap-2.5 text-sm text-gray-800 dark:text-gray-300 cursor-pointer">
+
+                        <!-- View Transactions Scope -->
+                        <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-3 hover:bg-gray-50/50 dark:border-gray-800 dark:hover:bg-white/[0.02] cursor-pointer transition-all">
                             <input type="checkbox" name="api_scopes[]" value="view_transactions" id="scope_view_transactions"
-                                class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
-                            <span>View Transactions</span>
+                                class="mt-1 h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-1.5 font-semibold text-sm text-gray-800 dark:text-white/90">
+                                    <span>View Transactions</span>
+                                    <span class="inline-flex items-center rounded-md bg-green-50 px-1.5 py-0.5 text-[10px] font-semibold text-green-700 dark:bg-green-500/10 dark:text-green-400">Read</span>
+                                </div>
+                                <span class="block mt-0.5 text-xs text-gray-500 dark:text-gray-400">List, export, and search pay records.</span>
+                            </div>
                         </label>
                     </div>
                 </div>
