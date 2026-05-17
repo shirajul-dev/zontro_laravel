@@ -106,8 +106,9 @@ All brand, profile, and system configuration sections for a merchant are central
 * **Path**: `/merchant/settings/domains`
 * **Features**: Dynamic site checkout safety management deck:
   * **Smart Domain Normalization**: Converts incoming domain names and store URLs (e.g., `https://myawesome shop.com/checkout/`) automatically into validated hostnames (`myawesome_shop.com`).
-  * **Instant AJAX Datatable**: AJAX search, filters, pagination, and status buttons.
-  * **Bulk and Individual Control**: Fully secure warning prompt dialogues for individual deletions and multiple rows checkout domains removals.
+  * **Polished AJAX Datatable**: AJAX search, horizontal limit/status filters, customizable showing info block, and customized paginated AJAX links.
+  * **Unified Grid UI Parity**: Clean grid borders, checkbox selection indicators, and HSL custom-designed active/inactive badges matching FAQs and API credentials.
+  * **Bulk and Individual Control**: Fully secure warning prompt dialogues for individual deletions and multiple rows checkout domains removals. Standardized dropdown widths (`260px`).
 
 ---
 
@@ -156,8 +157,8 @@ Merchants must be able to configure checkout payment keys for their brand.
   * `resources/views/merchant/default/pages/gateways/edit.blade.php`: Dynamic form to toggle a gateway (Active/Inactive), set a processing fee type (Percentage or Flat), and insert API Credentials (e.g., Client Secret, App Key, Password) securely.
 * **Security Note**: Ensure API credentials are saved with robust encryption inside the database.
 
-### Phase 3: API Credentials & Whitelisted Domains (✅ 100% Completed & Verified)
-All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space.
+### Phase 3: API Credentials & Whitelisted Domains (✅ 100% Completed & Visually Polished)
+All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space. Both the API Credentials and Whitelisted Domains panels have been 100% redesigned and polished to match the modern visual aesthetics, checkboxes, bulk confirmation modals, and action dropdown mechanics established by the FAQ module.
 
 ### Phase 4: Invoices & Payment Links (🟡 Medium Priority)
 Enables direct billing and quick payment buttons.

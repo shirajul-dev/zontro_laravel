@@ -49,64 +49,76 @@
                 <!-- Card Header End -->
 
                 <!-- Data Table Filter Start -->
-                <div class="mb-4 flex flex-col gap-2 px-4 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div class="flex items-center gap-3">
-                        <span class="text-gray-500 dark:text-gray-400"> Show </span>
-                        <div x-data="{ isOptionSelected: false }" class="relative z-20 bg-transparent">
-                            <select id="show-limit"
-                                class="dark:bg-dark-900 h-9 w-full appearance-none rounded-lg border border-gray-300 bg-transparent bg-none py-2 pl-3 pr-8 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                <option value="10">10</option>
-                                <option value="8" selected>8</option>
-                                <option value="5">5</option>
-                            </select>
-                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                                <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </span>
+                <div class="mb-4 flex flex-col gap-3 px-4 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Show</span>
+                            <div class="relative bg-transparent">
+                                <select id="show-limit"
+                                    class="dark:bg-dark-900 h-9 appearance-none rounded-lg border border-gray-300 bg-transparent py-1.5 pl-3 pr-8 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <option value="10" selected>10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
+                                    <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                        <span class="text-gray-500 dark:text-gray-400 font-medium"> entries </span>
 
-                        <!-- Bulk Actions -->
-                        <div id="bulk-action-wrapper" class="hidden items-center gap-2 pl-4 border-l border-gray-200 dark:border-gray-700">
-                            <select id="bulk-action-select"
-                                class="dark:bg-dark-900 h-9 rounded-lg border border-gray-300 bg-transparent px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                <option value="">Bulk Actions</option>
-                                <option value="activated">Activate</option>
-                                <option value="inactive">Deactivate</option>
-                                <option value="deleted">Delete</option>
-                            </select>
-                            <button onclick="triggerBulkAction()"
-                                class="h-9 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-sm font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 transition">
+                        <!-- Status Filter -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-500 dark:text-gray-400">Status</span>
+                            <div class="relative bg-transparent">
+                                <select id="filter-status"
+                                    class="dark:bg-dark-900 h-9 appearance-none rounded-lg border border-gray-300 bg-transparent py-1.5 pl-3 pr-8 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <option value="">All Status</option>
+                                    <option value="active">Active</option>
+                                    <option value="inactive">Inactive</option>
+                                </select>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
+                                    <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Bulk Actions Container -->
+                        <div id="bulk-actions-container" class="hidden flex items-center gap-2 pl-2 border-l border-gray-200 dark:border-gray-800">
+                            <span class="text-sm font-medium text-gray-500 dark:text-gray-400" id="select-count-label">0 selected</span>
+                            <div class="relative bg-transparent">
+                                <select id="bulk-action-select"
+                                    class="dark:bg-dark-900 h-9 appearance-none rounded-lg border border-gray-300 bg-transparent py-1.5 pl-3 pr-8 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <option value="">Bulk Action</option>
+                                    <option value="activated">Activate Selected</option>
+                                    <option value="inactive">Deactivate Selected</option>
+                                    <option value="deleted">Delete Selected</option>
+                                </select>
+                                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
+                                    <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </span>
+                            </div>
+                            <button type="button" id="apply-bulk-action-btn"
+                                class="bg-gray-800 hover:bg-gray-900 text-white shadow-theme-xs inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition dark:bg-brand-500 dark:hover:bg-brand-600">
                                 Apply
                             </button>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-2">
-                        <div x-data="{ isOptionSelected: false }" class="relative z-20 bg-transparent w-[140px]">
-                            <select id="filter-status"
-                                class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent py-2 pl-3 pr-8 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                <option value="">All Status</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
-                            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                                <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
-                                </svg>
-                            </span>
-                        </div>
-
-                        <div class="relative">
-                            <button class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                                <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M3.04199 9.37363C3.04199 5.87693 5.87735 3.04199 9.37533 3.04199C12.8733 3.04199 15.7087 5.87693 15.7087 9.37363C15.7087 12.8703 12.8733 15.7053 9.37533 15.7053C5.87735 15.7053 3.04199 12.8703 3.04199 9.37363ZM9.37533 1.54199C5.04926 1.54199 1.54199 5.04817 1.54199 9.37363C1.54199 13.6991 5.04926 17.2053 9.37533 17.2053C11.2676 17.2053 13.0032 16.5344 14.3572 15.4176L17.1773 18.238C17.4702 18.5309 17.945 18.5309 18.2379 18.238C18.5308 17.9451 18.5309 17.4703 18.238 17.1773L15.4182 14.3573C16.5367 13.0033 17.2087 11.2669 17.2087 9.37363C17.2087 5.04817 13.7014 1.54199 9.37533 1.54199Z"></path>
-                                </svg>
-                            </button>
-                            <input type="text" id="search-input" placeholder="Search Domain URL..." oninput="debouncedLoadDomains()"
-                                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-11 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 xl:w-[250px]">
-                        </div>
+                    <div class="relative">
+                        <button type="button" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
+                            <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" clip-rule="evenodd" d="M3.04199 9.37363C3.04199 5.87693 5.87735 3.04199 9.37533 3.04199C12.8733 3.04199 15.7087 5.87693 15.7087 9.37363C15.7087 12.8703 12.8733 15.7053 9.37533 15.7053C5.87735 15.7053 3.04199 12.8703 3.04199 9.37363ZM9.37533 1.54199C5.04926 1.54199 1.54199 5.04817 1.54199 9.37363C1.54199 13.6991 5.04926 17.2053 9.37533 17.2053C11.2676 17.2053 13.0032 16.5344 14.3572 15.4176L17.1773 18.238C17.4702 18.5309 17.945 18.5309 18.2379 18.238C18.5308 17.9451 18.5309 17.4703 18.238 17.1773L15.4182 14.3573C16.5367 13.0033 17.2087 11.2669 17.2087 9.37363C17.2087 5.04817 13.7014 1.54199 9.37533 1.54199Z"></path>
+                            </svg>
+                        </button>
+                        <input type="text" id="search-input" placeholder="Search Domains..."
+                            oninput="debouncedLoadDomains()"
+                            class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent py-2.5 pl-11 pr-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 xl:w-[300px]">
                     </div>
                 </div>
                 <!-- Data Table Filter End -->
@@ -116,9 +128,11 @@
                     <table class="min-w-full">
                         <thead class="border-y border-gray-100 py-3 dark:border-gray-800">
                             <tr>
-                                <th class="px-5 py-3 font-normal whitespace-nowrap text-left w-1">
-                                    <input type="checkbox" id="select-all-checkbox" onclick="toggleSelectAll(this)"
-                                        class="h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
+                                <th class="px-4 py-3 font-normal whitespace-nowrap w-10">
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="select-all-checkbox"
+                                            class="h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                                    </div>
                                 </th>
                                 <th class="px-5 py-3 font-normal whitespace-nowrap text-left">
                                     <p class="text-theme-sm text-gray-500 dark:text-gray-400">Domain URL</p>
@@ -126,7 +140,7 @@
                                 <th class="px-5 py-3 font-normal whitespace-nowrap text-left">
                                     <p class="text-theme-sm text-gray-500 dark:text-gray-400">Created / Updated</p>
                                 </th>
-                                <th class="px-5 py-3 font-normal whitespace-nowrap text-left">
+                                <th class="px-5 py-3 font-normal whitespace-nowrap text-center">
                                     <p class="text-theme-sm text-gray-500 dark:text-gray-400">Status</p>
                                 </th>
                                 <th class="px-5 py-3 font-normal whitespace-nowrap text-right">
@@ -146,9 +160,15 @@
                 <!-- Table Area End -->
 
                 <!-- Table Footer Start -->
-                <div class="flex flex-col items-center justify-between gap-4 border-t border-gray-100 p-5 dark:border-gray-800 sm:flex-row sm:px-6">
-                    <p id="table-info" class="text-sm text-gray-500 dark:text-gray-400">Showing 0 to 0 of 0 entries</p>
-                    <div id="table-pagination"></div>
+                <div class="px-4 py-4 sm:px-6 border-t border-gray-100 dark:border-gray-800">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div id="table-info" class="text-sm font-medium text-gray-500 dark:text-gray-400">
+                            Showing 0 to 0 of 0 entries
+                        </div>
+                        <div id="table-pagination">
+                            <!-- Pagination will be loaded via AJAX -->
+                        </div>
+                    </div>
                 </div>
                 <!-- Table Footer End -->
             </div>
@@ -272,7 +292,7 @@
                 // Load domains list
                 window.loadDomains = async function(page = 1) {
                     currentPage = page;
-                    const limit = document.getElementById('show-limit')?.value || 8;
+                    const limit = document.getElementById('show-limit')?.value || 10;
                     const search = document.getElementById('search-input')?.value || '';
                     const status = document.getElementById('filter-status')?.value || '';
 
@@ -305,15 +325,22 @@
                         if (result.status === 'true' && result.response && result.response.length > 0) {
                             let rowsHtml = '';
                             result.response.forEach(item => {
-                                let badgeClass = item.status === 'active' ? 'text-green-600 bg-green-50 dark:bg-green-500/10' : 'text-gray-500 bg-gray-50 dark:bg-gray-500/10';
+                                let statusBadge = '';
+                                if (item.status === 'active') {
+                                    statusBadge = '<span class="inline-flex items-center rounded-full bg-success-50 px-2.5 py-0.5 text-xs font-semibold text-success-700 dark:bg-success-500/10 dark:text-success-400">Active</span>';
+                                } else {
+                                    statusBadge = '<span class="inline-flex items-center rounded-full bg-gray-50 px-2.5 py-0.5 text-xs font-semibold text-gray-600 dark:bg-white/5 dark:text-gray-400">Inactive</span>';
+                                }
 
                                 rowsHtml += `
-                                    <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.01]">
-                                        <td class="px-5 py-4 whitespace-nowrap">
-                                            <input type="checkbox" value="${item.id}" onchange="updateBulkActionState()"
-                                                class="row-checkbox h-4 w-4 rounded-sm border-gray-300 text-brand-600 focus:ring-brand-500 dark:border-gray-700">
+                                    <tr class="hover:bg-gray-50/50 dark:hover:bg-white/[0.01] transition-all border-b border-gray-100 dark:border-gray-800 last:border-0">
+                                        <td class="px-4 py-4 w-10">
+                                            <div class="flex items-center">
+                                                <input type="checkbox" value="${item.id}"
+                                                    class="row-checkbox h-4 w-4 rounded-sm border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 transition">
+                                            </div>
                                         </td>
-                                        <td class="px-5 py-4 whitespace-nowrap font-medium text-gray-800 dark:text-white/90">
+                                        <td class="px-5 py-4 font-semibold text-gray-800 dark:text-white/90">
                                             <div class="flex items-center gap-2">
                                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
@@ -321,35 +348,44 @@
                                                 <span>${item.domain}</span>
                                             </div>
                                         </td>
-                                        <td class="px-5 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                                        <td class="px-5 py-4 text-sm text-gray-600 dark:text-gray-400">
                                             <div class="font-medium">${item.created_date}</div>
                                             <div class="text-xs text-gray-400">Updated: ${item.updated_date}</div>
                                         </td>
-                                        <td class="px-5 py-4 whitespace-nowrap">
-                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
-                                                <span class="w-1.5 h-1.5 rounded-full fill-current"></span>
-                                                ${item.status.toUpperCase()}
-                                            </span>
+                                        <td class="px-5 py-4 text-center">
+                                            ${statusBadge}
                                         </td>
-                                        <td class="px-5 py-4 whitespace-nowrap text-right">
-                                            <div class="relative inline-block text-left" x-data="{ open: false }">
-                                                <button @click="open = !open" @click.away="open = false"
-                                                    class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]">
+                                        <td class="px-5 py-4 text-right">
+                                            <div x-data="{openDropDown: false}" class="relative inline-block text-left">
+                                                <button @click="openDropDown = !openDropDown" class="inline-flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.05] transition-colors shadow-theme-xs border border-gray-200 dark:border-gray-800">
                                                     Actions
-                                                    <svg class="w-4 h-4 ml-1.5 stroke-current" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    <svg class="duration-200 ease-in-out fill-current" :class="openDropDown && 'rotate-180'" width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M4.79199 7.396L10.0003 12.6043L15.2087 7.396" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                                     </svg>
                                                 </button>
-                                                <div x-show="open" style="display: none;"
-                                                    class="absolute right-0 mt-1 w-[160px] origin-top-right rounded-lg bg-white p-1.5 shadow-lg ring-1 ring-black/5 dark:bg-gray-900 z-50">
-                                                    <button onclick="editDomain('${item.id}')"
-                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
-                                                        Edit Domain
-                                                    </button>
-                                                    <button onclick="deleteDomainPrompt('${item.id}')"
-                                                        class="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10">
-                                                        Delete Domain
-                                                    </button>
+                                                <div x-show="openDropDown" @click.outside="openDropDown = false" x-transition
+                                                    class="absolute right-0 top-full z-40 mt-2 w-[260px] rounded-2xl border border-gray-200 bg-white p-1.5 shadow-theme-lg dark:border-gray-800 dark:bg-[#1E2635]"
+                                                    style="display: none;">
+                                                    <ul class="flex flex-col gap-0.5">
+                                                        <li>
+                                                            <button @click="openDropDown = false; editDomain('${item.id}')"
+                                                                class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors text-left">
+                                                                <svg class="h-5 w-5 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                                </svg>
+                                                                Edit Domain
+                                                            </button>
+                                                        </li>
+                                                        <li>
+                                                            <button @click="openDropDown = false; deleteDomainPrompt('${item.id}')"
+                                                                class="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/5 transition-colors text-left">
+                                                                <svg class="h-5 w-5 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                                </svg>
+                                                                Delete Domain
+                                                            </button>
+                                                        </li>
+                                                    </ul>
                                                 </div>
                                             </div>
                                         </td>
@@ -366,6 +402,14 @@
                                     loadDomains(parseInt(this.dataset.page));
                                 };
                             });
+
+                            // Bind checkboxes & bulk actions
+                            bindCheckboxes();
+
+                            // Re-initialize Alpine for dropdowns
+                            if (window.Alpine) {
+                                Alpine.initTree(tbody);
+                            }
                         } else {
                             tbody.innerHTML = `
                                 <tr>
@@ -384,54 +428,77 @@
                             document.getElementById('table-pagination').innerHTML = '';
                         }
                     } catch (error) {
-                        tbody.innerHTML = `<tr><td colspan="5" class="px-5 py-20 text-center text-red-600">Failed to load whitelisted domains. Please try again.</td></tr>`;
+                        tbody.innerHTML = `<tr><td colspan="5" class="px-5 py-20 text-center text-red-600 font-medium">Failed to load whitelisted domains. Please try again.</td></tr>`;
                     }
-
-                    // Reset selection state
-                    const selectAll = document.getElementById('select-all-checkbox');
-                    if (selectAll) selectAll.checked = false;
-                    updateBulkActionState();
                 }
 
                 // Debounce search inputs
-                window.debouncedLoadDomains = function() {
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        loadDomains(1);
-                    }, 300);
+                window.debouncedLoadDomains = debounce(() => loadDomains(1), 500);
+
+                function debounce(func, wait) {
+                    let timeout;
+                    return function(...args) {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => func.apply(this, args), wait);
+                    };
                 }
 
-                // Selection check updates
-                window.toggleSelectAll = function(el) {
-                    document.querySelectorAll('.row-checkbox').forEach(cb => {
-                        cb.checked = el.checked;
+                // Row selection & bulk actions logic
+                function bindCheckboxes() {
+                    const selectAll = document.getElementById('select-all-checkbox');
+                    const checkboxes = document.querySelectorAll('.row-checkbox');
+                    const bulkContainer = document.getElementById('bulk-actions-container');
+                    const countLabel = document.getElementById('select-count-label');
+
+                    if (selectAll) {
+                        selectAll.checked = false;
+                        selectAll.onchange = function() {
+                            checkboxes.forEach(chk => chk.checked = selectAll.checked);
+                            updateBulkContainer();
+                        };
+                    }
+
+                    checkboxes.forEach(chk => {
+                        chk.onchange = function() {
+                            if (selectAll) {
+                                selectAll.checked = [...checkboxes].every(c => c.checked);
+                            }
+                            updateBulkContainer();
+                        };
                     });
-                    updateBulkActionState();
-                }
 
-                window.updateBulkActionState = function() {
-                    const checked = document.querySelectorAll('.row-checkbox:checked').length;
-                    const wrapper = document.getElementById('bulk-action-wrapper');
-                    if (checked > 0) {
-                        wrapper.classList.remove('hidden');
-                        wrapper.classList.add('flex');
-                    } else {
-                        wrapper.classList.remove('flex');
-                        wrapper.classList.add('hidden');
+                    function updateBulkContainer() {
+                        const selected = document.querySelectorAll('.row-checkbox:checked');
+                        if (selected.length > 0) {
+                            bulkContainer.classList.remove('hidden');
+                            bulkContainer.classList.add('flex');
+                            countLabel.innerText = `${selected.length} selected`;
+                        } else {
+                            bulkContainer.classList.add('hidden');
+                            bulkContainer.classList.remove('flex');
+                        }
                     }
                 }
 
                 // Trigger Bulk Action Confirmation Modal
-                window.triggerBulkAction = function() {
-                    const action = document.getElementById('bulk-action-select').value;
-                    if (!action) {
-                        showToast('error', 'Please choose a bulk action to proceed.');
-                        return;
-                    }
-                    activeBulkAction = action;
-                    window.dispatchEvent(new CustomEvent('open-modal', {
-                        detail: { id: 'bulk-action-modal' }
-                    }));
+                const applyBulkBtn = document.getElementById('apply-bulk-action-btn');
+                if (applyBulkBtn) {
+                    applyBulkBtn.onclick = function() {
+                        const action = document.getElementById('bulk-action-select').value;
+                        if (!action) {
+                            showToast('error', 'Please choose a bulk action to proceed.');
+                            return;
+                        }
+                        const selectedIds = Array.from(document.querySelectorAll('.row-checkbox:checked')).map(cb => cb.value);
+                        if (selectedIds.length === 0) {
+                            showToast('error', 'Please select at least one domain.');
+                            return;
+                        }
+                        activeBulkAction = action;
+                        window.dispatchEvent(new CustomEvent('open-modal', {
+                            detail: { id: 'bulk-action-modal' }
+                        }));
+                    };
                 }
 
                 const confirmBulkBtn = document.getElementById('confirm-bulk-action-btn');
