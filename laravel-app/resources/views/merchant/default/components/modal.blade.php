@@ -92,14 +92,23 @@
                         </button>
                     @endif
 
+                    @php
+                        $actionBtnColor = 'bg-brand-500 hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-600';
+                        if ($type === 'error') {
+                            $actionBtnColor = 'bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600';
+                        } elseif ($type === 'success') {
+                            $actionBtnColor = 'bg-success-600 hover:bg-success-700 dark:bg-success-500 dark:hover:bg-success-600';
+                        }
+                    @endphp
+
                     @if($actionRoute)
                         <a href="{{ $actionRoute }}" id="{{ $actionId }}"
-                           class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 sm:w-auto">
+                           class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg shadow-theme-xs {{ $actionBtnColor }} sm:w-auto transition-colors">
                             {{ $actionTitle ?? 'Save Changes' }}
                         </a>
                     @else
                         <button type="button" id="{{ $actionId }}" @click="isModalOpen = false"
-                                class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 sm:w-auto">
+                                class="flex justify-center w-full px-4 py-3 text-sm font-medium text-white rounded-lg shadow-theme-xs {{ $actionBtnColor }} sm:w-auto transition-colors">
                             {{ $actionTitle ?? 'Save Changes' }}
                         </button>
                     @endif
