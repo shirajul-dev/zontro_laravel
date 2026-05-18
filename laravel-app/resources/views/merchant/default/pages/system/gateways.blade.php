@@ -211,31 +211,134 @@
                 </div>
             </x-slot>
 
-            <form id="create-gateway-form" class="space-y-4">
+            <form id="create-gateway-form" class="space-y-4" x-data="{ category: 'bank', gatewayVal: 'bank' }">
                 @csrf
+                <!-- Hidden input that holds the actual gateway value to submit -->
+                <input type="hidden" name="gateway" :value="gatewayVal" id="hidden-gateway-input">
+
                 <div>
-                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">Gateway Engine Type <span class="text-danger">*</span></label>
-                    <div class="relative bg-transparent">
-                        <select name="gateway" required
-                            class="dark:bg-dark-900 h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                            <option value="" disabled selected>Select gateway engine...</option>
-                            <optgroup label="Direct Manual Channels">
-                                <option value="bank">Manual Bank Transfer</option>
-                            </optgroup>
-                            <optgroup label="Dynamic Payment Engines">
-                                @foreach($availableGateways as $slug => $info)
-                                    <option value="{{ $slug }}">{{ $info['title'] }} ({{ ucfirst($info['tab'] ?? '') }})</option>
-                                @endforeach
-                            </optgroup>
-                        </select>
-                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 pointer-events-none">
-                            <svg class="stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <label class="mb-3 block text-sm font-semibold text-gray-800 dark:text-gray-200">Select Gateway Category</label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Card 1: Bank Gateway -->
+                        <div @click="category = 'bank'; gatewayVal = 'bank'"
+                            class="relative cursor-pointer border-2 rounded-xl p-5 flex flex-col items-center text-center transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                            :class="category === 'bank' ? 'border-brand-500 bg-brand-500/[0.02] dark:border-brand-500 dark:bg-brand-500/[0.04]' : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] hover:border-gray-300 dark:hover:border-gray-700'">
+                            
+                            <!-- Selected Check Indicator -->
+                            <div x-show="category === 'bank'" class="absolute top-3 right-3 text-brand-500 bg-brand-50 dark:bg-brand-500/10 p-1 rounded-full">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+
+                            <div class="h-12 w-12 rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500 flex items-center justify-center mb-4 transition-colors"
+                                :class="category === 'bank' ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-800 dark:text-white">Manual Bank Gateway</h3>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed max-w-[200px]">Direct manual bank transfer setup with customized deposit guidelines.</p>
+                        </div>
+
+                        <!-- Card 2: Payment Gateway -->
+                        <div @click="category = 'payment'; gatewayVal = ''"
+                            class="relative cursor-pointer border-2 rounded-xl p-5 flex flex-col items-center text-center transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5"
+                            :class="category === 'payment' ? 'border-brand-500 bg-brand-500/[0.02] dark:border-brand-500 dark:bg-brand-500/[0.04]' : 'border-gray-200 dark:border-gray-800 bg-white dark:bg-white/[0.03] hover:border-gray-300 dark:hover:border-gray-700'">
+                            
+                            <!-- Selected Check Indicator -->
+                            <div x-show="category === 'payment'" class="absolute top-3 right-3 text-brand-500 bg-brand-50 dark:bg-brand-500/10 p-1 rounded-full">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+
+                            <div class="h-12 w-12 rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500 flex items-center justify-center mb-4 transition-colors"
+                                :class="category === 'payment' ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-500' : 'bg-gray-50 dark:bg-gray-800 text-gray-400'">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                                </svg>
+                            </div>
+                            <h3 class="text-sm font-bold text-gray-800 dark:text-white">Payment Gateway</h3>
+                            <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1 leading-relaxed max-w-[200px]">Automated online payment gateway solutions like bKash, Nagad, etc.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Custom dropdown search shown ONLY when dynamic Payment Gateway is active -->
+                <div x-show="category === 'payment'" x-transition class="space-y-2 pt-3" x-data="{ open: false, search: '', selectedLabel: 'Select payment gateway...' }">
+                    <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">Select Automated Engine <span class="text-danger">*</span></label>
+                    
+                    <div class="relative">
+                        <button type="button" @click="open = !open" 
+                            class="h-11 w-full flex items-center justify-between rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm text-gray-800 dark:text-white/90 shadow-theme-xs focus:border-brand-500 focus:outline-hidden text-left transition-colors">
+                            <span x-text="selectedLabel" class="truncate font-medium"></span>
+                            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400 stroke-current transition-transform duration-200" :class="open ? 'rotate-180' : ''" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M3.8335 5.9165L8.00016 10.0832L12.1668 5.9165" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"></path>
                             </svg>
-                        </span>
+                        </button>
+
+                        <!-- Dropdown panel -->
+                        <div x-show="open" @click.outside="open = false" x-transition
+                            class="absolute left-0 right-0 z-9999 mt-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1E2635] p-2 shadow-lg flex flex-col"
+                            style="max-height: 280px;">
+                            
+                            <!-- Search box inside dropdown (Stay Fixed, Never Scroll) -->
+                            <div class="relative mb-2 shrink-0">
+                                <input type="text" x-model="search" placeholder="Search payment engine..."
+                                    class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-3 pl-9 text-xs text-gray-800 dark:text-white focus:border-brand-500 focus:outline-hidden"
+                                    style="height: 38px; line-height: 38px;">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 pointer-events-none flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    </svg>
+                                </span>
+                            </div>
+
+                            <!-- Scrollable Options List Container with complete wheel scroll isolation -->
+                            <div class="space-y-0.5 pr-1"
+                                 @wheel.stop=""
+                                 style="max-height: 180px; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+                                @foreach($availableGateways as $slug => $info)
+                                    <button type="button" 
+                                        x-show="'{{ strtolower($info['title']) }}'.includes(search.toLowerCase())"
+                                        @click="gatewayVal = '{{ $slug }}'; selectedLabel = '{{ $info['title'] }} ({{ ucfirst($info['tab'] ?? '') }})'; open = false; search = ''"
+                                        class="w-full text-left px-3 py-2 text-xs rounded-md hover:bg-brand-50 dark:hover:bg-brand-500/10 hover:text-brand-600 dark:hover:text-brand-400 text-gray-700 dark:text-gray-300 font-medium transition-colors"
+                                        :class="gatewayVal === '{{ $slug }}' ? 'bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 font-semibold' : ''">
+                                        {{ $info['title'] }} ({{ ucfirst($info['tab'] ?? '') }})
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
+        </x-m::modal>
+
+        <!-- Delete Gateway Modal -->
+        <x-m::modal id="delete-gateway-modal" type="brand" title="Delete Payment Gateway"
+            description="Are you sure you want to delete this payment gateway? All credentials and parameter mappings will be cleared permanently. This action cannot be undone." actionTitle="Delete Gateway"
+            actionId="confirm-delete-gateway-btn" :cancelButtonShow="true" :isDispose="true">
+            <x-slot name="icon">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6 mx-auto">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                    </svg>
+                </div>
+            </x-slot>
+        </x-m::modal>
+
+        <!-- Bulk Action Confirmation Modal -->
+        <x-m::modal id="bulk-action-gateway-modal" type="brand" title="Confirm Bulk Action"
+            description="Are you sure you want to apply this bulk action to the selected payment gateways?"
+            actionTitle="Apply Action" actionId="confirm-bulk-action-gateway-btn" :cancelButtonShow="true" :isDispose="true">
+            <x-slot name="icon">
+                <div class="flex h-20 w-20 items-center justify-center rounded-full bg-brand-50 text-brand-500 dark:bg-brand-500/10 mb-6 mx-auto">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+            </x-slot>
         </x-m::modal>
     </div>
 
@@ -243,6 +346,8 @@
         (function() {
             let currentCategory = 'all';
             let selectedIds = [];
+            let gatewayIdToDelete = null;
+            let pendingBulkAction = '';
 
             // Category Tab Switching
             window.switchCategory = function(category, element) {
@@ -410,33 +515,8 @@
 
             // Deletion Handler
             window.deleteGateway = function(id) {
-                if (!confirm('Are you sure you want to delete this payment gateway? All credentials and parameter mappings will be cleared permanently.')) return;
-
-                const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
-
-                fetch(`/merchant/system/gateways/${id}/delete`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(response => {
-                    if (response.status === 'true') {
-                        createToast({
-                            title: response.title || 'Gateway Deleted',
-                            description: response.message || 'Payment channel has been successfully removed.',
-                            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
-                            timeout: 6000,
-                            top: 70
-                        });
-                        loadGateways(1);
-                    } else {
-                        alert(response.message || 'Error occurred');
-                    }
-                });
+                gatewayIdToDelete = id;
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: { id: 'delete-gateway-modal' } }));
             }
 
             // Selection & Bulk Handlers
@@ -465,47 +545,20 @@
                 const actionSelect = document.getElementById('bulk-action-select');
                 const action = actionSelect ? actionSelect.value : '';
                 if (!action) {
-                    alert('Please select a valid bulk action.');
+                    showToast('error', 'Please select a valid bulk action.');
                     return;
                 }
 
-                if (action === 'deleted' && !confirm('Are you sure you want to delete all selected payment gateways?')) return;
-
-                const formData = new FormData();
-                formData.append('_token', '{{ csrf_token() }}');
-                formData.append('actionID', action);
-                formData.append('selected_ids', JSON.stringify(selectedIds));
-
-                fetch('{{ route("merchant.system.gateways.bulk") }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(response => {
-                    if (response.status === 'true') {
-                        createToast({
-                            title: response.title || 'Bulk Action Executed',
-                            description: response.message || 'Batch update completed successfully.',
-                            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
-                            timeout: 6000,
-                            top: 70
-                        });
-                        loadGateways(1);
-                    } else {
-                        alert(response.message || 'Error occurred');
-                    }
-                });
+                pendingBulkAction = action;
+                window.dispatchEvent(new CustomEvent('open-modal', { detail: { id: 'bulk-action-gateway-modal' } }));
             }
 
             // Create Gateway Modal Submit
             window.submitCreateGateway = function() {
-                const selectElement = document.querySelector('select[name="gateway"]');
-                const gateway = selectElement ? selectElement.value : '';
+                const inputElement = document.getElementById('hidden-gateway-input');
+                const gateway = inputElement ? inputElement.value : '';
                 if (!gateway) {
-                    alert('Please select a valid gateway engine type.');
+                    showToast('error', 'Please select a valid gateway engine type.');
                     return;
                 }
 
@@ -534,16 +587,10 @@
                     window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'create-gateway-modal' } }));
 
                     if (response.status === 'true') {
-                        createToast({
-                            title: response.title || 'Gateway Added',
-                            description: response.message || 'Channel engine initiated successfully.',
-                            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
-                            timeout: 6000,
-                            top: 70
-                        });
+                        showToast('success', response.message || 'Channel engine initiated successfully.');
                         loadGateways(1);
                     } else {
-                        alert(response.message || 'Could not instantiate gateway.');
+                        showToast('error', response.message || 'Could not instantiate gateway.');
                     }
                 })
                 .catch(() => {
@@ -551,7 +598,7 @@
                         btn.disabled = false;
                         btn.innerHTML = originalText;
                     }
-                    alert('An error occurred while creating this gateway channel.');
+                    showToast('error', 'An error occurred while creating this gateway channel.');
                 });
             }
 
@@ -591,6 +638,94 @@
                 const submitCreateBtn = document.getElementById('submit-create-gateway-btn');
                 if (submitCreateBtn) {
                     submitCreateBtn.onclick = submitCreateGateway;
+                }
+
+                // Confirm delete gateway click
+                const confirmDeleteBtn = document.getElementById('confirm-delete-gateway-btn');
+                if (confirmDeleteBtn) {
+                    confirmDeleteBtn.onclick = function() {
+                        if (!gatewayIdToDelete) return;
+                        
+                        const originalText = confirmDeleteBtn.innerHTML;
+                        confirmDeleteBtn.disabled = true;
+                        confirmDeleteBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Deleting...';
+
+                        const formData = new FormData();
+                        formData.append('_token', '{{ csrf_token() }}');
+
+                        fetch(`/merchant/system/gateways/${gatewayIdToDelete}/delete`, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            confirmDeleteBtn.disabled = false;
+                            confirmDeleteBtn.innerHTML = originalText;
+                            window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'delete-gateway-modal' } }));
+                            if (response.status === 'true') {
+                                showToast('success', response.message || 'Payment channel has been successfully removed.');
+                                loadGateways(1);
+                            } else {
+                                showToast('error', response.message || 'Something went wrong while removing the channel.');
+                            }
+                        })
+                        .catch(() => {
+                            confirmDeleteBtn.disabled = false;
+                            confirmDeleteBtn.innerHTML = originalText;
+                            window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'delete-gateway-modal' } }));
+                            showToast('error', 'Network error. Please try again.');
+                        });
+                    };
+                }
+
+                // Confirm bulk action click
+                const confirmBulkBtn = document.getElementById('confirm-bulk-action-gateway-btn');
+                if (confirmBulkBtn) {
+                    confirmBulkBtn.onclick = function() {
+                        if (!pendingBulkAction || selectedIds.length === 0) return;
+
+                        const originalText = confirmBulkBtn.innerHTML;
+                        confirmBulkBtn.disabled = true;
+                        confirmBulkBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Updating...';
+
+                        const formData = new FormData();
+                        formData.append('_token', '{{ csrf_token() }}');
+                        formData.append('actionID', pendingBulkAction);
+                        formData.append('selected_ids', JSON.stringify(selectedIds));
+
+                        fetch('{{ route("merchant.system.gateways.bulk") }}', {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            confirmBulkBtn.disabled = false;
+                            confirmBulkBtn.innerHTML = originalText;
+                            window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'bulk-action-gateway-modal' } }));
+                            if (response.status === 'true') {
+                                showToast('success', response.message || 'Batch update completed successfully.');
+                                selectedIds = [];
+                                updateBulkContainer();
+                                const selectAllCheckbox = document.getElementById('select-all-checkbox');
+                                if (selectAllCheckbox) selectAllCheckbox.checked = false;
+                                loadGateways(1);
+                            } else {
+                                showToast('error', response.message || 'Something went wrong.');
+                            }
+                        })
+                        .catch(() => {
+                            confirmBulkBtn.disabled = false;
+                            confirmBulkBtn.innerHTML = originalText;
+                            window.dispatchEvent(new CustomEvent('close-modal', { detail: { id: 'bulk-action-gateway-modal' } }));
+                            showToast('error', 'Network error. Please try again.');
+                        });
+                    };
                 }
 
                 // Intercept pagination clicks dynamically

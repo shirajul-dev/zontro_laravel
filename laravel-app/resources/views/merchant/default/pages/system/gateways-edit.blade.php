@@ -36,215 +36,245 @@
             </div>
             <!-- Breadcrumb End -->
 
-            <form id="gateway-settings-form" class="space-y-6" enctype="multipart/form-data">
+            <form id="gateway-settings-form" class="space-y-6 max-w-4xl" enctype="multipart/form-data">
                 @csrf
                 <input type="hidden" name="gateway-id" value="{{ $gateway->gateway_id }}">
 
-                <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
-                    
-                    <!-- Left Column: Core Settings (6 Columns) -->
-                    <div class="lg:col-span-6 space-y-6">
-                        
-                        <!-- General settings card -->
-                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-white">General Information</h3>
+                <div class="max-w-4xl space-y-6">
+                    <!-- General settings card -->
+                    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
                             </div>
-                            <div class="p-6 space-y-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Gateway Engine</label>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800 dark:text-white">General Information</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Configure the gateway identity, active status, and settlement currency.</p>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div class="col-span-full">
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Gateway Engine</label>
                                     <input type="text" value="{{ $gateway->name }}" disabled
                                         class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-800/40 px-4 text-sm font-medium text-gray-500 shadow-theme-xs">
                                 </div>
                                 
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Display Name <span class="text-red-500">*</span></label>
+                                <div class="col-span-full">
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Display Name <span class="text-red-500">*</span></label>
                                     <input type="text" name="display_name" value="{{ $gateway->display }}" required placeholder="Enter customer display label"
                                         class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Settlement Currency <span class="text-red-500">*</span></label>
-                                        <div class="relative z-20">
-                                            <select name="currency" id="gateway-currency-select" onchange="updateCurrencySymbols()"
-                                                class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs">
-                                                @foreach($brandCurrencies as $curr)
-                                                    <option value="{{ $curr->code }}" {{ $gateway->currency === $curr->code ? 'selected' : '' }}>
-                                                        {{ $curr->code }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
-                                                <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
-                                                    <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                </svg>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Status <span class="text-red-500">*</span></label>
-                                        <div class="relative z-20">
-                                            <select name="status"
-                                                class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs">
-                                                <option value="active" {{ $gateway->status === 'active' ? 'selected' : '' }}>Active</option>
-                                                <option value="inactive" {{ $gateway->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
-                                            </select>
-                                            <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
-                                                <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
-                                                    <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                </svg>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Limits card -->
-                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-white">Transaction Limits</h3>
-                            </div>
-                            <div class="p-6 grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Min Amount <span class="text-red-500">*</span></label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-sm font-semibold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
-                                        <input type="text" name="min_amount" value="{{ number_format((float)$gateway->min_allow, 2, '.', '') }}" required
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pl-14 pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Settlement Currency <span class="text-red-500">*</span></label>
+                                    <div class="relative z-20">
+                                        <select name="currency" id="gateway-currency-select" onchange="updateCurrencySymbols()"
+                                            class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs">
+                                            @foreach($brandCurrencies as $curr)
+                                                <option value="{{ $curr->code }}" {{ $gateway->currency === $curr->code ? 'selected' : '' }}>
+                                                    {{ $curr->code }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
+                                            <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                                <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </span>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Max Amount <span class="text-red-500">*</span></label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-sm font-semibold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
-                                        <input type="text" name="max_amount" value="{{ number_format((float)$gateway->max_allow, 2, '.', '') }}" required
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pl-14 pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Status <span class="text-red-500">*</span></label>
+                                    <div class="relative z-20">
+                                        <select name="status"
+                                            class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs">
+                                            <option value="active" {{ $gateway->status === 'active' ? 'selected' : '' }}>Active</option>
+                                            <option value="inactive" {{ $gateway->status === 'inactive' ? 'selected' : '' }}>Inactive</option>
+                                        </select>
+                                        <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
+                                            <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                                <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                            </svg>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Payout charges card -->
-                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-white">Charges & Discounts</h3>
-                            </div>
-                            <div class="p-6 grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Fixed Charge <span class="text-red-500">*</span></label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-sm font-semibold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
-                                        <input type="text" name="fixed_charge" value="{{ number_format((float)$gateway->fixed_charge, 2, '.', '') }}" required
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pl-14 pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Percentage Charge <span class="text-red-500">*</span></label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-sm font-semibold text-gray-400">%</span>
-                                        <input type="text" name="percentage_charge" value="{{ number_format((float)$gateway->percentage_charge, 2, '.', '') }}" required
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Fixed Discount <span class="text-red-500">*</span></label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-sm font-semibold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
-                                        <input type="text" name="fixed_discount" value="{{ number_format((float)$gateway->fixed_discount, 2, '.', '') }}" required
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pl-14 pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Percentage Discount <span class="text-red-500">*</span></label>
-                                    <div class="relative flex items-center">
-                                        <span class="absolute left-4 text-sm font-semibold text-gray-400">%</span>
-                                        <input type="text" name="percentage_discount" value="{{ number_format((float)$gateway->percentage_discount, 2, '.', '') }}" required
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pl-10 pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
 
-                    <!-- Right Column: Visual Overrides & Dynamic Parameters (6 Columns) -->
-                    <div class="lg:col-span-6 space-y-6">
-                        
-                        <!-- Visual Override Branding card -->
-                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                <h3 class="text-base font-semibold text-gray-800 dark:text-white">Theme & Visual Customizations</h3>
+                    <!-- Limits card -->
+                    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                </svg>
                             </div>
-                            <div class="p-6 space-y-4">
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Primary Color <span class="text-red-500">*</span></label>
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
-                                                <input type="color" name="primary_color" value="{{ $gateway->primary_color ?? '#1e293b' }}"
-                                                    class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
-                                                    oninput="document.getElementById('primary_color-text').value = this.value">
-                                            </div>
-                                            <input type="text" id="primary_color-text" value="{{ $gateway->primary_color ?? '#1e293b' }}"
-                                                oninput="document.querySelector('input[name=primary_color]').value = this.value"
-                                                class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Text Color <span class="text-red-500">*</span></label>
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
-                                                <input type="color" name="text_color" value="{{ $gateway->text_color ?? '#ffffff' }}"
-                                                    class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
-                                                    oninput="document.getElementById('text_color-text').value = this.value">
-                                            </div>
-                                            <input type="text" id="text_color-text" value="{{ $gateway->text_color ?? '#ffffff' }}"
-                                                oninput="document.querySelector('input[name=text_color]').value = this.value"
-                                                class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                        </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Transaction Limits</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Define minimum and maximum settlement bounds for transaction routing.</p>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Min Amount <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-sm font-bold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
+                                        <input type="text" name="min_amount" value="{{ number_format((float)$gateway->min_allow, 2, '.', '') }}" required
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                            style="padding-left: 60px;">
                                     </div>
                                 </div>
-
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Button Color <span class="text-red-500">*</span></label>
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
-                                                <input type="color" name="btn_color" value="{{ $gateway->btn_color ?? '#3b82f6' }}"
-                                                    class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
-                                                    oninput="document.getElementById('btn_color-text').value = this.value">
-                                            </div>
-                                            <input type="text" id="btn_color-text" value="{{ $gateway->btn_color ?? '#3b82f6' }}"
-                                                oninput="document.querySelector('input[name=btn_color]').value = this.value"
-                                                class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                        </div>
+                                
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Max Amount <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-sm font-bold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
+                                        <input type="text" name="max_amount" value="{{ number_format((float)$gateway->max_allow, 2, '.', '') }}" required
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                            style="padding-left: 60px;">
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Button Text <span class="text-red-500">*</span></label>
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
-                                                <input type="color" name="btn_text_color" value="{{ $gateway->btn_text_color ?? '#ffffff' }}"
-                                                    class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
-                                                    oninput="document.getElementById('btn_text_color-text').value = this.value">
-                                            </div>
-                                            <input type="text" id="btn_text_color-text" value="{{ $gateway->btn_text_color ?? '#ffffff' }}"
-                                                oninput="document.querySelector('input[name=btn_text_color]').value = this.value"
-                                                class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
-                                        </div>
+                    <!-- Payout charges card -->
+                    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Charges & Discounts</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Configure processing charges and customer incentives applied to settlements.</p>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Fixed Charge <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-sm font-bold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
+                                        <input type="text" name="fixed_charge" value="{{ number_format((float)$gateway->fixed_charge, 2, '.', '') }}" required
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                            style="padding-left: 60px;">
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400 mb-1.5">Custom Gateway Logo</label>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Percentage Charge <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-sm font-bold text-gray-400">%</span>
+                                        <input type="text" name="percentage_charge" value="{{ number_format((float)$gateway->percentage_charge, 2, '.', '') }}" required
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                            style="padding-left: 36px;">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Fixed Discount <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-sm font-bold text-gray-400 currency-addon-label">{{ $gateway->currency }}</span>
+                                        <input type="text" name="fixed_discount" value="{{ number_format((float)$gateway->fixed_discount, 2, '.', '') }}" required
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                            style="padding-left: 60px;">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Percentage Discount <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <span class="absolute top-1/2 left-4 -translate-y-1/2 text-sm font-bold text-gray-400">%</span>
+                                        <input type="text" name="percentage_discount" value="{{ number_format((float)$gateway->percentage_discount, 2, '.', '') }}" required
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white pr-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                            style="padding-left: 36px;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Override Branding card -->
+                    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                        <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Visual Customizations</h2>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Design custom buttons, colors, and specific branding overrides for this channel.</p>
+                            </div>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Primary Color <span class="text-red-500">*</span></label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
+                                            <input type="color" name="primary_color" value="{{ $gateway->primary_color ?? '#1e293b' }}"
+                                                class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
+                                                oninput="document.getElementById('primary_color-text').value = this.value">
+                                        </div>
+                                        <input type="text" id="primary_color-text" value="{{ $gateway->primary_color ?? '#1e293b' }}"
+                                            oninput="document.querySelector('input[name=primary_color]').value = this.value"
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Text Color <span class="text-red-500">*</span></label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
+                                            <input type="color" name="text_color" value="{{ $gateway->text_color ?? '#ffffff' }}"
+                                                class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
+                                                oninput="document.getElementById('text_color-text').value = this.value">
+                                        </div>
+                                        <input type="text" id="text_color-text" value="{{ $gateway->text_color ?? '#ffffff' }}"
+                                            oninput="document.querySelector('input[name=text_color]').value = this.value"
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Button Color <span class="text-red-500">*</span></label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
+                                            <input type="color" name="btn_color" value="{{ $gateway->btn_color ?? '#3b82f6' }}"
+                                                class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
+                                                oninput="document.getElementById('btn_color-text').value = this.value">
+                                        </div>
+                                        <input type="text" id="btn_color-text" value="{{ $gateway->btn_color ?? '#3b82f6' }}"
+                                            oninput="document.querySelector('input[name=btn_color]').value = this.value"
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Button Text <span class="text-red-500">*</span></label>
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
+                                            <input type="color" name="btn_text_color" value="{{ $gateway->btn_text_color ?? '#ffffff' }}"
+                                                class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
+                                                oninput="document.getElementById('btn_text_color-text').value = this.value">
+                                        </div>
+                                        <input type="text" id="btn_text_color-text" value="{{ $gateway->btn_text_color ?? '#ffffff' }}"
+                                            oninput="document.querySelector('input[name=btn_text_color]').value = this.value"
+                                            class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
+                                    </div>
+                                </div>
+
+                                <div class="col-span-full">
+                                    <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">Custom Gateway Logo</label>
                                     <div class="space-y-3">
                                         <div class="relative flex items-center justify-between border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-lg p-3 shadow-theme-xs">
                                             <input type="file" name="gateway_logo" id="gateway_logo"
@@ -275,106 +305,128 @@
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Dynamic credentials card -->
-                        @if(!empty($fields))
-                            <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                                <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                    <h3 class="text-base font-semibold text-gray-800 dark:text-white">API Credentials & Setup</h3>
-                                </div>
-                                <div class="p-6 space-y-4">
-                                    @foreach($fields as $field)
-                                        @php
-                                            $val = $parameters[$field['name']] ?? '';
-                                            if ($val === '--') $val = '';
-                                        @endphp
-                                        <div class="space-y-1.5 {{ in_array($field['type'], ['textarea', 'image']) ? 'col-span-full' : '' }}">
-                                            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400">
-                                                {{ $field['label'] }}
-                                                @if(!empty($field['required'])) <span class="text-red-500">*</span> @endif
-                                            </label>
-                                            
-                                            @if($field['type'] === 'select')
-                                                <div class="relative z-20">
-                                                    <select name="{{ $field['name'] }}" 
-                                                        class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs"
-                                                        @if(!empty($field['required'])) required @endif>
-                                                        @foreach($field['options'] as $k => $v)
-                                                            <option value="{{ $k }}" {{ $val === $k ? 'selected' : '' }}>{{ $v }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                    <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
-                                                        <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
-                                                            <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                                                        </svg>
-                                                    </span>
-                                                </div>
-                                            @elseif($field['type'] === 'checkbox')
-                                                <label class="relative inline-flex items-center cursor-pointer">
-                                                    <input type="checkbox" name="{{ $field['name'] }}" value="1" {{ $val == '1' ? 'checked' : '' }}
-                                                        class="sr-only peer">
-                                                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-brand-500/20 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
-                                                </label>
-                                            @elseif($field['type'] === 'textarea')
-                                                <textarea name="{{ $field['name'] }}" rows="4" placeholder="{{ $field['placeholder'] ?? '' }}"
-                                                    class="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
-                                                    @if(!empty($field['required'])) required @endif>{{ $val }}</textarea>
-                                            @else
-                                                <input type="text" name="{{ $field['name'] }}" value="{{ $val }}" placeholder="{{ $field['placeholder'] ?? '' }}"
-                                                    class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
-                                                    @if(!empty($field['required'])) required @endif>
-                                            @endif
-
-                                            @if(!empty($field['hint']))
-                                                <p class="text-xs text-gray-400 font-medium">{{ $field['hint'] }}</p>
-                                            @endif
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- IPN Webhook helper panel -->
-                        @if($gateway->slug !== 'bank-transfer' && $gateway->tab !== 'bank')
-                            <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                                <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                    <h3 class="text-base font-semibold text-gray-800 dark:text-white">Instant Payment Notification (IPN)</h3>
-                                </div>
-                                <div class="p-6 space-y-3">
-                                    <p class="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
-                                        Configure this secure callback URL inside your payment provider portal to automatically sync order settlement states.
-                                    </p>
-                                    <div class="relative flex items-center">
-                                        <input type="text" id="ipn-callback-url-input" readonly value="{{ url('/ipn/' . $gateway->gateway_id) }}"
-                                            class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-800/40 pl-4 pr-12 text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-theme-xs select-all">
-                                        <button type="button" onclick="copyIpnUrl()" class="absolute right-3 text-gray-400 hover:text-brand-500 transition-colors">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                        <!-- Supported Languages card -->
-                        @if(!empty($supportedLanguages))
-                            <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
-                                <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-transparent">
-                                    <h3 class="text-base font-semibold text-gray-800 dark:text-white">Supported Languages</h3>
-                                </div>
-                                <div class="p-6 flex flex-wrap gap-1.5">
-                                    @foreach($supportedLanguages as $langCode => $langName)
-                                        <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-100/50 dark:border-brand-500/10">
-                                            {{ $langName }}
-                                        </span>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-
                     </div>
 
+                    <!-- Dynamic credentials card -->
+                    @if(!empty($fields))
+                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">API Credentials & Setup</h2>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Provide required secure keys, modes, and parameters for transactional validation.</p>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-4">
+                                @foreach($fields as $field)
+                                    @php
+                                        $val = $parameters[$field['name']] ?? '';
+                                        if ($val === '--') $val = '';
+                                    @endphp
+                                    <div class="space-y-1.5">
+                                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-400">
+                                            {{ $field['label'] }}
+                                            @if(!empty($field['required'])) <span class="text-red-500">*</span> @endif
+                                        </label>
+                                        
+                                        @if($field['type'] === 'select')
+                                            <div class="relative z-20">
+                                                <select name="{{ $field['name'] }}" 
+                                                    class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs"
+                                                    @if(!empty($field['required'])) required @endif>
+                                                    @foreach($field['options'] as $k => $v)
+                                                        <option value="{{ $k }}" {{ $val === $k ? 'selected' : '' }}>{{ $v }}</option>
+                                                    @endforeach
+                                                </select>
+                                                <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
+                                                    <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                                        <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
+                                        @elseif($field['type'] === 'checkbox')
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="{{ $field['name'] }}" value="1" {{ $val == '1' ? 'checked' : '' }}
+                                                    class="sr-only peer">
+                                                <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-brand-500/20 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500"></div>
+                                            </label>
+                                        @elseif($field['type'] === 'textarea')
+                                            <textarea name="{{ $field['name'] }}" rows="4" placeholder="{{ $field['placeholder'] ?? '' }}"
+                                                class="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                                @if(!empty($field['required'])) required @endif>{{ $val }}</textarea>
+                                        @else
+                                            <input type="text" name="{{ $field['name'] }}" value="{{ $val }}" placeholder="{{ $field['placeholder'] ?? '' }}"
+                                                class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                                @if(!empty($field['required'])) required @endif>
+                                        @endif
+
+                                        @if(!empty($field['hint']))
+                                            <p class="text-xs text-gray-400 font-medium">{{ $field['hint'] }}</p>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- IPN Webhook helper panel -->
+                    @if($gateway->slug !== 'bank-transfer' && $gateway->tab !== 'bank')
+                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Instant Payment Notification (IPN)</h2>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Configure callback endpoints inside your provider portal to receive real-time updates.</p>
+                                </div>
+                            </div>
+                            <div class="p-6 space-y-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400 font-medium leading-relaxed">
+                                    Configure this secure callback URL inside your payment provider portal to automatically sync order settlement states.
+                                </p>
+                                <div class="relative flex items-center">
+                                    <input type="text" id="ipn-callback-url-input" readonly value="{{ url('/ipn/' . $gateway->gateway_id) }}"
+                                        class="h-11 w-full rounded-lg border border-gray-200 bg-gray-50 dark:bg-gray-800/40 pl-4 pr-12 text-xs font-semibold text-gray-600 dark:text-gray-300 shadow-theme-xs select-all">
+                                    <button type="button" onclick="copyIpnUrl()" class="absolute right-3 text-gray-400 hover:text-brand-500 transition-colors">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
+                    <!-- Supported Languages card -->
+                    @if(!empty($supportedLanguages))
+                        <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                            <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+                                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 11.37 7.361 16.5 3 18.067"></path>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white">Supported Languages</h2>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">View languages natively supported for checkout display by this gateway provider.</p>
+                                </div>
+                            </div>
+                            <div class="p-6 flex flex-wrap gap-1.5">
+                                @foreach($supportedLanguages as $langCode => $langName)
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 border border-brand-100/50 dark:border-brand-500/10">
+                                        {{ $langName }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
                 <!-- Form Bottom Actions Outside of Card -->
@@ -422,13 +474,7 @@
                 input.setSelectionRange(0, 99999);
                 document.execCommand('copy');
                 
-                createToast({
-                    title: 'Callback URL Copied',
-                    description: 'Gateway IPN webhook address copied successfully.',
-                    svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
-                    timeout: 4000,
-                    top: 70
-                });
+                showToast('success', 'Gateway IPN webhook address copied successfully.');
             }
 
             // Save Configurations form trigger
@@ -450,18 +496,12 @@
                     });
                     const data = await response.json();
                     if (data.status === 'true') {
-                        createToast({
-                            title: 'Settings Saved',
-                            description: 'Payment gateway settings updated successfully!',
-                            svg: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#5f38f9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-circle-check"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 12m-9 0a9 9 0 1 0 18 0a9 9 0 1 0 -18 0" /><path d="M9 12l2 2l4 -4" /></svg>`,
-                            timeout: 6000,
-                            top: 70
-                        });
+                        showToast('success', data.message || 'Payment gateway settings updated successfully!');
                     } else {
-                        alert(data.message || 'Saving configuration failed.');
+                        showToast('error', data.message || 'Saving configuration failed.');
                     }
                 } catch (error) {
-                    alert('Network error. Please try again.');
+                    showToast('error', 'Network error. Please try again.');
                 } finally {
                     btn.disabled = false;
                     btn.innerHTML = originalText;

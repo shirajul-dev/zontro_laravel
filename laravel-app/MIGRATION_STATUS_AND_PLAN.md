@@ -121,6 +121,7 @@ All brand, profile, and system configuration sections for a merchant are central
   * **AJAX Creation & Setup**: Add dynamic gateway engines (bKash, Stripe, Nagad, etc.) or set up manual bank channels with instant, zero-reload AJAX callbacks.
   * **Custom Branding & Theme Customizer**: Set custom gateway logos with live previewing, and visually adjust primary, text, button, and button-text colors using reactive inline color Pickers.
   * **Transaction boundaries, limits, fees, and discounts**: Built-in money sanitization sanitizing currency values for flat rates, percentage fees, and allowed settlement currencies.
+  * **Interactive Custom Modals & Vertically Stacked Card layouts**: Replaced native browser confirm/alert popups with rich Alpine-driven `<x-m::modal>` dialog confirmation cards for single gateway deletion and bulk actions (Bulk Delete, Bulk Activate, Bulk Deactivate). Restructured the Gateway Edit screen into a premium, unified stacked vertical card single-column layout (`max-w-4xl`) with branded custom SVG card headers and helper descriptions, matching General Settings UI.
 
 ---
 
@@ -166,8 +167,11 @@ Merchants can now completely manage checkout payment gateways natively:
 * **Models**: Migrated fully to standard Laravel Eloquent models `ZpGateway` and `ZpGatewayParameter` (mapping to native database structures). Removed legacy `PpGateway` references entirely from the merchant context.
 * **Controller & Services**: Updated `SettingsController.php` gateway endpoints to call the newly created [GatewayMerchantActionService.php](file:///Volumes/Project/Personal%20Project/ZontroPay/PipraPay-Laravel%20%28Non%20SaaS%29/laravel-app/app/Services/Merchant/GatewayMerchantActionService.php).
 * **Views**:
-  * **Gateways Index**: Premium AJAX card grid showing active/inactive payment channels and supported settlement currencies.
+  * **Gateways Index**: Premium AJAX card grid showing active/inactive payment channels and supported settlement currencies. Includes rich Alpine-driven dropdown actions menus and dynamically loaded row details.
   * **Gateways Edit**: Clean visual forms to manage credentials, visual theme customization (primary, button, and text colors), custom logo uploads, and transaction boundaries (min/max allow limits, charges, and discounts).
+  * **Custom Confirmation Modals**: Successfully wired `<x-m::modal>` Alpine component instances for Single Gateway Deletion and Bulk Actions, removing native `confirm()` and `alert()` triggers entirely. Dynamically compiled nested Alpine bindings using `Alpine.initTree` to preserve transition and click lifecycle actions on fetch requests.
+  * **Layout Redesign**: Restructured `gateways-edit.blade.php` from two columns to a single-column, `max-w-4xl` stacked layout mimicking the General Settings hub, utilizing curated SVG card icons, description headers, and rounded layout containers.
+  * **Interactive Gateway Category Cards & Searchable Dropdown**: Enhanced the gateway creation modal by offering side-by-side selectable cards (Manual Bank Transfer and Payment Gateway) equipped with dynamic active borders, tick-indicator badges, and hover animations. Selecting the payment category dynamically unfolds a beautiful Alpine-based combobox with real-time text-filtering search input, enabling instant engine selection and direct AJAX setups without any full-page reload.
 
 ### Phase 3: API Credentials, Domains, and Checkout Themes (✅ 100% Completed & Visually Polished)
 All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space. 
