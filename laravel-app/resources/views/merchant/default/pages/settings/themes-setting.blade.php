@@ -41,10 +41,10 @@
             <!-- Breadcrumb End -->
 
             <div class="max-w-4xl">
-                <form id="theme-settings-form" class="space-y-6" enctype="multipart/form-data">
+                <form id="theme-settings-form" class="space-y-6 max-w-4xl" enctype="multipart/form-data">
                     @csrf
 
-                    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
+                    <div class="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs overflow-hidden">
                         <!-- Card Header -->
                         <div class="flex items-center gap-3 px-6 py-4 border-b border-gray-100 dark:border-gray-800">
                             <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50 dark:bg-gray-800 text-brand-500">
@@ -59,99 +59,110 @@
                         </div>
 
                         <!-- Card Fields Content -->
-                        <div class="p-6 space-y-6">
-                            @foreach ($fields as $field)
-                                <div class="space-y-2">
-                                    <label class="block text-sm font-semibold text-gray-800 dark:text-gray-200">
-                                        {{ $field['label'] }}
-                                        @if (!empty($field['required']))
-                                            <span class="text-red-500">*</span>
-                                        @endif
-                                    </label>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                @foreach ($fields as $field)
+                                    <div class="space-y-2 {{ in_array($field['type'], ['textarea', 'image']) ? 'col-span-full' : '' }}">
+                                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-400">
+                                            {{ $field['label'] }}
+                                            @if (!empty($field['required']))
+                                                <span class="text-red-500">*</span>
+                                            @endif
+                                        </label>
 
-                                    <!-- Render SELECT drop list -->
-                                    @if ($field['type'] === 'select')
-                                        <div class="relative z-20 bg-transparent dark:bg-gray-900">
-                                            <select name="{{ $field['name'] }}" 
-                                                class="relative z-20 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-5 py-3 text-sm text-gray-800 outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-800 dark:bg-transparent dark:text-white dark:focus:border-brand-500"
-                                                @if(!empty($field['required'])) required @endif>
-                                                @foreach ($field['options'] as $optVal => $optLabel)
-                                                    <option value="{{ $optVal }}" {{ ($field['value'] ?? '') === $optVal ? 'selected' : '' }} class="dark:bg-gray-900">
-                                                        {{ $optLabel }}
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                            <span class="absolute right-4 top-1/2 z-30 -translate-y-1/2">
-                                                <svg class="fill-current text-gray-500" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M5.29289 8.29289C5.68342 7.90237 6.31658 7.90237 6.70711 8.29289L12 13.5858L17.2929 8.29289C17.6834 7.90237 18.3166 7.90237 18.7071 8.29289C19.0976 8.68342 19.0976 9.31658 18.7071 9.70711L12.7071 15.7071C12.3166 16.0976 11.6834 16.0976 11.2929 15.7071L5.29289 9.70711C4.90237 9.31658 4.90237 8.68342 5.29289 8.29289Z" fill=""></path>
-                                                </svg>
-                                            </span>
-                                        </div>
+                                        <!-- Render SELECT drop list -->
+                                        @if ($field['type'] === 'select')
+                                            <div class="relative z-20">
+                                                <select name="{{ $field['name'] }}" 
+                                                    class="h-11 w-full appearance-none rounded-lg border border-gray-200 bg-transparent px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:text-white/90 shadow-theme-xs"
+                                                    @if(!empty($field['required'])) required @endif>
+                                                    @foreach ($field['options'] as $optVal => $optLabel)
+                                                        <option value="{{ $optVal }}" {{ ($field['value'] ?? '') === $optVal ? 'selected' : '' }} class="dark:bg-gray-900">
+                                                            {{ $optLabel }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                                <span class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 text-gray-500">
+                                                    <svg class="stroke-current" width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                                        <path d="M4.79175 7.396L10.0001 12.6043L15.2084 7.396" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                                    </svg>
+                                                </span>
+                                            </div>
 
-                                    <!-- Render IMAGE upload zone -->
-                                    @elseif ($field['type'] === 'image')
-                                        <div class="relative group">
-                                            <div id="{{ $field['name'] }}-preview-container"
-                                                class="flex items-center justify-center w-full h-48 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/50 dark:bg-gray-900/50 dark:border-gray-800 group-hover:border-brand-500 transition-all cursor-pointer overflow-hidden shadow-inner">
-                                                @if (!empty($field['value']))
-                                                    <img src="{{ $field['value'] }}" id="{{ $field['name'] }}-preview-img" alt="{{ $field['label'] }}"
-                                                        class="max-h-full max-w-full p-4 object-contain transition-transform group-hover:scale-105">
-                                                @else
-                                                    <div class="text-center space-y-2" id="{{ $field['name'] }}-placeholder">
-                                                        <div class="flex justify-center">
-                                                            <div class="p-3 rounded-full bg-white dark:bg-gray-800 shadow-sm text-gray-400">
-                                                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                                                </svg>
-                                                            </div>
+                                        <!-- Render IMAGE upload zone -->
+                                        @elseif ($field['type'] === 'image')
+                                            <div class="space-y-3">
+                                                <!-- Standard File Input Field -->
+                                                <div class="relative flex items-center justify-between border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 rounded-lg p-3 shadow-theme-xs">
+                                                    <input type="file" name="{{ $field['name'] }}" id="{{ $field['name'] }}-input"
+                                                        class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                                        onchange="previewImage(this, '{{ $field['name'] }}-preview-img', '{{ $field['name'] }}-preview-container')">
+                                                    <div class="flex items-center gap-3">
+                                                        <div class="p-2 rounded-lg bg-gray-50 dark:bg-gray-800 text-gray-500">
+                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+                                                            </svg>
                                                         </div>
-                                                        <p class="text-xs font-medium text-gray-500">Upload {{ $field['label'] }}</p>
+                                                        <div>
+                                                            <p class="text-xs font-semibold text-gray-700 dark:text-gray-300" id="{{ $field['name'] }}-filename-label">Choose a file...</p>
+                                                            <p class="text-[10px] text-gray-400">PNG, JPG, JPEG up to 2MB</p>
+                                                        </div>
                                                     </div>
-                                                @endif
+                                                    <span class="inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800 px-4 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                                                        Browse
+                                                    </span>
+                                                </div>
+
+                                                <!-- Preview Container at Bottom -->
+                                                <div id="{{ $field['name'] }}-preview-container" class="relative {{ empty($field['value']) ? 'hidden' : '' }} border border-gray-200 dark:border-gray-800 rounded-xl bg-gray-50 dark:bg-gray-950 p-4 flex items-center justify-center overflow-hidden" style="height: 160px; max-width: 320px;">
+                                                    <img src="{{ $field['value'] ?? '' }}" id="{{ $field['name'] }}-preview-img" alt="{{ $field['label'] }} Preview"
+                                                        class="max-h-full max-w-full object-contain rounded-lg shadow-sm">
+                                                </div>
                                             </div>
-                                            <input type="file" name="{{ $field['name'] }}"
-                                                class="absolute inset-0 opacity-0 cursor-pointer"
-                                                onchange="previewImage(this, '{{ $field['name'] }}-preview-img', '{{ $field['name'] }}-placeholder')">
-                                        </div>
 
-                                    <!-- Render TEXTAREA fields -->
-                                    @elseif ($field['type'] === 'textarea')
-                                        <textarea name="{{ $field['name'] }}" rows="4"
-                                            placeholder="{{ $field['placeholder'] ?? '' }}"
-                                            class="w-full rounded-lg border border-gray-200 bg-transparent px-5 py-3 text-sm text-gray-800 outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-800 dark:bg-transparent dark:text-white dark:focus:border-brand-500"
-                                            @if(!empty($field['required'])) required @endif>{{ $field['value'] ?? '' }}</textarea>
+                                        <!-- Render TEXTAREA fields -->
+                                        @elseif ($field['type'] === 'textarea')
+                                            <textarea name="{{ $field['name'] }}" rows="4"
+                                                placeholder="{{ $field['placeholder'] ?? '' }}"
+                                                class="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                                @if(!empty($field['required'])) required @endif>{{ $field['value'] ?? '' }}</textarea>
 
-                                    <!-- Render COLOR pickers -->
-                                    @elseif ($field['type'] === 'color')
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-12 h-12 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-sm">
-                                                <input type="color" name="{{ $field['name'] }}" value="{{ $field['value'] ?? '#000000' }}"
-                                                    class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
-                                                    oninput="document.getElementById('{{ $field['name'] }}-text-val').value = this.value">
+                                        <!-- Render COLOR pickers -->
+                                        @elseif ($field['type'] === 'color')
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-11 h-11 rounded-lg border border-gray-200 dark:border-gray-800 overflow-hidden relative shadow-theme-xs">
+                                                    <input type="color" name="{{ $field['name'] }}" value="{{ $field['value'] ?? '#000000' }}"
+                                                        class="absolute -inset-2 cursor-pointer w-[200%] h-[200%]"
+                                                        oninput="document.getElementById('{{ $field['name'] }}-text-val').value = this.value">
+                                                </div>
+                                                <input type="text" id="{{ $field['name'] }}-text-val" value="{{ $field['value'] ?? '#000000' }}"
+                                                    oninput="document.querySelector('input[name={{ $field['name'] }}]').value = this.value"
+                                                    class="h-11 w-32 rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs">
                                             </div>
-                                            <input type="text" id="{{ $field['name'] }}-text-val" value="{{ $field['value'] ?? '#000000' }}"
-                                                oninput="document.querySelector('input[name={{ $field['name'] }}]').value = this.value"
-                                                class="w-32 rounded-lg border border-gray-200 bg-transparent px-4 py-2.5 text-sm text-gray-800 outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-800 dark:bg-transparent dark:text-white dark:focus:border-brand-500">
-                                        </div>
 
-                                    <!-- Render generic TEXT inputs -->
-                                    @else
-                                        <input type="text" name="{{ $field['name'] }}" value="{{ $field['value'] ?? '' }}"
-                                            placeholder="{{ $field['placeholder'] ?? '' }}"
-                                            class="w-full rounded-lg border border-gray-200 bg-transparent px-5 py-3 text-sm text-gray-800 outline-none transition focus:border-brand-500 active:border-brand-500 dark:border-gray-800 dark:bg-transparent dark:text-white dark:focus:border-brand-500"
-                                            @if(!empty($field['required'])) required @endif>
-                                    @endif
-                                </div>
-                            @endforeach
+                                        <!-- Render generic TEXT inputs -->
+                                        @else
+                                            <input type="text" name="{{ $field['name'] }}" value="{{ $field['value'] ?? '' }}"
+                                                placeholder="{{ $field['placeholder'] ?? '' }}"
+                                                class="h-11 w-full rounded-lg border border-gray-200 bg-white px-4 text-sm font-medium text-gray-700 focus:border-brand-500 focus:outline-hidden dark:border-gray-800 dark:bg-gray-900 dark:text-white/90 shadow-theme-xs"
+                                                @if(!empty($field['required'])) required @endif>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
                         </div>
+                    </div>
 
-                        <!-- Card Footer Update Controls -->
-                        <div class="flex justify-end p-6 bg-gray-50/50 dark:bg-gray-800/20 border-t border-gray-100 dark:border-gray-800">
-                            <button type="submit"
-                                class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center gap-2 rounded-lg px-10 py-3 text-sm font-bold text-white transition-all active:scale-95">
-                                Save Theme Settings
-                            </button>
-                        </div>
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-4">
+                        <a href="{{ route('merchant.settings.themes') }}"
+                            class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                            class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all active:scale-95">
+                            Save Theme Settings
+                        </button>
                     </div>
                 </form>
             </div>
@@ -160,24 +171,24 @@
 
     <!-- Scripting for live image previews and secure AJAX submission -->
     <script>
-        function previewImage(input, previewId, placeholderId) {
+        function previewImage(input, previewId, containerId) {
             const file = input.files[0];
+            const label = document.getElementById(input.name + '-filename-label');
             if (file) {
+                if (label) {
+                    label.textContent = file.name;
+                }
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    let img = document.getElementById(previewId);
-                    const placeholder = document.getElementById(placeholderId);
-
-                    if (!img) {
-                        img = document.createElement('img');
-                        img.id = previewId;
-                        img.className = 'max-h-full max-w-full p-4 object-contain transition-transform group-hover:scale-105';
-                        input.parentElement.querySelector('div').appendChild(img);
+                    const img = document.getElementById(previewId);
+                    const container = document.getElementById(containerId);
+                    
+                    if (img) {
+                        img.src = e.target.result;
                     }
-
-                    img.src = e.target.result;
-                    img.classList.remove('hidden');
-                    if (placeholder) placeholder.classList.add('hidden');
+                    if (container) {
+                        container.classList.remove('hidden');
+                    }
                 }
                 reader.readAsDataURL(file);
             }
