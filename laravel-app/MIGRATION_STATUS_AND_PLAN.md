@@ -114,6 +114,14 @@ All brand, profile, and system configuration sections for a merchant are central
   * **Unified Grid UI Parity**: Clean grid borders, checkbox selection indicators, and HSL custom-designed active/inactive badges matching FAQs and API credentials.
   * **Bulk and Individual Control**: Fully secure warning prompt dialogues for individual deletions and multiple rows checkout domains removals. Standardized dropdown widths (`260px`).
 
+#### 7. Payment Gateways Settings
+* **Path**: `/merchant/system/gateways`
+* **Features**: High-performance payment processing configuration center:
+  * **Modern Architecture**: Clean separation utilizing native `ZpGateway` and `ZpGatewayParameter` models, completely bypassing old procedural/admin code blocks.
+  * **AJAX Creation & Setup**: Add dynamic gateway engines (bKash, Stripe, Nagad, etc.) or set up manual bank channels with instant, zero-reload AJAX callbacks.
+  * **Custom Branding & Theme Customizer**: Set custom gateway logos with live previewing, and visually adjust primary, text, button, and button-text colors using reactive inline color Pickers.
+  * **Transaction boundaries, limits, fees, and discounts**: Built-in money sanitization sanitizing currency values for flat rates, percentage fees, and allowed settlement currencies.
+
 ---
 
 ## 🔍 3. Legacy Project Analysis & Next Modules to Move
@@ -153,13 +161,13 @@ The heart of the merchant experience is seeing their payments. This must be the 
   * Refund processing (with background confirmation Toast).
   * Manual IPN resend trigger (initiating the native `PaymentVerificationService` webhook callback).
 
-### Phase 2: Payment Gateways Configuration (🔴 High Priority)
-Merchants must be able to configure checkout payment keys for their brand.
-* **Controller**: Create `Merchant\GatewayController`.
+### Phase 2: Payment Gateways Configuration (✅ 100% Completed & Migrated)
+Merchants can now completely manage checkout payment gateways natively:
+* **Models**: Migrated fully to standard Laravel Eloquent models `ZpGateway` and `ZpGatewayParameter` (mapping to native database structures). Removed legacy `PpGateway` references entirely from the merchant context.
+* **Controller & Services**: Updated `SettingsController.php` gateway endpoints to call the newly created [GatewayMerchantActionService.php](file:///Volumes/Project/Personal%20Project/ZontroPay/PipraPay-Laravel%20%28Non%20SaaS%29/laravel-app/app/Services/Merchant/GatewayMerchantActionService.php).
 * **Views**:
-  * `resources/views/merchant/default/pages/gateways/index.blade.php`: Clean card-based visual panel listing all 46+ supported gateways (bKash, Nagad, SSLCommerz, Rocket, Stripe, PayPal, etc.).
-  * `resources/views/merchant/default/pages/gateways/edit.blade.php`: Dynamic form to toggle a gateway (Active/Inactive), set a processing fee type (Percentage or Flat), and insert API Credentials (e.g., Client Secret, App Key, Password) securely.
-* **Security Note**: Ensure API credentials are saved with robust encryption inside the database.
+  * **Gateways Index**: Premium AJAX card grid showing active/inactive payment channels and supported settlement currencies.
+  * **Gateways Edit**: Clean visual forms to manage credentials, visual theme customization (primary, button, and text colors), custom logo uploads, and transaction boundaries (min/max allow limits, charges, and discounts).
 
 ### Phase 3: API Credentials, Domains, and Checkout Themes (✅ 100% Completed & Visually Polished)
 All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space. 

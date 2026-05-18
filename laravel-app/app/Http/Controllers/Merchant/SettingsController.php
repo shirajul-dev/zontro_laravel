@@ -1104,6 +1104,287 @@ class SettingsController extends Controller
     }
 
     /**
+     * Display the Manage System dashboard page.
+     */
+    public function systemIndex()
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
+        }
+
+        return view('merchant.default.pages.system.index', compact('brand'));
+    }
+
+    /**
+     * Display the payment gateways settings page.
+     */
+    public function gateways()
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
+        }
+
+        $availableGateways = [];
+        $gatewayDirs = glob(app_path('Modules/gateways/*'), GLOB_ONLYDIR);
+        foreach ($gatewayDirs as $dir) {
+            $classFile = $dir . '/class.php';
+            if (!file_exists($classFile)) {
+                continue;
+            }
+
+            require_once $classFile;
+
+            $slug = basename($dir);
+            $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $slug))) . 'Gateway';
+
+            if (class_exists($class)) {
+                $gatewayObj = new $class();
+                $availableGateways[$slug] = $gatewayObj->info();
+            }
+        }
+
+        return view('merchant.default.pages.system.gateways', compact('brand', 'availableGateways'));
+    }
+
+    /**
+     * Handle payment gateway listing AJAX query.
+     */
+    public function gatewayList(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        }
+
+        $service = new \App\Services\Merchant\GatewayMerchantActionService();
+        $result = $service->list($request->all(), $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+        return response()->json($result);
+    }
+
+    /**
+     * Create a new payment gateway mapping.
+     */
+    public function gatewayCreate(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        }
+
+        $gateway = trim((string)$request->input('gateway', ''));
+        if ($gateway === 'bank') {
+            // Special setup for bank gateway
+            $gatewayId = function_exists('generateItemID') ? (string) generateItemID() : bin2hex(random_bytes(10));
+            \App\Models\ZpGateway::query()->create([
+                'gateway_id' => $gatewayId,
+                'brand_id' => $brand->brand_id,
+                'slug' => 'bank-transfer',
+                'name' => 'Bank Transfer',
+                'display' => 'Bank Transfer',
+                'logo' => '',
+                'currency' => $brand->currency ?? 'USD',
+                'primary_color' => '#1e293b',
+                'text_color' => '#ffffff',
+                'btn_color' => '#3b82f6',
+                'btn_text_color' => '#ffffff',
+                'tab' => 'bank',
+                'status' => 'active',
+            ]);
+            return response()->json([
+                'status' => 'true',
+                'title' => 'Gateway Created',
+                'message' => 'The bank gateway has been created successfully.',
+                'csrf_token' => csrf_token()
+            ]);
+        }
+
+        $service = new \App\Services\Merchant\GatewayMerchantActionService();
+        $result = $service->create($gateway, $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+        return response()->json($result);
+    }
+
+    /**
+     * Edit a specific payment gateway configuration.
+     */
+    public function gatewayEdit(string $id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
+        }
+
+        $gateway = \App\Models\ZpGateway::where('gateway_id', $id)->where('brand_id', $brand->brand_id)->first();
+        if ($gateway === null) {
+            return redirect()->route('merchant.system.gateways')->with('error', 'Gateway not found.');
+        }
+
+        $moduleSlug = (string)$gateway->slug;
+        $moduleFile = app_path('Modules/gateways/' . $moduleSlug . '/class.php');
+        $fields = [];
+        $supportedLanguages = [];
+        $gatewayInfo = [];
+
+        if (file_exists($moduleFile)) {
+            require_once $moduleFile;
+            $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $moduleSlug))) . 'Gateway';
+            if (class_exists($class)) {
+                $gatewayObj = new $class();
+                $gatewayInfo = $gatewayObj->info();
+                $fields = method_exists($gatewayObj, 'fields') ? $gatewayObj->fields() : [];
+                $supportedLanguages = method_exists($gatewayObj, 'supported_languages') ? $gatewayObj->supported_languages() : [];
+
+                if (($gatewayInfo['gateway_type'] ?? '') === 'automation') {
+                    $extraFields = [
+                        [
+                            'name'  => 'mobile_number',
+                            'label' => 'Mobile Number',
+                            'type'  => 'text',
+                            'value' => '',
+                            'required' => true,
+                            'placeholder' => 'Enter mobile number'
+                        ],
+                        [
+                            'name'  => 'pending_payment',
+                            'label' => 'Allow Pending Payment?',
+                            'type'  => 'select',
+                            'options' => [
+                                'enable' => 'Enable',
+                                'disable' => 'Disable',
+                            ],
+                            'value' => 'disable',
+                            'required' => true,
+                            'multiple' => false,
+                        ]
+                    ];
+                    $fields = array_merge($extraFields, $fields);
+                }
+            }
+        } elseif ($gateway->tab === 'bank') {
+            $fields = [
+                [
+                    'name'  => 'bank_name',
+                    'label' => 'Bank Name',
+                    'type'  => 'text',
+                    'value' => '',
+                    'required' => true,
+                    'placeholder' => 'Enter bank name'
+                ],
+                [
+                    'name'  => 'account_holder_name',
+                    'label' => 'Account Holder Name',
+                    'type'  => 'text',
+                    'value' => '',
+                    'required' => true,
+                    'placeholder' => 'Enter account holder name'
+                ],
+                [
+                    'name'  => 'account_number',
+                    'label' => 'Account Number',
+                    'type'  => 'text',
+                    'value' => '',
+                    'required' => true,
+                    'placeholder' => 'Enter account number'
+                ],
+                [
+                    'name'  => 'branch_name',
+                    'label' => 'Branch Name',
+                    'type'  => 'text',
+                    'value' => '',
+                    'required' => true,
+                    'placeholder' => 'Enter branch name'
+                ],
+                [
+                    'name'  => 'routing_number',
+                    'label' => 'Routing Number',
+                    'type'  => 'text',
+                    'value' => '',
+                    'required' => true,
+                    'placeholder' => 'Enter routing number'
+                ],
+                [
+                    'name'  => 'swift_code',
+                    'label' => 'SWIFT/BIC Code',
+                    'type'  => 'text',
+                    'value' => '',
+                    'required' => true,
+                    'placeholder' => 'Enter code'
+                ]
+            ];
+            $supportedLanguages = [
+                'en' => 'English',
+                'bn' => 'বাংলা',
+                'hi' => 'हिन्दी',
+                'ur' => 'اردو',
+                'ar' => 'العربية',
+            ];
+        }
+
+        $brandCurrencies = \App\Models\ZpCurrency::where('brand_id', $brand->brand_id)->orderBy('id', 'desc')->get();
+        $parameters = \App\Models\ZpGatewayParameter::where('gateway_id', $id)->where('brand_id', $brand->brand_id)->pluck('value', 'option_name')->toArray();
+
+        return view('merchant.default.pages.system.gateways-edit', compact('brand', 'gateway', 'fields', 'supportedLanguages', 'brandCurrencies', 'parameters'));
+    }
+
+    /**
+     * Update a specific payment gateway configuration.
+     */
+    public function gatewayUpdate(Request $request, string $id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        }
+
+        $service = new \App\Services\Merchant\GatewayMerchantActionService();
+        $postData = $request->all();
+        $postData['gateway-id'] = $id;
+
+        $siteUrl = rtrim((string)config('app.url', '/'), '/');
+        $result = $service->updateGatewaySetting($postData, $request->allFiles(), $brand->brand_id, $siteUrl);
+        $result['csrf_token'] = csrf_token();
+        return response()->json($result);
+    }
+
+    /**
+     * Delete a payment gateway setup.
+     */
+    public function gatewayDelete(string $id)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        }
+
+        $service = new \App\Services\Merchant\GatewayMerchantActionService();
+        $result = $service->delete($id, $brand->brand_id);
+        $result['csrf_token'] = csrf_token();
+        return response()->json($result);
+    }
+
+    /**
+     * Bulk action trigger for multiple payment gateways.
+     */
+    public function gatewayBulkAction(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'message' => 'Unauthorized'], 401);
+        }
+
+        $actionId = $request->input('actionID');
+        $selectedIds = json_decode($request->input('selected_ids', '[]'), true);
+
+        $service = new \App\Services\Merchant\GatewayMerchantActionService();
+        $result = $service->bulkAction($actionId, $selectedIds, $brand->brand_id, true, true);
+        $result['csrf_token'] = csrf_token();
+        return response()->json($result);
+    }
+
+    /**
      * Set environmental option helper for theme settings.
      */
     private function setThemeEnvValue(string $optionName, string $value, string $brandId): void

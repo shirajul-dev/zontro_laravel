@@ -76,6 +76,16 @@ Route::prefix('merchant')->name('merchant.')->group(function () {
         Route::get('/settings/themes/manage/{slug}', [SettingsController::class, 'themeSettings'])->name('settings.themes.manage');
         Route::post('/settings/themes/manage/{slug}', [SettingsController::class, 'updateThemeSettings'])->name('settings.themes.manage.update');
 
+        // Manage System
+        Route::get('/system', [SettingsController::class, 'systemIndex'])->name('system');
+        Route::get('/system/gateways', [SettingsController::class, 'gateways'])->name('system.gateways');
+        Route::post('/system/gateways/list', [SettingsController::class, 'gatewayList'])->name('system.gateways.list');
+        Route::post('/system/gateways/create', [SettingsController::class, 'gatewayCreate'])->name('system.gateways.create');
+        Route::get('/system/gateways/{id}/edit', [SettingsController::class, 'gatewayEdit'])->name('system.gateways.edit');
+        Route::post('/system/gateways/{id}/edit', [SettingsController::class, 'gatewayUpdate'])->name('system.gateways.update');
+        Route::post('/system/gateways/{id}/delete', [SettingsController::class, 'gatewayDelete'])->name('system.gateways.delete');
+        Route::post('/system/gateways/bulk', [SettingsController::class, 'gatewayBulkAction'])->name('system.gateways.bulk');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 });

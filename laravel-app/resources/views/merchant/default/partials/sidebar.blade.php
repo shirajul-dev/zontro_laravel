@@ -25,7 +25,7 @@
               <div class="mt-6 flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
                   <!-- Sidebar Menu -->
                   <nav x-data="{
-                      selected: '{{ request()->is('merchant/dashboard*') ? 'Dashboard' : (request()->is('merchant/settings*') ? 'Settings' : '') }}'
+                      selected: '{{ request()->is('merchant/dashboard*') ? 'Dashboard' : (request()->is('merchant/settings*') ? 'Settings' : (request()->is('merchant/system*') ? 'System' : '')) }}'
                   }">
                       <!-- Menu Group -->
                       <div>
@@ -85,6 +85,25 @@
                                   </a>
                               </li>
                               <!-- Menu Item Settings End -->
+                              
+                              <!-- Menu Item Manage System -->
+                              <li>
+                                  <a href="{{ route('merchant.system') }}" @click="selected = 'System'"
+                                      class="menu-item group"
+                                      :class="selected === 'System' ? 'menu-item-active' : 'menu-item-inactive'">
+                                      <svg :class="selected === 'System' ? 'menu-item-icon-active' : 'menu-item-icon-inactive'"
+                                          width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                          xmlns="http://www.w3.org/2000/svg">
+                                          <path fill-rule="evenodd" clip-rule="evenodd"
+                                              d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15.93c-3.13-.26-5.67-2.8-5.93-5.93H9v-2H7.07c.26-3.13 2.8-5.67 5.93-5.93V7h2v-.93c3.13.26 5.67 2.8 5.93 5.93H19v2h-1.93c-.26 3.13-2.8 5.67-5.93 5.93V17h-2v.93z"
+                                              fill="" />
+                                      </svg>
+
+                                      <span class="menu-item-text" :class="sidebarToggle ? 'lg:hidden' : ''">
+                                          Manage System
+                                      </span>
+                                  </a>
+                              </li>
 
                               <li>
                                   <a href="calendar.html"
