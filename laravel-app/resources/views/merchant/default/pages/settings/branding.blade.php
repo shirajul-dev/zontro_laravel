@@ -135,14 +135,18 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div
-                            class="flex justify-end p-6 bg-gray-50/50 dark:bg-gray-800/20 border-t border-gray-100 dark:border-gray-800">
-                            <button type="submit"
-                                class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center gap-2 rounded-lg px-10 py-3 text-sm font-bold text-white transition-all active:scale-95">
-                                Update Branding
-                            </button>
-                        </div>
+                    <!-- Form Actions -->
+                    <div class="flex items-center justify-end gap-3 pt-4">
+                        <a href="{{ route('merchant.settings') }}"
+                            class="inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white px-6 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] transition-colors">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                            class="bg-brand-500 shadow-theme-xs hover:bg-brand-600 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white transition-all active:scale-95">
+                            Update Branding
+                        </button>
                     </div>
                 </form>
             </div>
