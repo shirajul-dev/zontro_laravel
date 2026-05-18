@@ -205,14 +205,49 @@ class SettingsController extends Controller
             return response()->json(['status' => 'error', 'message' => 'No active brand found.'], 404);
         }
 
-        // Note: Actual file upload logic would go here
-        // For now, validating existing paths or placeholders
+        // Validate the logo and favicon files
         $validated = $request->validate([
-            'logo' => 'nullable|string|max:255',
-            'favicon' => 'nullable|string|max:255',
+            'logo' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'favicon' => 'nullable|file|image|mimes:jpeg,png,jpg,gif,webp,ico|max:1024',
         ]);
 
-        $brand->update($validated);
+        $updateData = [];
+
+        // Upload Logo if provided
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            $logoFile = $request->file('logo');
+            $extension = strtolower($logoFile->getClientOriginalExtension());
+            $filename = 'logo_' . strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $extension);
+            
+            $uploadPath = storage_path('app/public/media');
+            if (!is_dir($uploadPath)) {
+                @mkdir($uploadPath, 0755, true);
+            }
+            $logoFile->move($uploadPath, $filename);
+            
+            $siteUrl = rtrim((string) config('app.url', '/'), '/');
+            $updateData['logo'] = $siteUrl . '/storage/media/' . $filename;
+        }
+
+        // Upload Favicon if provided
+        if ($request->hasFile('favicon') && $request->file('favicon')->isValid()) {
+            $faviconFile = $request->file('favicon');
+            $extension = strtolower($faviconFile->getClientOriginalExtension());
+            $filename = 'favicon_' . strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $extension);
+            
+            $uploadPath = storage_path('app/public/media');
+            if (!is_dir($uploadPath)) {
+                @mkdir($uploadPath, 0755, true);
+            }
+            $faviconFile->move($uploadPath, $filename);
+            
+            $siteUrl = rtrim((string) config('app.url', '/'), '/');
+            $updateData['favicon'] = $siteUrl . '/storage/media/' . $filename;
+        }
+
+        if (!empty($updateData)) {
+            $brand->update($updateData);
+        }
 
         return response()->json([
             'status' => 'success',
