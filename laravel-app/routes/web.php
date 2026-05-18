@@ -73,12 +73,12 @@ Route::match(['get', 'post'], '/' . $paymentLinkPath . '/{ref}', [CheckoutContro
 |--------------------------------------------------------------------------
 */
 Route::get('/module-asset/{type}/{module}/{path}', [ModuleAssetController::class, 'serve'])
-    ->where('type', 'theme|themes|gateway|gateways|addon|addons')
+    ->where('type', 'theme|themes|gateway|gateways|addon|addons|checkout-theme|checkout-themes')
     ->where('path', '.*')
     ->name('module.asset.v2');
 
 Route::get('/pp-{type}/{module}/assets/{path}', [ModuleAssetController::class, 'serve'])
-    ->where('type', 'theme|gateway|addon')
+    ->where('type', 'theme|gateway|addon|checkout-theme')
     ->where('path', '.*')
     ->name('module.asset');
 

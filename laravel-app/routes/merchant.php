@@ -70,6 +70,12 @@ Route::prefix('merchant')->name('merchant.')->group(function () {
         Route::post('/settings/domains/{id}/delete', [SettingsController::class, 'domainDelete'])->name('settings.domains.delete');
         Route::post('/settings/domains/bulk', [SettingsController::class, 'domainBulkAction'])->name('settings.domains.bulk');
 
+        // Checkout Themes
+        Route::get('/settings/themes', [SettingsController::class, 'themes'])->name('settings.themes');
+        Route::post('/settings/themes/active', [SettingsController::class, 'activeTheme'])->name('settings.themes.active');
+        Route::get('/settings/themes/manage/{slug}', [SettingsController::class, 'themeSettings'])->name('settings.themes.manage');
+        Route::post('/settings/themes/manage/{slug}', [SettingsController::class, 'updateThemeSettings'])->name('settings.themes.manage.update');
+
         Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     });
 });

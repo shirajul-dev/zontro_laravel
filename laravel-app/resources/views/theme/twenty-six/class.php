@@ -4,7 +4,7 @@
         public function info()
         {
             return [
-                'title'       => 'Twenty Six',
+                'title'       => 'ZontroPay Checkout',
                 'logo'        => 'assets/logo.jpg'
             ];
         }
@@ -100,7 +100,7 @@
         {
             $langs = [];
             $langDir = __DIR__ . '/langs';
-            
+
             if (is_dir($langDir)) {
                 $files = glob($langDir . '/*.json');
                 foreach ($files as $file) {

@@ -23,12 +23,14 @@ class ModuleAssetController extends Controller
 
         // Map type to directory (handle both singular and plural)
         $basePathMap = [
-            'theme'    => resource_path('views/merchant'),
-            'themes'   => resource_path('views/merchant'),
-            'gateway'  => app_path('Modules/gateways'),
-            'gateways' => app_path('Modules/gateways'),
-            'addon'    => app_path('Modules/addons'),
-            'addons'   => app_path('Modules/addons'),
+            'theme'           => resource_path('views/merchant'),
+            'themes'          => resource_path('views/merchant'),
+            'checkout-theme'  => resource_path('views/theme'),
+            'checkout-themes' => resource_path('views/theme'),
+            'gateway'         => app_path('Modules/gateways'),
+            'gateways'        => app_path('Modules/gateways'),
+            'addon'           => app_path('Modules/addons'),
+            'addons'          => app_path('Modules/addons'),
         ];
 
         if (!isset($basePathMap[$type])) {

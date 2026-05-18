@@ -161,10 +161,13 @@ Merchants must be able to configure checkout payment keys for their brand.
   * `resources/views/merchant/default/pages/gateways/edit.blade.php`: Dynamic form to toggle a gateway (Active/Inactive), set a processing fee type (Percentage or Flat), and insert API Credentials (e.g., Client Secret, App Key, Password) securely.
 * **Security Note**: Ensure API credentials are saved with robust encryption inside the database.
 
-### Phase 3: API Credentials & Whitelisted Domains (✅ 100% Completed & Visually Polished)
-All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space. Both the API Credentials and Whitelisted Domains panels have been 100% redesigned and polished to match the modern visual aesthetics, checkboxes, bulk confirmation modals, and action dropdown mechanics established by the FAQ module.
+### Phase 3: API Credentials, Domains, and Checkout Themes (✅ 100% Completed & Visually Polished)
+All routes, controllers, views, database schema alignments, clipboard copy toast actions, Alpine.js modals, and selected bulk check actions have been fully migrated to Laravel standards inside the Merchant space. 
+* **API Credentials & Whitelisted Domains**: Both have been 100% redesigned and polished to match the modern visual aesthetics, checkboxes, bulk confirmation modals, and action dropdown mechanics established by the FAQ module.
+* **Checkout Themes & Dynamic Theme Settings**: Added fully standard, scanned theme scan actions, dynamic color inputs, text fields, textareas, dynamic selects, and image uploading zones into the premium TailAdmin layout with absolute isolation from the old Admin code.
 * **Unified Pagination Component**: A premium, reusable Blade component `<x-pagination>` has been implemented under `resources/views/merchant/default/components/pagination.blade.php`.
-* **Zero-Touch Admin Policy**: Standard Eloquent dynamic paginators are safely intercepted and rendered inside the merchant-side `SettingsController` to feed the new pagination component. Not a single line of the legacy `app/Services/Admin/` files is touched, maintaining absolute legacy code isolation.
+* **Zero-Touch Admin Policy**: Standard Eloquent dynamic paginators and setting observers are safely intercepted and rendered inside the merchant-side `SettingsController` to feed the new pagination component. Not a single line of the legacy `app/Services/Admin/` files is touched, maintaining absolute legacy code isolation.
+* **Themes List Visual Polish**: Unified preview thumbnail dimensions to exactly `240px` utilizing inline CSS overrides for guaranteed cross-browser height consistency. Rendered active badges with a solid `bg-brand-500` background, white text, a pulsing white status dot, and elegant `top-6 right-6` margins. Isolated theme preview assets using a dedicated `checkout-theme` routing channel to keep the merchant theme assets completely unaffected.
 
 ### Phase 4: Invoices & Payment Links (🟡 Medium Priority)
 Enables direct billing and quick payment buttons.

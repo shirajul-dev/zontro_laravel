@@ -5,7 +5,7 @@
         {
             return [
                 'title'       => 'Commerz',
-                'logo'        => 'assets/logo.jpg'
+                'logo'        => 'assets/preview.png'
             ];
         }
 

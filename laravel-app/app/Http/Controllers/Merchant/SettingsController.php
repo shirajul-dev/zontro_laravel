@@ -847,4 +847,251 @@ class SettingsController extends Controller
 
         return response()->json($result);
     }
+
+    /**
+     * Display all checkout themes.
+     */
+    public function themes()
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
+        }
+
+        $themes = [];
+        $themeDirs = glob(resource_path('views/theme/*'), GLOB_ONLYDIR);
+
+        foreach ($themeDirs as $dir) {
+            $classFile = $dir . '/class.php';
+            if (!file_exists($classFile)) {
+                continue;
+            }
+
+            require_once $classFile;
+
+            $slug = basename($dir);
+            $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $slug))) . 'Theme';
+
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            $themeObj = new $class();
+            $themes[$slug] = $themeObj->info();
+            $themes[$slug]['supported_languages'] = method_exists($themeObj, 'supported_languages') ? $themeObj->supported_languages() : [];
+        }
+
+        if (request()->ajax()) {
+            return view('merchant.default.pages.settings.sections.themes', compact('brand', 'themes'))->render();
+        }
+
+        return view('merchant.default.pages.settings.themes', compact('brand', 'themes'));
+    }
+
+    /**
+     * Activate a checkout theme.
+     */
+    public function activeTheme(Request $request)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'title' => 'Unauthorized', 'message' => 'Unauthorized access.'], 401);
+        }
+
+        $slug = trim((string)$request->input('slug', ''));
+        if ($slug === '') {
+            return response()->json(['status' => 'false', 'title' => 'Error', 'message' => 'Invalid theme selected.', 'csrf_token' => csrf_token()]);
+        }
+
+        $themeDir = resource_path('views/theme/' . $slug);
+        if (!is_dir($themeDir) || !file_exists($themeDir . '/class.php')) {
+            return response()->json(['status' => 'false', 'title' => 'Error', 'message' => 'Selected theme class was not found.', 'csrf_token' => csrf_token()]);
+        }
+
+        // Update brand theme natively
+        $brand->update(['theme' => $slug]);
+
+        // Parallel sync to legacy table
+        \DB::table('pp_brands')->where('brand_id', $brand->brand_id)->update([
+            'theme' => $slug,
+            'updated_date' => now()->format('Y-m-d H:i:s'),
+        ]);
+
+        return response()->json([
+            'status' => 'true',
+            'title' => 'Theme Activated',
+            'message' => 'The checkout theme has been activated successfully.',
+            'csrf_token' => csrf_token()
+        ]);
+    }
+
+    /**
+     * Display configuration form for a specific active theme.
+     */
+    public function themeSettings(string $slug)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return redirect()->route('merchant.dashboard')->with('error', 'No active brand found.');
+        }
+
+        if ($brand->theme !== $slug) {
+            return redirect()->route('merchant.settings.themes')->with('error', 'You can only configure your active checkout theme.');
+        }
+
+        $themeDir = resource_path('views/theme/' . $slug);
+        if (!is_dir($themeDir) || !file_exists($themeDir . '/class.php')) {
+            return redirect()->route('merchant.settings.themes')->with('error', 'Theme settings file not found.');
+        }
+
+        require_once $themeDir . '/class.php';
+        $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $slug))) . 'Theme';
+        if (!class_exists($class)) {
+            return redirect()->route('merchant.settings.themes')->with('error', 'Theme class definition not found.');
+        }
+
+        $themeObj = new $class();
+        $fields = method_exists($themeObj, 'fields') ? $themeObj->fields() : [];
+        $supportedLanguages = method_exists($themeObj, 'supported_languages') ? $themeObj->supported_languages() : [];
+        $themeInfo = $themeObj->info();
+
+        foreach ($fields as &$field) {
+            $optionName = $slug . '-' . $field['name'];
+            $storedValue = get_env($optionName, $brand->brand_id);
+            if ($storedValue !== '') {
+                $field['value'] = $storedValue;
+            }
+
+            if (!empty($field['multiple']) && !empty($field['value'])) {
+                $field['value'] = is_array($field['value']) ? $field['value'] : (json_decode($field['value'], true) ?: $field['value']);
+            }
+        }
+
+        if (request()->ajax()) {
+            return view('merchant.default.pages.settings.sections.themes-setting', compact('brand', 'slug', 'fields', 'supportedLanguages', 'themeInfo'))->render();
+        }
+
+        return view('merchant.default.pages.settings.themes-setting', compact('brand', 'slug', 'fields', 'supportedLanguages', 'themeInfo'));
+    }
+
+    /**
+     * Update configuration form values for a specific active theme.
+     */
+    public function updateThemeSettings(Request $request, string $slug)
+    {
+        $brand = $this->getActiveBrand();
+        if (!$brand) {
+            return response()->json(['status' => 'false', 'title' => 'Unauthorized', 'message' => 'Unauthorized access.'], 401);
+        }
+
+        if ($brand->theme !== $slug) {
+            return response()->json(['status' => 'false', 'title' => 'Error', 'message' => 'You can only configure your active theme.', 'csrf_token' => csrf_token()]);
+        }
+
+        $themeDir = resource_path('views/theme/' . $slug);
+        if (!is_dir($themeDir) || !file_exists($themeDir . '/class.php')) {
+            return response()->json(['status' => 'false', 'title' => 'Error', 'message' => 'Theme settings file not found.', 'csrf_token' => csrf_token()]);
+        }
+
+        require_once $themeDir . '/class.php';
+        $class = str_replace(' ', '', ucwords(str_replace('-', ' ', $slug))) . 'Theme';
+        if (!class_exists($class)) {
+            return response()->json(['status' => 'false', 'title' => 'Error', 'message' => 'Theme class definition not found.', 'csrf_token' => csrf_token()]);
+        }
+
+        $themeObj = new $class();
+        $fields = method_exists($themeObj, 'fields') ? $themeObj->fields() : [];
+
+        // Save normal input fields
+        foreach ($fields as $field) {
+            $name = $field['name'];
+            $optionName = $slug . '-' . $name;
+
+            if ($field['type'] === 'image') {
+                continue;
+            }
+
+            $value = $request->input($name);
+
+            if ($value === null) {
+                if ($field['type'] === 'checkbox') {
+                    $value = '0';
+                } else {
+                    $value = '';
+                }
+            }
+
+            if (is_array($value)) {
+                $value = json_encode($value);
+            }
+
+            $this->setThemeEnvValue($optionName, (string)$value, $brand->brand_id);
+        }
+
+        // Save uploaded files/images
+        foreach ($request->files as $key => $file) {
+            if ($file instanceof \Illuminate\Http\UploadedFile && $file->isValid()) {
+                $optionName = $slug . '-' . $key;
+                
+                $maxSize = 5 * 1024 * 1024;
+                if ($file->getSize() > $maxSize) {
+                    continue;
+                }
+
+                $extension = strtolower($file->getClientOriginalExtension());
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                if (!in_array($extension, $allowed, true)) {
+                    continue;
+                }
+
+                $filename = strtolower(\Illuminate\Support\Str::random(10) . '_' . time() . '.' . $extension);
+                
+                $uploadPath = storage_path('app/public/media');
+                if (!is_dir($uploadPath)) {
+                    @mkdir($uploadPath, 0755, true);
+                }
+
+                $file->move($uploadPath, $filename);
+
+                $siteUrl = rtrim((string) config('app.url', '/'), '/') . '/';
+                $value = rtrim($siteUrl, '/') . '/storage/media/' . $filename;
+
+                $this->setThemeEnvValue($optionName, $value, $brand->brand_id);
+            }
+        }
+
+        return response()->json([
+            'status' => 'true',
+            'title' => 'Settings Updated',
+            'message' => 'The theme settings have been updated successfully.',
+            'csrf_token' => csrf_token()
+        ]);
+    }
+
+    /**
+     * Set environmental option helper for theme settings.
+     */
+    private function setThemeEnvValue(string $optionName, string $value, string $brandId): void
+    {
+        $row = \App\Models\PpEnv::query()
+            ->where('brand_id', $brandId)
+            ->where('option_name', $optionName)
+            ->first();
+
+        if ($row === null) {
+            \App\Models\PpEnv::query()->create([
+                'brand_id' => $brandId,
+                'option_name' => $optionName,
+                'value' => $value,
+                'created_date' => now()->format('Y-m-d H:i:s'),
+                'updated_date' => now()->format('Y-m-d H:i:s'),
+            ]);
+            return;
+        }
+
+        $row->update([
+            'value' => $value,
+            'updated_date' => now()->format('Y-m-d H:i:s'),
+        ]);
+    }
 }
